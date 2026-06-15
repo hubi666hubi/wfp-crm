@@ -1,0 +1,336 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidUser(data, isCreate) {
+      return (
+        data.keys().hasOnly(['email', 'displayName', 'photoURL', 'createdAt']) &&
+        (isCreate ? data.keys().hasAll(['email', 'displayName', 'photoURL']) : true) &&
+        (data.get('email', '') is string) && (data.get('email', '').size() <= 200) &&
+        (data.get('displayName', '') is string) && (data.get('displayName', '').size() <= 100) &&
+        (data.get('photoURL', '') is string) && (data.get('photoURL', '').size() <= 1000) &&
+        (data.get('createdAt', '') is string) && (data.get('createdAt', '').size() <= 100)
+      );
+    }
+    
+    function isValidDashboard(data, isCreate) {
+      return (
+        data.keys().hasOnly(['tasks', 'stats']) &&
+        (data.get('tasks', []) is list) && (data.get('tasks', []).size() <= 500) &&
+        (data.get('stats', []) is list) && (data.get('stats', []).size() <= 500)
+      );
+    }
+
+    function isValidClient(data, isCreate) {
+      return (
+        data.keys().hasOnly(['userId', 'name', 'email', 'paymentLink', 'status', 'linkSentAt', 'createdAt', 'followUpScheduled', 'lastGmailToken', 'paidAt']) &&
+        (isCreate ? data.keys().hasAll(['userId', 'name', 'email', 'status']) : true) &&
+        (data.get('userId', '') is string && data.get('userId', '').size() <= 128) &&
+        (data.userId == request.auth.uid) &&
+        (data.get('name', '') is string && data.get('name', '').size() <= 200) &&
+        (data.get('email', '') is string && data.get('email', '').size() <= 200) &&
+        (data.get('status', '') is string && data.get('status', '').size() <= 50)
+      );
+    }
+
+    function isValidDopamineLoop(data, isCreate) {
+      return (
+        data.keys().hasOnly(['userId', 'hook', 'channel', 'niche', 'score', 'patternInterrupt', 'unresolvedMystery', 'createdAt', 'spikes', 'predictedTrend']) &&
+        (isCreate ? data.keys().hasAll(['userId', 'hook', 'channel', 'niche', 'score']) : true) &&
+        (data.get('userId', '') is string && data.get('userId', '').size() <= 128) &&
+        (data.userId == request.auth.uid) &&
+        (data.get('hook', '') is string && data.get('hook', '').size() <= 1000) &&
+        (data.get('channel', '') is string && data.get('channel', '').size() <= 100) &&
+        (data.get('niche', '') is string && data.get('niche', '').size() <= 100) &&
+        (data.get('score', 0) is int || data.get('score', 0) is float) &&
+        (data.get('patternInterrupt', '') is string && data.get('patternInterrupt', '').size() <= 5000) &&
+        (data.get('unresolvedMystery', '') is string && data.get('unresolvedMystery', '').size() <= 5000) &&
+        (data.get('createdAt', '') is string && data.get('createdAt', '').size() <= 100) &&
+        (data.get('spikes', []) is list) &&
+        (!data.keys().contains('predictedTrend') || (data.get('predictedTrend', '') is string && data.get('predictedTrend', '').size() <= 10000))
+      );
+    }
+
+    function isValidVslScript(data, isCreate) {
+      return (
+        data.keys().hasOnly(['userId', 'topic', 'parameters', 'globalKeywords', 'scriptParts', 'createdAt']) &&
+        (isCreate ? data.keys().hasAll(['userId', 'topic', 'scriptParts', 'createdAt']) : true) &&
+        (data.get('userId', '') is string && data.get('userId', '').size() <= 128) &&
+        (data.userId == request.auth.uid) &&
+        (data.get('topic', '') is string && data.get('topic', '').size() <= 2000) &&
+        (data.get('parameters', {}) is map) &&
+        (data.get('globalKeywords', []) is list) &&
+        (data.get('scriptParts', []) is list) &&
+        (data.get('createdAt', '') is string && data.get('createdAt', '').size() <= 100)
+      );
+    }
+
+    function isValidKeepNote(data, isCreate) {
+      return (
+        data.keys().hasOnly(['userId', 'title', 'content', 'checklist', 'checkedItems', 'color', 'pinned', 'createdAt', 'updatedAt']) &&
+        (isCreate ? data.keys().hasAll(['userId', 'title', 'content']) : true) &&
+        (data.get('userId', '') is string && data.get('userId', '').size() <= 128) &&
+        (data.userId == request.auth.uid) &&
+        (data.get('title', '') is string && data.get('title', '').size() <= 1000) &&
+        (data.get('content', '') is string && data.get('content', '').size() <= 20000) &&
+        (!data.keys().contains('checklist') || data.get('checklist', []) is list) &&
+        (!data.keys().contains('checkedItems') || data.get('checkedItems', []) is list) &&
+        (!data.keys().contains('color') || (data.get('color', '') is string && data.get('color', '').size() <= 100)) &&
+        (!data.keys().contains('pinned') || data.get('pinned', false) is bool) &&
+        (!data.keys().contains('createdAt') || (data.get('createdAt', '') is string && data.get('createdAt', '').size() <= 100)) &&
+        (!data.keys().contains('updatedAt') || (data.get('updatedAt', '') is string && data.get('updatedAt', '').size() <= 100))
+      );
+    }
+
+    function isValidAnomaly(data, isCreate) {
+      return (
+        data.keys().hasOnly(['statusMap']) &&
+        (data.get('statusMap', {}) is map)
+      );
+    }
+
+    function isValidAnomalyLog(data, isCreate) {
+      return (
+        data.keys().hasOnly(['userId', 'date', 'conversions', 'timestamp', 'note', 'tag']) &&
+        (isCreate ? data.keys().hasAll(['userId', 'date', 'timestamp']) : true) &&
+        (data.get('userId', '') is string && data.get('userId', '').size() <= 128) &&
+        (data.userId == request.auth.uid) &&
+        (data.get('date', '') is string && data.get('date', '').size() <= 100) &&
+        (data.get('conversions', 0) is int || data.get('conversions', 0) is float) &&
+        (data.get('timestamp', '') is string && data.get('timestamp', '').size() <= 100) &&
+        (!data.keys().contains('note') || (data.get('note', '') is string && data.get('note', '').size() <= 5000)) &&
+        (!data.keys().contains('tag') || (data.get('tag', '') is string && data.get('tag', '').size() <= 100))
+      );
+    }
+
+    function isValidSavedPrompt(data, isCreate) {
+      return (
+        data.keys().hasOnly(['userId', 'title', 'promptTemplate', 'variables', 'generationType', 'createdAt']) &&
+        (isCreate ? data.keys().hasAll(['userId', 'title', 'promptTemplate', 'generationType', 'createdAt']) : true) &&
+        (data.get('userId', '') is string && data.get('userId', '').size() <= 128) &&
+        (data.userId == request.auth.uid) &&
+        (data.get('title', '') is string && data.get('title', '').size() <= 200) &&
+        (data.get('promptTemplate', '') is string && data.get('promptTemplate', '').size() <= 5000) &&
+        (data.get('variables', []) is list) &&
+        (data.get('generationType', '') is string && (data.get('generationType', '') == 'image' || data.get('generationType', '') == 'video')) &&
+        (data.get('createdAt', '') is string && data.get('createdAt', '').size() <= 100)
+      );
+    }
+
+    function isValidSystemLog(data, isCreate) {
+      return (
+        data.keys().hasOnly(['userId', 'module', 'action', 'details', 'timestamp', 'userEmail']) &&
+        (isCreate ? data.keys().hasAll(['userId', 'module', 'action', 'details', 'timestamp']) : true) &&
+        (data.get('userId', '') is string && data.get('userId', '').size() <= 128) &&
+        (data.userId == request.auth.uid || data.userId == 'demo_tycoon_user') &&
+        (data.get('module', '') is string && data.get('module', '').size() <= 200) &&
+        (data.get('action', '') is string && data.get('action', '').size() <= 200) &&
+        (data.get('details', '') is string && data.get('details', '').size() <= 5000) &&
+        (data.get('timestamp', '') is string && data.get('timestamp', '').size() <= 100) &&
+        (!data.keys().contains('userEmail') || (data.get('userEmail', '') is string && data.get('userEmail', '').size() <= 200))
+      );
+    }
+
+    function isValidFactory(data, isCreate) {
+      return (
+        data.keys().hasOnly(['factoryId', 'userId', 'factoryName', 'tierRequired', 'status', 'currentProduct', 'isProcessingBroker', 'isMarketplaceListed', 'recommendedListingPrice', 'reasoning', 'listedAt', 'cycleDurationMs', 'cyclesCompleted', 'lastCycleStart', 'overclockMultiplier', 'temperature', 'yieldRateCount', 'createdAt']) &&
+        (isCreate ? data.keys().hasAll(['userId', 'factoryId', 'factoryName', 'status']) : true) &&
+        (data.get('userId', '') is string && data.get('userId', '').size() <= 128) &&
+        (data.userId == request.auth.uid || data.userId == 'demo_tycoon_user') &&
+        (data.get('factoryId', '') is string && data.get('factoryId', '').size() <= 128) &&
+        (data.get('factoryName', '') is string && data.get('factoryName', '').size() <= 200) &&
+        (data.get('status', '') is string && data.get('status', '').size() <= 50)
+      );
+    }
+
+    function isValidMarketplaceListing(data, isCreate) {
+      return (
+        data.keys().hasOnly(['listingId', 'sellerId', 'seller', 'itemName', 'priceCredits', 'status', 'listedAt', 'reasoning']) &&
+        (isCreate ? data.keys().hasAll(['listingId', 'sellerId', 'itemName', 'priceCredits', 'status']) : true) &&
+        (data.get('listingId', '') is string && data.get('listingId', '').size() <= 128) &&
+        (data.get('sellerId', '') is string && data.get('sellerId', '').size() <= 128) &&
+        (data.get('itemName', '') is string && data.get('itemName', '').size() <= 500) &&
+        (data.get('priceCredits', 0) is int || data.get('priceCredits', 0) is float) &&
+        (data.get('status', '') is string && data.get('status', '').size() <= 50)
+      );
+    }
+
+    function isValidAutomationLog(data, isCreate) {
+      return (
+        data.keys().hasOnly(['userId', 'type', 'status', 'message', 'timestamp']) &&
+        (isCreate ? data.keys().hasAll(['userId', 'type', 'status', 'message', 'timestamp']) : true) &&
+        (data.get('userId', '') is string && data.get('userId', '').size() <= 128) &&
+        (data.get('type', '') is string && data.get('type', '').size() <= 100) &&
+        (data.get('status', '') is string && data.get('status', '').size() <= 100) &&
+        (data.get('message', '') is string && data.get('message', '').size() <= 5000) &&
+        (data.get('timestamp', '') is string && data.get('timestamp', '').size() <= 100)
+      );
+    }
+
+    match /users/{userId} {
+      allow get: if isValidId(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && isValidUser(incoming(), true);
+      allow update: if isOwner(userId)
+                    && isValidUser(incoming(), false)
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL']);
+      allow delete: if false;
+    }
+
+    match /clients/{clientId} {
+      allow get: if isOwner(resource.data.userId);
+      allow list: if isOwner(resource.data.userId);
+      allow create: if isSignedIn() && isValidClient(incoming(), true);
+      allow update: if isOwner(existing().userId) && isValidClient(incoming(), false);
+      allow delete: if isOwner(existing().userId);
+    }
+
+    match /dashboards/{userId} {
+      allow read: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && isValidDashboard(incoming(), true);
+      allow update: if isOwner(userId)
+                    && isValidDashboard(incoming(), false)
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['tasks', 'stats']);
+      allow delete: if false;
+    }
+
+    match /dopamine_loops/{loopId} {
+      allow get: if isOwner(resource.data.userId);
+      allow list: if isOwner(resource.data.userId);
+      allow create: if isSignedIn() && isValidDopamineLoop(incoming(), true);
+      allow update: if isOwner(existing().userId) && isValidDopamineLoop(incoming(), false);
+      allow delete: if isOwner(existing().userId);
+    }
+
+    match /vsl_scripts/{scriptId} {
+      allow get: if isOwner(resource.data.userId);
+      allow list: if isOwner(resource.data.userId);
+      allow create: if isSignedIn() && isValidVslScript(incoming(), true);
+      allow update: if isOwner(existing().userId) && isValidVslScript(incoming(), false);
+      allow delete: if isOwner(existing().userId);
+    }
+
+    match /saved_prompts/{promptId} {
+      allow get: if isOwner(resource.data.userId);
+      allow list: if isOwner(resource.data.userId);
+      allow create: if isSignedIn() && isValidSavedPrompt(incoming(), true);
+      allow update: if isOwner(existing().userId) && isValidSavedPrompt(incoming(), false);
+      allow delete: if isOwner(existing().userId);
+    }
+
+    match /system_logs/{logId} {
+      allow get: if isOwner(resource.data.userId);
+      allow list: if isOwner(resource.data.userId);
+      allow create: if isSignedIn() && isValidSystemLog(incoming(), true);
+      allow update: if false;
+      allow delete: if isOwner(existing().userId);
+    }
+
+    match /crm_leads/{docId} {
+      allow read, write: if isSignedIn();
+    }
+    
+    match /shield_logs/{docId} {
+      allow read, write: if isSignedIn();
+    }
+    
+    match /pricing_config/{docId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /researched_leads/{leadId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /facebook_leads/{leadId} {
+      allow read, write: if isSignedIn();
+    }
+
+    match /keep_notes/{noteId} {
+      allow get: if isOwner(resource.data.userId);
+      allow list: if isOwner(resource.data.userId);
+      allow create: if isSignedIn() && isValidKeepNote(incoming(), true);
+      allow update: if isOwner(existing().userId) && isValidKeepNote(incoming(), false);
+      allow delete: if isOwner(existing().userId);
+    }
+
+    match /marketing_ideas/{ideaId} {
+      allow get: if isOwner(resource.data.userId);
+      allow list: if isOwner(resource.data.userId);
+      allow write: if false;
+    }
+
+    match /keep_insights/{userId} {
+      allow get: if isOwner(userId);
+      allow write: if false;
+    }
+
+    match /anomalies/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidAnomaly(incoming(), true);
+      allow update: if isOwner(userId) && isValidAnomaly(incoming(), false);
+      allow delete: if false;
+    }
+
+    match /anomaly_logs/{logId} {
+      allow get: if isOwner(resource.data.userId);
+      allow list: if isOwner(resource.data.userId);
+      allow create: if isSignedIn() && isValidAnomalyLog(incoming(), true);
+      allow update: if isOwner(existing().userId) && isValidAnomalyLog(incoming(), false);
+      allow delete: if isOwner(existing().userId);
+    }
+
+    match /factories/{factoryId} {
+      allow get, list: if (isSignedIn() && resource.data.userId == request.auth.uid) || resource.data.userId == 'demo_tycoon_user';
+      allow create: if (isSignedIn() && incoming().userId == request.auth.uid) || incoming().userId == 'demo_tycoon_user';
+      allow update: if ((isSignedIn() && existing().userId == request.auth.uid) || existing().userId == 'demo_tycoon_user') && isValidFactory(incoming(), false);
+      allow delete: if (isSignedIn() && existing().userId == request.auth.uid) || existing().userId == 'demo_tycoon_user';
+    }
+
+    match /FactoryRegistry/{factoryId} {
+      allow get, list: if (isSignedIn() && resource.data.userId == request.auth.uid) || resource.data.userId == 'demo_tycoon_user';
+      allow create: if (isSignedIn() && incoming().userId == request.auth.uid) || incoming().userId == 'demo_tycoon_user';
+      allow update: if ((isSignedIn() && existing().userId == request.auth.uid) || existing().userId == 'demo_tycoon_user') && isValidFactory(incoming(), false);
+      allow delete: if (isSignedIn() && existing().userId == request.auth.uid) || existing().userId == 'demo_tycoon_user';
+    }
+
+    match /marketplace/{listingId} {
+      allow get, list: if (isSignedIn() && resource.data.sellerId == request.auth.uid) || resource.data.sellerId == 'demo_tycoon_user';
+      allow create: if (isSignedIn() && incoming().sellerId == request.auth.uid) || incoming().sellerId == 'demo_tycoon_user';
+      allow update: if ((isSignedIn() && existing().sellerId == request.auth.uid) || existing().sellerId == 'demo_tycoon_user') && isValidMarketplaceListing(incoming(), false);
+      allow delete: if (isSignedIn() && existing().sellerId == request.auth.uid) || existing().sellerId == 'demo_tycoon_user';
+    }
+
+    match /automation_logs/{logId} {
+      allow get, list: if (isSignedIn() && resource.data.userId == request.auth.uid) || resource.data.userId == 'demo_tycoon_user';
+      allow create: if (isSignedIn() && incoming().userId == request.auth.uid) || incoming().userId == 'demo_tycoon_user';
+      allow update: if false;
+      allow delete: if (isSignedIn() && existing().userId == request.auth.uid) || existing().userId == 'demo_tycoon_user';
+    }
+  }
+}

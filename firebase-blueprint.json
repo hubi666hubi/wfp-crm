@@ -1,0 +1,329 @@
+{
+  "entities": {
+    "Dashboard": {
+      "title": "User Dashboard Data",
+      "description": "Stores user dashboard state, including tasks and stats",
+      "type": "object",
+      "properties": {
+        "tasks": {
+          "type": "array",
+          "description": "The tasks associated with the user dashboard."
+        },
+        "stats": {
+          "type": "array",
+          "description": "The statistics associated with the user dashboard."
+        }
+      }
+    },
+    "User": {
+      "title": "User Profile",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "photoURL": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        }
+      }
+    },
+    "Client": {
+      "title": "CRM Client",
+      "description": "Stores client data for the Zapalnik CRM, including payment links and statuses.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "paymentLink": { "type": "string" },
+        "status": { "type": "string", "enum": ["Oczekujący", "Wysłano Link", "Opłacono", "Follow-up 1 Wysłany", "Follow-up 2 Wysłany"] },
+        "linkSentAt": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "followUpScheduled": { "type": "boolean" }
+      },
+      "required": ["userId", "name", "email", "status"]
+    },
+    "DopamineLoop": {
+      "title": "Pętla Dopaminowa",
+      "description": "Przechowuje przeanalizowane pętle dopaminowe i symulacje wirusowych haczyków (hooks)",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "hook": { "type": "string" },
+        "channel": { "type": "string" },
+        "niche": { "type": "string" },
+        "score": { "type": "number" },
+        "patternInterrupt": { "type": "string" },
+        "unresolvedMystery": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "spikes": { "type": "array" },
+        "predictedTrend": { "type": "string" }
+      },
+      "required": ["userId", "hook", "channel", "niche", "score"]
+    },
+    "VslScript": {
+      "title": "VSL Script Draft",
+      "description": "Przechowuje wygenerowane skrypty VSL i ich parametry dla historii wersji.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "topic": { "type": "string" },
+        "parameters": { "type": "object" },
+        "globalKeywords": { "type": "array" },
+        "scriptParts": { "type": "array" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "topic", "scriptParts", "createdAt"]
+    },
+    "KeepNote": {
+      "title": "Keep Note",
+      "description": "Przechowuje pojedynczą notatkę powiązaną z kontem Google Keep użytkownika",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "checklist": { "type": "array" },
+        "checkedItems": { "type": "array" },
+        "color": { "type": "string" },
+        "pinned": { "type": "boolean" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["userId", "title", "content"]
+    },
+    "MarketingIdea": {
+      "title": "Marketing Idea",
+      "description": "Pomysły marketingowe/szkice wygenerowane automatycznie na podstawie notatek z Google Keep",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "idea": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "idea", "createdAt"]
+    },
+    "KeepInsight": {
+      "title": "Keep Insights",
+      "description": "Podsumowana wiedza o klientach wygenerowana ze wszystkich notatek Google Keep",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "insights": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["userId", "insights", "updatedAt"]
+    },
+    "Anomaly": {
+      "title": "Anomaly status mapping",
+      "description": "Mapping of conversion rate anomalies to reported/ignored states",
+      "type": "object",
+      "properties": {
+        "statusMap": { "type": "object" }
+      },
+      "required": ["statusMap"]
+    },
+    "AnomalyLog": {
+      "title": "Anomaly log record",
+      "description": "Log of user observations/details on detected conversion rate anomalies",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string" },
+        "conversions": { "type": "number" },
+        "timestamp": { "type": "string" },
+        "note": { "type": "string" },
+        "tag": { "type": "string" }
+      },
+      "required": ["userId", "date", "timestamp"]
+    },
+    "SavedPrompt": {
+      "title": "Zapisany szablon promptu",
+      "description": "Przechowuje szablony promptów użytkownika z obsługą zmiennych szablonowych i podświetlaniem składni",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "promptTemplate": { "type": "string" },
+        "variables": { "type": "array" },
+        "generationType": { "type": "string", "enum": ["image", "video"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "title", "promptTemplate", "generationType", "createdAt"]
+    },
+    "SystemLog": {
+      "title": "Log Systemowy",
+      "description": "Przechowuje logi działań użytkownika w celach audytowych",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "module": { "type": "string" },
+        "action": { "type": "string" },
+        "details": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "userEmail": { "type": "string" }
+      },
+      "required": ["userId", "module", "action", "details", "timestamp"]
+    },
+    "Factory": {
+      "title": "Industrial Factory Unit",
+      "description": "Represents an industrial factory stage with metadata, resource counts, temperature telemetry, and Agent Broker orchestration status",
+      "type": "object",
+      "properties": {
+        "factoryId": { "type": "string" },
+        "userId": { "type": "string" },
+        "factoryName": { "type": "string" },
+        "tierRequired": { "type": "string" },
+        "status": { "type": "string", "enum": ["IDLE", "RUNNING", "COMPLETED", "LISTED", "SHUTDOWN"] },
+        "currentProduct": { "type": "string" },
+        "isProcessingBroker": { "type": "boolean" },
+        "isMarketplaceListed": { "type": "boolean" },
+        "recommendedListingPrice": { "type": "number" },
+        "reasoning": { "type": "string" },
+        "listedAt": { "type": "string" },
+        "cycleDurationMs": { "type": "number" },
+        "cyclesCompleted": { "type": "number" },
+        "lastCycleStart": { "type": "string" },
+        "overclockMultiplier": { "type": "number" },
+        "temperature": { "type": "number" },
+        "yieldRateCount": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "factoryId", "factoryName", "status"]
+    },
+    "MarketplaceListing": {
+      "title": "Internal Trade Listing",
+      "description": "An automated trade deal posted to the internal somatic market from completed factory batches with Gemini margin pricing",
+      "type": "object",
+      "properties": {
+        "listingId": { "type": "string" },
+        "sellerId": { "type": "string" },
+        "seller": { "type": "string" },
+        "itemName": { "type": "string" },
+        "priceCredits": { "type": "number" },
+        "status": { "type": "string", "enum": ["ACTIVE", "SOLD", "EXPIRED"] },
+        "listedAt": { "type": "string" },
+        "reasoning": { "type": "string" }
+      },
+      "required": ["listingId", "sellerId", "itemName", "priceCredits", "status"]
+    },
+    "AutomationLog": {
+      "title": "Agent Automator Action Log",
+      "description": "Tracks operations run by autonomous background workers, cron agents, and AgentBrokers",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "type": { "type": "string" },
+        "status": { "type": "string" },
+        "message": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["userId", "type", "status", "message", "timestamp"]
+    }
+  },
+  "firestore": {
+    "factories/{factoryId}": {
+      "schema": {
+        "$ref": "#/entities/Factory"
+      },
+      "description": "User production lines"
+    },
+    "FactoryRegistry/{factoryId}": {
+      "schema": {
+        "$ref": "#/entities/Factory"
+      },
+      "description": "Mirror list of user production lines"
+    },
+    "marketplace/{listingId}": {
+      "schema": {
+        "$ref": "#/entities/MarketplaceListing"
+      },
+      "description": "Internal somatic trading desk offers"
+    },
+    "automation_logs/{logId}": {
+      "schema": {
+        "$ref": "#/entities/AutomationLog"
+      },
+      "description": "Logs tracking autonomous background flows"
+    },
+    "system_logs/{logId}": {
+      "schema": {
+        "$ref": "#/entities/SystemLog"
+      },
+      "description": "Logi systemowe służące do audytu operacyjnego"
+    },
+    "saved_prompts/{promptId}": {
+      "schema": {
+        "$ref": "#/entities/SavedPrompt"
+      },
+      "description": "Zapisane przez użytkownika szablony promptów do wielokrotnego użytku"
+    },
+    "vsl_scripts/{scriptId}": {
+      "schema": {
+        "$ref": "#/entities/VslScript"
+      },
+      "description": "Skrypty VSL zapisane przez użytkowników dla historii wersji"
+    },
+    "dopamine_loops/{loopId}": {
+      "schema": {
+        "$ref": "#/entities/DopamineLoop"
+      },
+      "description": "Simulated or recorded dopamine loops and viral hooks analyzed by the user"
+    },
+    "clients/{clientId}": {
+      "schema": {
+        "$ref": "#/entities/Client"
+      },
+      "description": "CRM clients associated with users"
+    },
+    "dashboards/{userId}": {
+      "schema": {
+        "$ref": "#/entities/Dashboard"
+      },
+      "description": "User specific dashboard state."
+    },
+    "users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/User"
+      },
+      "description": "User profile data."
+    },
+    "keep_notes/{noteId}": {
+      "schema": {
+        "$ref": "#/entities/KeepNote"
+      },
+      "description": "Google Keep notes synchronized for the user"
+    },
+    "marketing_ideas/{ideaId}": {
+      "schema": {
+        "$ref": "#/entities/MarketingIdea"
+      },
+      "description": "Automatically summarized marketing ideas based on Google Keep content"
+    },
+    "keep_insights/{userId}": {
+      "schema": {
+        "$ref": "#/entities/KeepInsight"
+      },
+      "description": "AI summarized user knowledge extracted from the Google Keep notes corpus"
+    },
+    "anomalies/{userId}": {
+      "schema": {
+        "$ref": "#/entities/Anomaly"
+      },
+      "description": "Mapped states (ignored/reported) for statistical conversions anomalies"
+    },
+    "anomaly_logs/{logId}": {
+      "schema": {
+        "$ref": "#/entities/AnomalyLog"
+      },
+      "description": "Comments and annotations on specific conversion spikes or drops"
+    }
+  }
+}

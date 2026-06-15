@@ -1,0 +1,60 @@
+{
+  "schedules": [
+    {
+      "platform": "X",
+      "topicContext": "Technologia AI i SaaS",
+      "cronExpression": "0 9 * * *",
+      "isActive": false
+    },
+    {
+      "platform": "LinkedIn",
+      "topicContext": "Lekcje biznesowe z analizy danych",
+      "cronExpression": "30 8 * * *",
+      "isActive": false
+    }
+  ],
+  "logs": [
+    {
+      "id": 1780348061334,
+      "timestamp": "2026-06-01T21:07:41.334Z",
+      "platform": "System",
+      "message": "Rozpoczęto rutynę auto-publikacji dla platformy LinkedIn...",
+      "status": "pending"
+    },
+    {
+      "id": 1780348066058,
+      "timestamp": "2026-06-01T21:07:46.058Z",
+      "platform": "System",
+      "message": "Rozpoczęto rutynę auto-publikacji dla platformy X...",
+      "status": "pending"
+    },
+    {
+      "id": 1780348074457,
+      "timestamp": "2026-06-01T21:07:54.457Z",
+      "platform": "System",
+      "message": "Agent wygenerował treść postu pomyślnie. Wysyłam do API...",
+      "status": "pending"
+    },
+    {
+      "id": 1780348074458,
+      "timestamp": "2026-06-01T21:07:54.457Z",
+      "platform": "LinkedIn",
+      "message": "Opublikowano post: \"Twoja intuicja to Twój najdroższy wróg. Przestań n...\"",
+      "status": "success"
+    },
+    {
+      "id": 1780348079688,
+      "timestamp": "2026-06-01T21:07:59.688Z",
+      "platform": "System",
+      "message": "Agent wygenerował treść postu pomyślnie. Wysyłam do API...",
+      "status": "pending"
+    },
+    {
+      "id": 1780348079689,
+      "timestamp": "2026-06-01T21:07:59.688Z",
+      "platform": "X",
+      "message": "Opublikowano post: \"STOP. Twoje \"inwestycje w AI\" to nie inwestycje. T...\"",
+      "status": "success"
+    }
+  ]
+}

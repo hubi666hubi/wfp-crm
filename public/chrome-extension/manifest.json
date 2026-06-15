@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "Zapalnik Lead Clipper PRO",
+  "version": "1.0.0",
+  "description": "Błyskawiczne dodawanie leadów B2B z LinkedIn oraz innych stron internetowych bezpośrednio do systemu CRM Zapalnik.",
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon-128.png",
+      "32": "icon-128.png",
+      "48": "icon-128.png",
+      "128": "icon-128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.linkedin.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "icons": {
+    "16": "icon-128.png",
+    "32": "icon-128.png",
+    "48": "icon-128.png",
+    "128": "icon-128.png"
+  }
+}
