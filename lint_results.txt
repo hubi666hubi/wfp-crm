@@ -1,0 +1,54 @@
+
+> applet@0.0.0 lint
+> eslint .
+
+
+/app/src/components/dashboard/CampaignConversionChart.tsx
+   71:1   warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+   75:7   warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+   79:7   warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+   90:12  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+  434:7   warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+  450:7   warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+  463:7   warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+
+/app/src/model-viewer.d.ts
+  1:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+
+/app/src/pages/Dashboard.tsx
+  364:9  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unused-vars')
+
+/app/src/pages/GmailIntegration.tsx
+  337:3  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-unused-vars')
+
+/app/src/pages/ProDashboard.tsx
+  248:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/app/src/pages/ProDashboard.tsx:248:7
+  246 |     const isDemo = localStorage.getItem("auth_demo_logged_in") === "true";
+  247 |     if (isDemo) {
+> 248 |       setUserEmail("hubi666hubi@gmail.com");
+      |       ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  249 |       verifyPremiumStatus("hubi666hubi@gmail.com", true);
+  250 |       return;
+  251 |     }  react-hooks/set-state-in-effect
+
+/app/src/pages/SocialMedia.tsx
+  61:1  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+
+/app/src/pages/VslGenerator.tsx
+   604:5  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+   704:7  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+   822:7  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+   928:7  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+  1031:7  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+  1153:7  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+
+✖ 18 problems (1 error, 17 warnings)
+  0 errors and 17 warnings potentially fixable with the `--fix` option.
