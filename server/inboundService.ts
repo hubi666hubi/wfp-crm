@@ -4,20 +4,20 @@ import { getDb } from "./db";
 
 async function generateInboundContentWithFallback(ai: GoogleGenAI, params: any) {
   try {
-    params.model = "gemini-3.5-flash";
+    params.model = "gemini-1.5-flash";
     return await ai.models.generateContent(params);
   } catch (err1: any) {
-    console.log(`[Inbound Fallback] gemini-3.5-flash failed, trying gemini-3.1-flash-lite. Error: ${err1?.message || err1}`);
+    console.log(`[Inbound Fallback] gemini-1.5-flash failed, trying gemini-1.5-flash. Error: ${err1?.message || err1}`);
     try {
-      params.model = "gemini-3.1-flash-lite";
+      params.model = "gemini-1.5-flash";
       return await ai.models.generateContent(params);
     } catch (err2: any) {
-      console.log(`[Inbound Fallback] gemini-3.1-flash-lite failed, trying gemini-2.5-flash. Error: ${err2?.message || err2}`);
+      console.log(`[Inbound Fallback] gemini-1.5-flash failed, trying gemini-1.5-flash. Error: ${err2?.message || err2}`);
       try {
-        params.model = "gemini-2.5-flash";
+        params.model = "gemini-1.5-flash";
         return await ai.models.generateContent(params);
       } catch (err3: any) {
-        console.log(`[Inbound Fallback] gemini-2.5-flash failed, trying gemini-1.5-flash. Error: ${err3?.message || err3}`);
+        console.log(`[Inbound Fallback] gemini-1.5-flash failed, trying gemini-1.5-flash. Error: ${err3?.message || err3}`);
         try {
           params.model = "gemini-1.5-flash";
           return await ai.models.generateContent(params);

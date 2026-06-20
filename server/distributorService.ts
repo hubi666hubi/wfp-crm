@@ -173,16 +173,16 @@ export class DistributorService {
       let generatedPost = "Brak wygenerowanego tekstu";
       try {
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-1.5-flash",
           contents: prompt,
         });
         generatedPost = response.text || generatedPost;
       } catch (err: unknown) {
         const error = err as { status?: number, message?: string };
         if (error?.status === 503 || error?.message?.includes("503") || error?.status === 503) {
-          console.log(`gemini-2.5-flash 503 during auto post, falling back to gemini-2.5-pro`);
+          console.log(`gemini-1.5-flash 503 during auto post, falling back to gemini-1.5-pro`);
           const fallbackResponse = await ai.models.generateContent({
-            model: "gemini-2.5-pro",
+            model: "gemini-1.5-pro",
             contents: prompt,
           });
           generatedPost = fallbackResponse.text || generatedPost;
@@ -194,7 +194,7 @@ export class DistributorService {
       this.addLog('System', `Agent wygenerował treść postu pomyślnie. Wysyłam do API...`, 'pending');
 
       if (schedule.webhookUrl) {
-         // Tutaj następuje rzyczywiste wywołanie webhooka z wygenerowanym tekstem
+         // Tutaj następuje rzeczywiste wywołanie webhooka z wygenerowanym tekstem
          await fetch(schedule.webhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
