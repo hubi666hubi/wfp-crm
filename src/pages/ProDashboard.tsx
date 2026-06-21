@@ -60,6 +60,7 @@ export function ProDashboard() {
   // States
   const [trends, setTrends] = useState<TrendItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [militaryMode, setMilitaryMode] = useState(true);
   const [activeTab, setActiveTab] = useState<"insights" | "hooks" | "radar" | "watchlist" | "stripe-finance">("insights");
   
   // Access state (Security Priority Access)
