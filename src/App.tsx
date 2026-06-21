@@ -32,6 +32,7 @@ const ShieldPage = lazy(() => import('./pages/Shield').then(m => ({ default: m.S
 const PricingPage = lazy(() => import('./pages/Pricing').then(m => ({ default: m.PricingPage })));
 const ProGenerators = lazy(() => import('./pages/ProGenerators').then(m => ({ default: m.ProGenerators })));
 const FactoryRegistry = lazy(() => import('./pages/FactoryRegistry').then(m => ({ default: m.FactoryRegistry })));
+const Stitch = lazy(() => import('./pages/Stitch').then(m => ({ default: m.Stitch })));
 
 function PlaceholderModule({ title }: { title: string }) {
   return (
@@ -224,6 +225,7 @@ function App() {
           <Route path="/pro-generators" element={<ProGenerators />} />
           <Route path="/factory-registry" element={<FactoryRegistry />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/stitch" element={<Stitch />} />
         </Routes>
       </Suspense>
     </AppLayout>
