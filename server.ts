@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import sharp from "sharp";
 import { distributorService } from "./server/distributorService";
 import { legacyService } from "./server/legacyService";
+import { automationEngine } from "./server/automationEngine";
 import { inboundService } from "./server/inboundService";
 import Stripe from "stripe";
 import * as admin from "firebase-admin";
@@ -6603,6 +6604,14 @@ Napisz raport w sposób zwięzły, konkretny, unikając lania wody ("AI-slop"). 
     } catch (err: any) {
       return res.status(500).json({ error: err.message });
     }
+  });
+
+  app.get("/api/automation/status", async (req, res) => {
+    return res.status(200).json(automationEngine.getStatus());
+  });
+
+  app.get("/api/automation/logs", async (req, res) => {
+    return res.status(200).json(automationEngine.getRecentLogs());
   });
 
   app.get("/api/legacy/metrics", async (req, res) => {

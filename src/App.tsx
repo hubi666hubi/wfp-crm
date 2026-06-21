@@ -218,6 +218,7 @@ function App() {
           <Route path="/z-pulse" element={<ZPulse />} />
           <Route path="/pro-dashboard" element={<ProDashboard />} />
           <Route path="/elite-vault" element={<EliteVault />} />
+          <Route path="/automation-hub" element={<AutomationHub />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/closer" element={<Closer />} />
           <Route path="/scraper" element={<LeadScraper />} />
