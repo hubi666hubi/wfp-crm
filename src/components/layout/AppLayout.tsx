@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Network, 
+  Cpu,
   Radar, 
   Mic2, 
   Gauge, 
@@ -70,6 +71,7 @@ const navigation = [
   { name: 'Zadania (Google Tasks)', to: '/tasks', icon: CheckSquare },
   { name: 'Notatki (Google Keep)', to: '/keep', icon: StickyNote },
   { name: 'Kalendarz (Google Calendar)', to: '/calendar', icon: Calendar },
+  { name: 'Stitch Uplink', to: '/stitch', icon: Cpu },
   { name: 'Konfiguracja Agentów', to: '/settings', icon: SettingsIcon },
 ];
 

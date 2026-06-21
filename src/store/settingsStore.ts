@@ -8,12 +8,14 @@ interface SettingsState {
   geminiKey: string;
   supabaseUrl: string;
   supabaseServiceRoleKey: string;
+  stitchProjectId: string;
   setStripeKey: (key: string) => void;
   setMakeWebhook: (url: string) => void;
   setOpenAiKey: (key: string) => void;
   setGeminiKey: (key: string) => void;
   setSupabaseUrl: (url: string) => void;
   setSupabaseServiceRoleKey: (key: string) => void;
+  setStitchProjectId: (id: string) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -25,12 +27,14 @@ export const useSettingsStore = create<SettingsState>()(
       geminiKey: "",
       supabaseUrl: "",
       supabaseServiceRoleKey: "",
+      stitchProjectId: "353902890850105523",
       setStripeKey: (stripeKey) => set({ stripeKey }),
       setMakeWebhook: (makeWebhook) => set({ makeWebhook }),
       setOpenAiKey: (openAiKey) => set({ openAiKey }),
       setGeminiKey: (geminiKey) => set({ geminiKey }),
       setSupabaseUrl: (supabaseUrl) => set({ supabaseUrl }),
       setSupabaseServiceRoleKey: (supabaseServiceRoleKey) => set({ supabaseServiceRoleKey }),
+      setStitchProjectId: (stitchProjectId) => set({ stitchProjectId }),
     }),
     { name: "settings-store" }
   )
