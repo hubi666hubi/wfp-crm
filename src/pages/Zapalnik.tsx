@@ -279,6 +279,23 @@ export function Zapalnik() {
     }
   };
 
+  const handleCloseWonWithInvoice = async (lead: any) => {
+    const amount = 19500;
+    toast.info(`Inicjowanie rozliczenia PRO dla ${lead.companyName}...`);
+
+    const res = await FinanceService.issueInvoice({
+      companyName: lead.companyName,
+      email: lead.email || "ksiegowosc@system.pl",
+      amount,
+      serviceType: "Retainer Premium WFP Elite",
+      invoiceType: "vat"
+    });
+
+    if (res.success) {
+      toast.success("STATUS: ZAMKNIĘTY SUKCES. Faktura VAT została wystawiona!");
+      FinanceService.triggerJarvisVoice(`Mistrzu! Faktura dla firmy ${lead.companyName} na kwotę ${amount} złotych została automatycznie wystawiona i wysłana! Kesz leci na konto!`);
+    }
+  };
   const handleCaptureLead = () => {
     if (!email || !pain) return;
     setGenerating(true);
@@ -2336,6 +2353,13 @@ GENEROWANE PRZEZ: ZAPALNIK B2B TACTICAL INTEL ENGINE v4.0
                             <span className="text-[8.5px] text-rose-400 uppercase font-mono font-black">FAZA 4: WEZWANIE DO WALKI (CTA)</span>
                           </div>
                           <p className="p-2.5 bg-neutral-950/80 border border-neutral-900 rounded-lg text-[10.5px] text-neutral-300 leading-relaxed font-sans">
+                        <button
+                          onClick={() => handleCloseWonWithInvoice(selectedLead)}
+                          className="w-full mt-6 py-4 bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-xl font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-3 shadow-[0_0_20px_rgba(16,185,129,0.3)] border border-emerald-500/30"
+                        >
+                          <Receipt size={16} />
+                          CLOSE WON & WYSTAW FAKTURĘ (19 500 PLN)
+                        </button>
                             {selectedLead.tacticalBrief.opScript.phase4Cta}
                           </p>
                         </div>
