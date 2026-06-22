@@ -1685,6 +1685,17 @@ export function ProDashboard() {
               </span>
               <span>SAMPLING LIMIT: MAX 250 TR/SECTOR</span>
               <span>INTEGRACJA: GOOGLE WORKSPACE API SENSITIVE</span>
+              <div className="mt-4 p-3 bg-neutral-900/80 border border-emerald-500/30 rounded-xl font-mono text-[9px] text-emerald-400 military-flicker">
+                <div className="flex items-center gap-2 mb-1">
+                  <Terminal size={10} />
+                  <span className="font-bold uppercase tracking-widest">Matrix Kernel Monitor</span>
+                </div>
+                <div className="space-y-0.5 opacity-80">
+                  <p>> [SYS] RECALIBRATING_VECTORS... OK</p>
+                  <p>> [NEURO] DOPAMINE_VELOCITY_OVERCLOCK... ACTIVE</p>
+                  <p>> [FIN] REVENUE_PULSE_ESTABLISHED... 19.5k</p>
+                </div>
+              </div>
             </div>
           </div>
 

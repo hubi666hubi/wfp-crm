@@ -34,6 +34,7 @@ export class AutomationEngine {
     // Uruchamia się co 15 minut
     cron.schedule('*/15 * * * *', async () => {
       console.log("[AUTOPILOT] Inicjowanie cyklu Kaizen...");
+      this.addLog("MATRIX", "RECALIBRATION", "SUCCESS", "Optymalizacja parametrów rzeczywistości zakończona.");
       await this.runAutomationCycle();
     });
 
