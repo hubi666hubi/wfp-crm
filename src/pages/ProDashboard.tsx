@@ -60,6 +60,7 @@ export function ProDashboard() {
   // States
   const [trends, setTrends] = useState<TrendItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [militaryMode, setMilitaryMode] = useState(true);
   const [activeTab, setActiveTab] = useState<"insights" | "hooks" | "radar" | "watchlist" | "stripe-finance">("insights");
   
   // Access state (Security Priority Access)
@@ -1467,7 +1468,8 @@ export function ProDashboard() {
                   
                   {/* Revenue Summary KPI Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="bg-neutral-950 border border-neutral-900 rounded-2xl p-5 relative overflow-hidden">
+                    <div className="bg-neutral-950 border border-neutral-900 rounded-2xl p-5 relative overflow-hidden ring-1 ring-emerald-500/20 bg-emerald-900/5">
+            <div className="absolute -top-1 -right-1 w-20 h-20 bg-emerald-500/10 blur-2xl rounded-full animate-pulse" />
                       <div className="absolute top-0 right-0 p-3 text-emerald-500/10"><DollarSign size={40} /></div>
                       <span className="text-[10px] font-mono text-neutral-500 uppercase block mb-1">Całkowity Przychód Skumulowany</span>
                       <h3 className="text-3xl font-black text-white font-mono flex items-baseline gap-1">
@@ -1478,7 +1480,8 @@ export function ProDashboard() {
                       </div>
                     </div>
 
-                    <div className="bg-neutral-950 border border-neutral-900 rounded-2xl p-5 relative overflow-hidden">
+                    <div className="bg-neutral-950 border border-neutral-900 rounded-2xl p-5 relative overflow-hidden ring-1 ring-emerald-500/20 bg-emerald-900/5">
+            <div className="absolute -top-1 -right-1 w-20 h-20 bg-emerald-500/10 blur-2xl rounded-full animate-pulse" />
                       <div className="absolute top-0 right-0 p-3 text-emerald-500/10"><Activity size={40} /></div>
                       <span className="text-[10px] font-mono text-neutral-500 uppercase block mb-1">Monthly Recurring Revenue (MRR)</span>
                       <h3 className="text-3xl font-black text-rose-500 font-mono flex items-baseline gap-1">
@@ -1489,7 +1492,8 @@ export function ProDashboard() {
                       </div>
                     </div>
 
-                    <div className="bg-neutral-950 border border-neutral-900 rounded-2xl p-5 relative overflow-hidden">
+                    <div className="bg-neutral-950 border border-neutral-900 rounded-2xl p-5 relative overflow-hidden ring-1 ring-emerald-500/20 bg-emerald-900/5">
+            <div className="absolute -top-1 -right-1 w-20 h-20 bg-emerald-500/10 blur-2xl rounded-full animate-pulse" />
                       <div className="absolute top-0 right-0 p-3 text-emerald-500/10"><Wallet size={40} /></div>
                       <span className="text-[10px] font-mono text-neutral-500 uppercase block mb-1">Średnia Wartość Koszyka (AOV)</span>
                       <h3 className="text-3xl font-black text-white font-mono flex items-baseline gap-1">
@@ -1681,6 +1685,17 @@ export function ProDashboard() {
               </span>
               <span>SAMPLING LIMIT: MAX 250 TR/SECTOR</span>
               <span>INTEGRACJA: GOOGLE WORKSPACE API SENSITIVE</span>
+              <div className="mt-4 p-3 bg-neutral-900/80 border border-emerald-500/30 rounded-xl font-mono text-[9px] text-emerald-400 military-flicker">
+                <div className="flex items-center gap-2 mb-1">
+                  <Terminal size={10} />
+                  <span className="font-bold uppercase tracking-widest">Matrix Kernel Monitor</span>
+                </div>
+                <div className="space-y-0.5 opacity-80">
+                  <p>> [SYS] RECALIBRATING_VECTORS... OK</p>
+                  <p>> [NEURO] DOPAMINE_VELOCITY_OVERCLOCK... ACTIVE</p>
+                  <p>> [FIN] REVENUE_PULSE_ESTABLISHED... 19.5k</p>
+                </div>
+              </div>
             </div>
           </div>
 

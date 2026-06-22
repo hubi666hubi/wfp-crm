@@ -666,7 +666,7 @@ export function DopamineLoops() {
 
                     <div>
                       <span className="block text-[10px] font-mono uppercase text-rose-400 font-bold tracking-widest mb-1">
-                        Przerwanie wzorca (Pattern Interrupt)
+                        Przerwanie wzorca (CORTISOL_SPIKE)
                       </span>
                       <p className="text-xs text-neutral-300 leading-relaxed font-mono">
                         {currentResult.patternInterrupt}

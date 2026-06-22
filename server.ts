@@ -4,6 +4,8 @@ import { GoogleGenAI, Type, GenerateVideosOperation, ThinkingLevel } from "@goog
 import { createClient } from "@supabase/supabase-js";
 import sharp from "sharp";
 import { distributorService } from "./server/distributorService";
+import { legacyService } from "./server/legacyService";
+import { automationEngine } from "./server/automationEngine";
 import { inboundService } from "./server/inboundService";
 import Stripe from "stripe";
 import * as admin from "firebase-admin";
@@ -6583,6 +6585,44 @@ Napisz raport w sposób zwięzły, konkretny, unikając lania wody ("AI-slop"). 
   });
 
   // --- SUPABASE & GEMINI KNOWLEDGE BASE INTEGRATION ---
+  app.post("/api/campaign/bomb-v3", express.json(), async (req, res) => {
+    try {
+      const { targetId, diagnosticDepth } = req.body;
+      const report = await legacyService.getAnomalyReport(targetId);
+
+      // Simple branching logic based on diagnosticDepth
+      const sequence = diagnosticDepth > 80 ? "ELITE_HEAVY_OUTREACH" : "STANDARD_KAIZEN";
+
+      return res.status(200).json({
+        success: true,
+        target: targetId,
+        sequence,
+        diagnostic: report.diagnostic,
+        estimatedLeak: "2.5M - 4.5M PLN",
+        nextAction: "GENERATE_MCKINSEY_PDF"
+      });
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get("/api/automation/status", async (req, res) => {
+    return res.status(200).json(automationEngine.getStatus());
+  });
+
+  app.get("/api/automation/logs", async (req, res) => {
+    return res.status(200).json(automationEngine.getRecentLogs());
+  });
+
+  app.get("/api/legacy/metrics", async (req, res) => {
+    try {
+      const metrics = await legacyService.calculateMetrics("omega-main");
+      return res.status(200).json(metrics);
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
+    }
+  });
+
   app.post("/api/handle-aistudio-call", express.json(), async (req, res) => {
     try {
       const rawSupabaseUrl = req.body.supabaseUrl || process.env.SUPABASE_URL;
