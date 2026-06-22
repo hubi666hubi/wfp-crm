@@ -39,6 +39,7 @@ export class AutomationEngine {
     });
 
     this.addLog("SYSTEM", "START_AUTOPILOT", "SUCCESS", "Autopilot Kaizen V25.0 pomyślnie zainicjowany.");
+    this.addLog("SYSTEM", "MATRIX_RAIN_PROTOCOL", "SUCCESS", "Visual character streams established. Reality layer optimized.");
   }
 
   private async runAutomationCycle() {

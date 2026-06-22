@@ -52,7 +52,7 @@ const EliteVault = () => {
         <header className="flex justify-between items-end border-b border-neutral-900 pb-8">
           <div>
             <h1 className="text-4xl font-bold text-white tracking-tighter uppercase italic flex items-center gap-4">
-              <Lock className="text-amber-500" /> The Ancient Ledger
+              <Lock className="text-amber-500" /> <span className="military-flicker">The Ancient Ledger</span>
             </h1>
             <p className="text-amber-500 text-xs mt-2 uppercase">☥ WFP PRO ELITE LEGACY // ANOMALY DETECTION UNIT</p>
           </div>
