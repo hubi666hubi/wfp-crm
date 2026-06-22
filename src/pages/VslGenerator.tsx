@@ -601,7 +601,6 @@ export function VslGenerator() {
         }
       }, 0);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setTopic, setScriptParts, setLastSaved, setParameter, setGlobalKeywords]);
 
   const handleManualSave = () => {
@@ -701,7 +700,6 @@ export function VslGenerator() {
         }),
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let data: any;
       let isJson = false;
       try {
@@ -819,7 +817,6 @@ export function VslGenerator() {
         body: JSON.stringify({ prompt: part.visual, globalKeywords }),
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let data: any;
       let isJson = false;
       try {
@@ -925,7 +922,6 @@ export function VslGenerator() {
         }),
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let data: any;
       let isJson = false;
       try {
@@ -1028,7 +1024,6 @@ export function VslGenerator() {
         }),
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let data: any;
       let isJson = false;
       try {
@@ -1150,7 +1145,6 @@ export function VslGenerator() {
         0,
       ); // No retries for 3D as it's long-running and might duplicate tasks
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let data: any;
       let isJson = false;
       try {

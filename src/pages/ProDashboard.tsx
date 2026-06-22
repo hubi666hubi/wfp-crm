@@ -245,8 +245,10 @@ export function ProDashboard() {
     // Sprawdzamy czy jesteśmy w trybie demo-sandbox
     const isDemo = localStorage.getItem("auth_demo_logged_in") === "true";
     if (isDemo) {
-      setUserEmail("hubi666hubi@gmail.com");
-      verifyPremiumStatus("hubi666hubi@gmail.com", true);
+      setTimeout(() => {
+        setUserEmail("hubi666hubi@gmail.com");
+        verifyPremiumStatus("hubi666hubi@gmail.com", true);
+      }, 0);
       return;
     }
 

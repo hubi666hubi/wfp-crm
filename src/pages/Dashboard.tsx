@@ -361,7 +361,6 @@ export function Dashboard() {
     const user = auth.currentUser;
     if (user) {
       const sanitizedStats = initialStats.map((s) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { icon, ...rest } = s;
         return rest;
       });

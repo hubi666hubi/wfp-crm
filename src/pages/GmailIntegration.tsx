@@ -334,7 +334,6 @@ export function GmailIntegration() {
     setActionLoading(null);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const executeFollowUp = async (clientId: string, level: 1 | 2) => {
     const client = clients.find(c => c.id === clientId);
     if (!client || !client.paymentLink) return;

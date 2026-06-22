@@ -58,7 +58,6 @@ const generateMockData = () => {
 
 const mockData = generateMockData();
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const StatCard = ({ title, value, change, icon: Icon, color }: any) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}

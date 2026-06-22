@@ -294,13 +294,13 @@ export function Settings() {
   const [scoutKeywords, setScoutKeywords] = useState(
     "SaaS, AI, marketing automation",
   );
-  const [scoutModel, setScoutModel] = useState("gemini-2.5-pro");
+  const [scoutModel, setScoutModel] = useState("gemini-1.5-pro");
   const [scoutTemperature, setScoutTemperature] = useState(0.7);
 
   // VSL Generator Settings
   const [vslTone, setVslTone] = useState("aggressive");
   const [vslDefaultLength, setVslDefaultLength] = useState("medium");
-  const [vslModel, setVslModel] = useState("gemini-2.5-flash");
+  const [vslModel, setVslModel] = useState("gemini-1.5-flash");
   const [vslTemperature, setVslTemperature] = useState(0.9);
 
   // Distributor Settings
@@ -309,7 +309,7 @@ export function Settings() {
     "twitter",
     "linkedin",
   ]);
-  const [distributorModel, setDistributorModel] = useState("gemini-2.5-pro");
+  const [distributorModel, setDistributorModel] = useState("gemini-1.5-pro");
   const [distributorTemperature, setDistributorTemperature] = useState(0.5);
 
   // Integrations
@@ -492,8 +492,8 @@ export function Settings() {
                     onChange={(e) => setScoutModel(e.target.value)}
                     className="w-full bg-black border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
                   >
-                    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
                   </select>
                 </div>
                 <div>
@@ -583,8 +583,8 @@ export function Settings() {
                     onChange={(e) => setVslModel(e.target.value)}
                     className="w-full bg-black border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
                   >
-                    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
                   </select>
                 </div>
                 <div>
@@ -685,8 +685,8 @@ export function Settings() {
                     onChange={(e) => setDistributorModel(e.target.value)}
                     className="w-full bg-black border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
                   >
-                    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-                    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                    <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
                   </select>
                 </div>
                 <div>

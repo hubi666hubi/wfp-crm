@@ -182,19 +182,19 @@ function isValidApiKey(key: string | undefined): boolean {
 
 async function generateContentWithFallback(ai: GoogleGenAI, params: Record<string, unknown>) {
   try {
-    params.model = "gemini-3.5-flash";
+    params.model = "gemini-1.5-flash";
     // @ts-expect-error - parameters generic usage
     return await ai.models.generateContent(params);
   } catch (err1: any) {
-    console.log(`[Gemini Fallback Engine] gemini-3.5-flash failed or had quota limits. Trying gemini-3.1-flash-lite. Error: ${err1?.message || err1}`);
+    console.log(`[Gemini Fallback Engine] gemini-1.5-flash failed or had quota limits. Trying gemini-1.5-flash. Error: ${err1?.message || err1}`);
     try {
-      params.model = "gemini-3.1-flash-lite";
+      params.model = "gemini-1.5-flash";
       // @ts-expect-error - parameters generic usage
       return await ai.models.generateContent(params);
     } catch (err2: any) {
-      console.log(`[Gemini Fallback Engine] gemini-3.1-flash-lite failed. Trying gemini-2.5-flash. Error: ${err2?.message || err2}`);
+      console.log(`[Gemini Fallback Engine] gemini-1.5-flash failed. Trying gemini-1.5-flash. Error: ${err2?.message || err2}`);
       try {
-        params.model = "gemini-2.5-flash";
+        params.model = "gemini-1.5-flash";
         // @ts-expect-error - parameters generic usage
         return await ai.models.generateContent(params);
       } catch (err3) {
@@ -420,7 +420,7 @@ Analizuj logi i metryki, szukając:
 Napisz raport w języku polskim. Użyj formatu JSON zgodnego ze zdefiniowanym schematem. Zachowaj mroczny, profesjonalny styl analityczny.`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-1.5-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -510,7 +510,7 @@ Zaprojektuj zoptymalizowaną strategię orkiestracji i wiązania modułów (Scra
 Wygeneruj precyzyjne parametry techniczne integracji jako JSON zgodne z podanym schematem. Raport sformatuj wyłącznie w języku polskim.`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-1.5-flash",
         contents: prompt,
         config: {
           responseMimeType: "application/json",
@@ -626,7 +626,7 @@ Zaproponuj precyzyjną, automatyczną optymalizację parametrów systemowych w c
 Zwróć wynik jako JSON zgodny z podanym schematem. Raport sformatuj wyłącznie w języku polskim. Wyciągnij precyzyjne rekomendacje.`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.1-pro-preview",
+        model: "gemini-1.5-pro",
         contents: prompt,
         config: {
           thinkingConfig: {
@@ -767,7 +767,7 @@ Zwróć wynik jako JSON zgodny z podanym schematem. Raport sformatuj wyłącznie
     }
   });
 
-  // Pro Generators: Optimize & Enrich prompt using gemini-3.5-flash and search grounding
+  // Pro Generators: Optimize & Enrich prompt using gemini-1.5-flash and search grounding
   app.post("/api/pro-generators/optimize-prompt", express.json(), async (req, res) => {
     try {
       const { prompt, generationType, enableSearch } = req.body;
@@ -807,7 +807,7 @@ Oto pomysł użytkownika: "${prompt}".`;
       config.systemInstruction = systemInstruction;
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-1.5-flash",
         contents: userMessage,
         config
       });
@@ -838,7 +838,7 @@ Oto pomysł użytkownika: "${prompt}".`;
     }
   });
 
-  // Pro Generators: Image Generation using gemini-3.1-flash-image-preview
+  // Pro Generators: Image Generation using gemini-1.5-flash
   app.post("/api/pro-generators/generate-image", express.json(), async (req, res) => {
     try {
       const { prompt, aspectRatio, imageSize, inputImage, mimeType } = req.body;
@@ -874,9 +874,9 @@ Oto pomysł użytkownika: "${prompt}".`;
 
       parts.push({ text: prompt });
 
-      // Run generateContent specifically on gemini-3.1-flash-image-preview
+      // Run generateContent specifically on gemini-1.5-flash
       const response = await ai.models.generateContent({
-        model: "gemini-3.1-flash-image-preview",
+        model: "gemini-1.5-flash",
         contents: { parts },
         config: {
           imageConfig: {
@@ -1887,9 +1887,9 @@ Prompt: "${prompt}"`;
      if (schedule) {
         // Wywołujemy asynchronicznie, nie czekamy
         distributorService.executeAutoPost(schedule);
-        res.json({ success: true, message: "Uruchomiono rącznie."});
+        res.json({ success: true, message: "Uruchomiono ręcznie."});
      } else {
-        res.status(404).json({error: "Brak takiego hamonogramu"});
+        res.status(404).json({error: "Brak takiego harmonogramu"});
      }
   });
 
@@ -4881,7 +4881,7 @@ Zostaw komentarz o treści 'DOPAMINA', a mój automatyczny agent wyśle Ci gotow
       }
 
       // 5. Submit to Gemini for Smart Project Categorization & Insights Summary
-      syncLogs.push(`[${new Date().toLocaleTimeString()}] Inicjalizacja silnika neuromorficznego Gemini (gemini-3.5-flash)...`);
+      syncLogs.push(`[${new Date().toLocaleTimeString()}] Inicjalizacja silnika neuromorficznego Gemini (gemini-1.5-flash)...`);
       syncLogs.push(`[${new Date().toLocaleTimeString()}] Analizowanie projektów, dopasowywanie do lejków marketingowych i generowanie kroków wdrożeniowych...`);
 
       const apiKey = process.env.GEMINI_API_KEY;
@@ -5464,7 +5464,7 @@ Zwróć odpowiedź wyłącznie w formacie JSON o schemacie:
 }`;
 
           const completion = await ai.models.generateContent({
-            model: "gemini-3.5-flash",
+            model: "gemini-1.5-flash",
             contents: geminiPrompt,
             config: {
               responseMimeType: "application/json"
@@ -5565,7 +5565,7 @@ Zwróć wynik wyłącznie jako poprawny obiekt JSON o schemacie:
 }`;
 
             const completion = await ai.models.generateContent({
-              model: "gemini-3.5-flash",
+              model: "gemini-1.5-flash",
               contents: brokerPrompt,
               config: {
                 responseMimeType: "application/json"
@@ -6143,7 +6143,7 @@ Zwróć odpowiedź wyłącznie w poprawnym formacie JSON o poniższym schemacie:
 }`;
 
           const completion = await ai.models.generateContent({
-            model: "gemini-3.5-flash",
+            model: "gemini-1.5-flash",
             contents: brokerPrompt,
             config: {
               responseMimeType: "application/json"
@@ -6298,7 +6298,7 @@ WYMAGANE SEKCJE W ODPOWIEDZI (generuj wyłącznie w języku polskim, z zachowani
 Napisz raport w sposób zwięzły, konkretny, unikając lania wody ("AI-slop"). Skup się na czystej taktyce przychodowej (Revenue Ops).`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
+        model: "gemini-1.5-flash",
         contents: prompt,
       });
 

@@ -876,7 +876,7 @@ export function WorkflowOrchestrator() {
               Pętla Feedbacku AI (Real-time AI Feedback Loop)
             </h3>
             <p className="text-xs text-neutral-400 max-w-4xl leading-relaxed">
-              Dedykowany podsystem diagnostyczny Omega AI PRO+ dla każdego modułu. Zbierane w czasie rzeczywistym logi operacyjne, wskaźniki będu oraz przestoje w integracjach są analizowane z użyciem modelu <code className="text-indigo-400 font-mono px-1 bg-neutral-950 rounded">gemini-3.1-pro-preview</code> w trybie głębokiego wnioskowania (Thinking Mode – HIGH), sugerując natychmiastowe optymalizacje parametrów systemowych w celu podniesienia konwersji pętli.
+              Dedykowany podsystem diagnostyczny Omega AI PRO+ dla każdego modułu. Zbierane w czasie rzeczywistym logi operacyjne, wskaźniki błędu oraz przestoje w integracjach są analizowane z użyciem modelu <code className="text-indigo-400 font-mono px-1 bg-neutral-950 rounded">gemini-1.5-pro</code> w trybie głębokiego wnioskowania (Thinking Mode – HIGH), sugerując natychmiastowe optymalizacje parametrów systemowych w celu podniesienia konwersji pętli.
             </p>
           </div>
           
