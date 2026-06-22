@@ -20,7 +20,7 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { DashboardCalendar } from "../components/dashboard/DashboardCalendar";
 import { CampaignConversionChart } from "../components/dashboard/CampaignConversionChart";
 import { auth, db } from "../lib/firebase";
@@ -289,7 +289,8 @@ export function Dashboard() {
     return () => unsubscribe();
   }, []);
 
-  const dependencyManager = new DependencyManager(tasks);
+  const dependencyManager = useMemo(() => new DependencyManager(tasks), [tasks]);
+  const layeredLayout = useMemo(() => dependencyManager.getLayeredLayout(), [dependencyManager]);
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -361,7 +362,6 @@ export function Dashboard() {
     const user = auth.currentUser;
     if (user) {
       const sanitizedStats = initialStats.map((s) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { icon, ...rest } = s;
         return rest;
       });
@@ -1096,7 +1096,7 @@ export function Dashboard() {
         ) : (
           <div className="bg-neutral-950/50 rounded-xl border border-neutral-800 p-6 overflow-x-auto custom-scrollbar">
             <div className="min-w-max flex flex-col gap-10">
-              {dependencyManager.getLayeredLayout().map((layer, idx) => (
+              {layeredLayout.map((layer, idx) => (
                 <div
                   key={idx}
                   className="flex justify-center flex-wrap gap-8 w-full relative"
