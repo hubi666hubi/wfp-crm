@@ -6,6 +6,7 @@ import sharp from "sharp";
 import { distributorService } from "./server/distributorService";
 import { legacyService } from "./server/legacyService";
 import { automationEngine } from "./server/automationEngine";
+import { mutantEngine } from "./server/MutantEngine";
 import { inboundService } from "./server/inboundService";
 import Stripe from "stripe";
 import * as admin from "firebase-admin";
@@ -6604,6 +6605,15 @@ Napisz raport w sposób zwięzły, konkretny, unikając lania wody ("AI-slop"). 
     } catch (err: any) {
       return res.status(500).json({ error: err.message });
     }
+  });
+
+  app.get("/api/mutant/telemetry", async (req, res) => {
+    return res.status(200).json(mutantEngine.getTelemetry());
+  });
+
+  app.post("/api/kernel/sync", express.json(), async (req, res) => {
+    // Neural Mesh sync simulation
+    return res.status(200).json({ success: true, message: "Neural Mesh synchronized with Matrix Kernel." });
   });
 
   app.get("/api/automation/status", async (req, res) => {

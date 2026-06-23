@@ -6,6 +6,7 @@ import type { User } from 'firebase/auth';
 import { initAuth, googleSignIn, signInAsDemoUser } from './lib/auth';
 import { AppLayout } from './components/layout/AppLayout';
 import MatrixRain from './components/layout/MatrixRain';
+import WarRoomOverlay from './components/layout/WarRoomOverlay';
 import { startAgentBrokerListener } from './services/AgentBroker';
 
 const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
@@ -25,6 +26,7 @@ const GoogleCalendarPage = lazy(() => import('./pages/GoogleCalendarPage').then(
 const Closer = lazy(() => import('./pages/Closer').then(m => ({ default: m.Closer })));
 const DopamineLoops = lazy(() => import('./pages/DopamineLoops').then(m => ({ default: m.DopamineLoops })));
 const AutomationHub = lazy(() => import('./pages/AutomationHub').then(m => ({ default: m.AutomationHub })));
+const NeuralCommand = lazy(() => import('./pages/NeuralCommand'));
 const LeadScraper = lazy(() => import('./pages/LeadScraper').then(m => ({ default: m.LeadScraper })));
 const FacebookLeads = lazy(() => import('./pages/FacebookLeads').then(m => ({ default: m.FacebookLeads })));
 const ZPulse = lazy(() => import('./pages/ZPulse').then(m => ({ default: m.ZPulse })));
@@ -95,6 +97,7 @@ function App() {
     <>
       <MatrixRain />
       <div className="crt-overlay" />
+      <WarRoomOverlay />
       <AppLayout user={user}>
         <Suspense fallback={
           <div className="p-8 flex justify-center">
@@ -120,6 +123,7 @@ function App() {
             <Route path="/pro-dashboard" element={<ProDashboard />} />
             <Route path="/elite-vault" element={<EliteVault />} />
             <Route path="/automation-hub" element={<AutomationHub />} />
+            <Route path="/neural-command" element={<NeuralCommand />} />
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/closer" element={<Closer />} />
             <Route path="/scraper" element={<LeadScraper />} />
