@@ -4,3 +4,10 @@
 ## 2025-06-22 - Server-side Firestore Filtering
 **Learning:** Client-side filtering of large Firestore collections in `onSnapshot` listeners is a major performance and security anti-pattern. It wastes bandwidth and blocks the main thread with O(N) iterations.
 **Action:** Always use `query()` with `where()` clauses to push filtering to the server. This reduces client-side memory pressure and ensures only relevant data is transmitted.
+## 2025-06-22 - Layout Re-render Decoupling
+**Learning:** Frequent state updates (e.g., high-frequency timers like 45ms for military-style countdowns) in a top-level Layout component trigger full-tree re-renders, impacting interaction latency on complex sidebars.
+**Action:** Extract high-frequency timers into leaf components to isolate the render boundary.
+
+## 2025-06-22 - O(N) Kanban Partitioning
+**Learning:** Mapping over columns and filtering a large dataset for each column creates O(Columns * Leads) complexity. While manageable for small sets, it scales poorly.
+**Action:** Use a single-pass O(N) grouping in useMemo to provide O(1) lookup during the render loop for Kanban columns.

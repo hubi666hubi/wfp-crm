@@ -246,17 +246,25 @@ export function ProDashboard() {
     // Sprawdzamy czy jesteśmy w trybie demo-sandbox
     const isDemo = localStorage.getItem("auth_demo_logged_in") === "true";
     if (isDemo) {
-      setUserEmail("hubi666hubi@gmail.com");
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setUserEmail(prev => {
+        const next = "hubi666hubi@gmail.com";
+        return prev === next ? prev : next;
+      });
       verifyPremiumStatus("hubi666hubi@gmail.com", true);
       return;
     }
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user && user.email) {
-        setUserEmail(user.email);
-        verifyPremiumStatus(user.email, true);
+        const email = user.email;
+        setUserEmail(prev => prev === email ? prev : email);
+        verifyPremiumStatus(email, true);
       } else {
-        setUserEmail("hubi666hubi@gmail.com");
+        setUserEmail(prev => {
+          const next = "hubi666hubi@gmail.com";
+          return prev === next ? prev : next;
+        });
         verifyPremiumStatus("hubi666hubi@gmail.com", true);
       }
     });

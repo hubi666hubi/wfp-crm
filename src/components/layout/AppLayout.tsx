@@ -383,9 +383,7 @@ export function AppLayout({ children, user }: AppLayoutProps) {
             <span className="text-[10px] font-mono font-bold tracking-wider text-rose-500 uppercase">
               OPERACJA ZRZUT:
             </span>
-            <span className="text-white font-mono font-black text-xs bg-rose-950/30 border border-rose-955/50 border-rose-950/50 px-2 py-0.5 rounded-md">
-              {countdownText}
-            </span>
+            <CountdownTimer />
           </div>
 
           <div className={`transition-all duration-300 ${hyperFocus ? 'opacity-15 hover:opacity-100' : ''}`}>
