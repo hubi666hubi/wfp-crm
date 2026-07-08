@@ -17,9 +17,8 @@ export function RealtimeOperationsMonitor() {
 
     const unsubAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // 1. Active Leads (CRM Leads) - Filtered by userId for security & performance
-        const leadsQuery = query(collection(db, "crm_leads"), where("userId", "==", user.uid));
-        unsubLeads = onSnapshot(leadsQuery, (snapshot) => {
+        // 1. Active Leads (Inbound Feed) - Pointed to primary data source
+        unsubLeads = onSnapshot(collection(db, "inbound_leads"), (snapshot) => {
           setActiveLeads(snapshot.size);
         }, (error) => console.error("Leads snapshot error:", error));
 

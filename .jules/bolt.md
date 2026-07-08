@@ -11,3 +11,10 @@
 ## 2025-06-22 - O(N) Kanban Partitioning
 **Learning:** Mapping over columns and filtering a large dataset for each column creates O(Columns * Leads) complexity. While manageable for small sets, it scales poorly.
 **Action:** Use a single-pass O(N) grouping in useMemo to provide O(1) lookup during the render loop for Kanban columns.
+## 2025-06-22 - Architectural Simplification: Unified Source of Truth
+**Learning:** Redundant "Poll-and-Sync" cycles (e.g., polling an API and then writing each result to Firestore) create O(N) network and database bottlenecks.
+**Action:** Always favor a single source of truth and direct real-time listeners (`onSnapshot`). If a backend service manages data, let the frontend consume that collection directly rather than proxying it through manual sync loops.
+
+## 2025-06-22 - Efficient State Initialization
+**Learning:** Calling `setState` inside `useEffect` with values available at component mount time triggers an unnecessary second render and can cause ESLint errors.
+**Action:** Use functional state initializers `useState(() => ...)` to read from slow sources like `localStorage` once during mount.

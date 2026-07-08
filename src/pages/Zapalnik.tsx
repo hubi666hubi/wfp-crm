@@ -134,6 +134,12 @@ export function Zapalnik() {
   // Clipboard copies
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  // Cache fast lane metadata to avoid repeated localStorage lookups in render loop
+  const [fastLaneMeta] = useState<{topic: string | null, msg: string | null}>(() => ({
+    topic: localStorage.getItem("omega_zrzut_vsl_topic"),
+    msg: localStorage.getItem("omega_zrzut_zapalnik_message")
+  }));
+
   // PRO Feature SDR Sandbox / Sequence states
   const [drawerTab, setDrawerTab] = useState<'profil' | 'sekwencja' | 'symulator'>('profil');
   const [isGeneratingSequence, setIsGeneratingSequence] = useState(false);
@@ -146,60 +152,61 @@ export function Zapalnik() {
   const [chatMessageText, setChatMessageText] = useState("");
   const [isSendingChat, setIsSendingChat] = useState(false);
 
-  // Fetch and Sync leads from backend memory to Firestore
+  // Real-time Firestore synchronization for the Inbound Feed
   useEffect(() => {
-    let interval: any;
-    const fetchLeadsData = async () => {
-      try {
-        const response = await fetch('/api/inbound-leads');
-        const data = await response.json();
-        const sorted = data.sort((a: any,b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-        setLeads(sorted);
-        
-        // Sync to cloud for cross-module Realtime Monitor
-        if (auth.currentUser) {
-          sorted.forEach((ld: InboundLead) => {
-            setDoc(doc(db, "crm_leads", ld.id), ld).catch(() => {});
-          });
-        }
-      } catch (err) {
-        console.error("Błąd podczas pobierania leadów", err);
-      }
-    };
+    // Initial fetch to trigger backend logic/seeding if needed
+    fetch('/api/inbound-leads').catch(err => console.error("Initial leads fetch failed:", err));
 
-    fetchLeadsData();
-    interval = setInterval(fetchLeadsData, 5000);
-    return () => clearInterval(interval);
+    // Listen for real-time updates directly from the source of truth
+    const q = collection(db, "inbound_leads");
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedLeads = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as InboundLead));
+      // Sorting by timestamp descending (most recent first)
+      const sorted = fetchedLeads.sort((a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      setLeads(sorted);
+    }, (error) => {
+      console.error("Real-time leads sync error:", error);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   // Derive the selected lead directly from current leads list on every render
 
 
-  const computedLeadsWithFastLane = useMemo(() => {
-    const hasZrzut = leads.some(l => l.source === 'Kolejka ZRZUT' || l.source?.includes('ZRZUT') || l.name?.includes('ZRZUT'));
-    if (hasZrzut) return leads;
+  // Consolidate list derivation and grouping into a single O(N) pass
+  const { allLeads, grouped } = useMemo(() => {
+    const result: InboundLead[] = [...leads];
+    let hasZrzut = false;
 
-    const zrzutTopic = localStorage.getItem("omega_zrzut_vsl_topic");
-    const zrzutMsg = localStorage.getItem("omega_zrzut_zapalnik_message");
-    
-    if (zrzutTopic) {
+    // First pass check for existing ZRZUT
+    for (const l of leads) {
+      if (l.source === 'Kolejka ZRZUT' || l.source?.includes('ZRZUT') || l.name?.includes('ZRZUT')) {
+        hasZrzut = true;
+        break;
+      }
+    }
+
+    if (!hasZrzut && fastLaneMeta.topic) {
       const simulatedZrzutLead = {
         id: "simulated-zrzut-crm-lead",
         name: "Adam Kowalski // Kolejka ZRZUT 🔴",
-        bio: `System zidentyfikował reakcję na gorący trend "${zrzutTopic}". Profil rynkowy: Dyrektor Operacyjny. Potrzebuje automatyzacji dystrybucji treści.`,
+        bio: `System zidentyfikował reakcję na gorący trend "${fastLaneMeta.topic}". Profil rynkowy: Dyrektor Operacyjny. Potrzebuje automatyzacji dystrybucji treści.`,
         source: 'Kolejka ZRZUT',
         timestamp: new Date().toISOString(),
         isHighTicket: true,
         score: 99,
-        draftMessage: zrzutMsg || "Gotowy do szybkiego wysłania...",
+        draftMessage: fastLaneMeta.msg || "Gotowy do szybkiego wysłania...",
         status: "Do kontaktu",
         chatHistory: [
-          { sender: 'lead', text: `Cześć, widziałem Waszą analizę trendu "${zrzutTopic}". Chciałbym wdrożyć u siebie podobne pętle automatyczne. Prześlesz mi ofertę oraz szablon VSL?`, timestamp: "Przed chwilą" }
+          { sender: 'lead', text: `Cześć, widziałem Waszą analizę trendu "${fastLaneMeta.topic}". Chciałbym wdrożyć u siebie podobne pętle automatyczne. Prześlesz mi ofertę oraz szablon VSL?`, timestamp: "Przed chwilą" }
         ],
         aiEnrichment: {
           icebreakers: [
             `Gratulacje udanego treningu na siłowni! Dopinamy brzuch i domykamy lejek.`,
-            `Zauważyłem, że reagujesz błyskawicznie na najnowszy trend ${zrzutTopic}.`
+            `Zauważyłem, że reagujesz błyskawicznie na najnowszy trend ${fastLaneMeta.topic}.`
           ],
           budgetPotential: "Wysoki ($10,000+)",
           objections: [
@@ -207,19 +214,21 @@ export function Zapalnik() {
           ]
         }
       } as unknown as InboundLead;
-      return [simulatedZrzutLead, ...leads];
+      result.unshift(simulatedZrzutLead);
     }
-    return leads;
-  }, [leads]);
 
-  const groupedLeads = useMemo(() => {
-    const groups: Record<string, typeof computedLeadsWithFastLane> = {};
-    computedLeadsWithFastLane.forEach(lead => {
+    // Grouping pass
+    const groups: Record<string, InboundLead[]> = {};
+    result.forEach(lead => {
       if (!groups[lead.status]) groups[lead.status] = [];
       groups[lead.status].push(lead);
     });
-    return groups;
-  }, [computedLeadsWithFastLane]);
+
+    return { allLeads: result, grouped: groups };
+  }, [leads, fastLaneMeta]);
+
+  const computedLeadsWithFastLane = allLeads;
+  const groupedLeads = grouped;
 
   const selectedLead = selectedLeadId ? computedLeadsWithFastLane.find(l => l.id === selectedLeadId) || null : null;
 
