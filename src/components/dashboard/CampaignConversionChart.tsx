@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { memo, useRef, useState, useEffect } from "react";
 import {
   XAxis,
   YAxis,
@@ -139,7 +139,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export function CampaignConversionChart({ data: originalData }: Props) {
+const CampaignConversionChartComponent = function CampaignConversionChart({ data: originalData }: Props) {
   const [dateRange, setDateRange] = useState(30);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [frozenData, setFrozenData] = useState<ConversionData[]>([]);
@@ -1826,3 +1826,5 @@ export function CampaignConversionChart({ data: originalData }: Props) {
     </div>
   );
 }
+
+export const CampaignConversionChart = memo(CampaignConversionChartComponent);

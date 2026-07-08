@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Zap, Users, Terminal } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -17,7 +17,7 @@ const getMockEvents = () => {
   ];
 };
 
-export function DashboardCalendar() {
+const DashboardCalendarComponent = function DashboardCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events] = useState(getMockEvents());
 
@@ -158,3 +158,5 @@ export function DashboardCalendar() {
     </div>
   );
 }
+
+export const DashboardCalendar = memo(DashboardCalendarComponent);

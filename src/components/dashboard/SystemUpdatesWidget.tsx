@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Sparkles, 
@@ -27,7 +27,7 @@ interface UpdateItem {
   icon: any;
 }
 
-export function SystemUpdatesWidget() {
+const SystemUpdatesWidgetComponent = function SystemUpdatesWidget() {
   const settingsStore = useSettingsStore();
   const navigate = useNavigate();
 
@@ -324,3 +324,5 @@ export function SystemUpdatesWidget() {
     </div>
   );
 }
+
+export const SystemUpdatesWidget = memo(SystemUpdatesWidgetComponent);

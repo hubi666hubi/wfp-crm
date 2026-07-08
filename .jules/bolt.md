@@ -18,3 +18,10 @@
 ## 2025-06-22 - Efficient State Initialization
 **Learning:** Calling `setState` inside `useEffect` with values available at component mount time triggers an unnecessary second render and can cause ESLint errors.
 **Action:** Use functional state initializers `useState(() => ...)` to read from slow sources like `localStorage` once during mount.
+## 2025-06-22 - Global Component Memoization
+**Learning:** In a complex dashboard with many interconnected parts, a single state change at the top level can trigger 50+ component re-renders.
+**Action:** Systematically apply `React.memo` to leaf dashboard widgets to ensure they only re-render when their specific slice of state changes.
+
+## 2025-06-22 - State vs LocalStorage
+**Learning:** Reading from `localStorage` in `useMemo` or the render body is synchronous I/O and surprisingly slow in high-frequency render loops.
+**Action:** Lift `localStorage` reads into state initializers or dedicated effects.

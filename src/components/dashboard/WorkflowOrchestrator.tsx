@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { memo, useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   GitFork, 
@@ -47,7 +47,7 @@ interface WorkflowConnection {
   isActive: boolean;
 }
 
-export function WorkflowOrchestrator() {
+const WorkflowOrchestratorComponent = function WorkflowOrchestrator() {
   const sysLogsStore = useSystemLogsStore();
 
   // Log diagnostic events helper
@@ -1084,3 +1084,5 @@ export function WorkflowOrchestrator() {
     </div>
   );
 }
+
+export const WorkflowOrchestrator = memo(WorkflowOrchestratorComponent);

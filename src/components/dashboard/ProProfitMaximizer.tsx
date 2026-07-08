@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   TrendingUp, 
@@ -26,7 +26,7 @@ interface ProProfitMaximizerProps {
   initialConvRate: number;
 }
 
-export function ProProfitMaximizer({ 
+const ProProfitMaximizerComponent = function ProProfitMaximizer({
   initialDailyGoal, 
   initialAvgPrice, 
   initialConvRate 
@@ -381,3 +381,5 @@ export function ProProfitMaximizer({
     </div>
   );
 }
+
+export const ProProfitMaximizer = memo(ProProfitMaximizerComponent);

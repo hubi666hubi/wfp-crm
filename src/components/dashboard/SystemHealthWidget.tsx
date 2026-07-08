@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { memo, useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "motion/react";
 import { 
   Database, 
@@ -23,7 +23,7 @@ interface CrawlerStatus {
   velocity: number;
 }
 
-export function SystemHealthWidget() {
+const SystemHealthWidgetComponent = function SystemHealthWidget() {
   // Tabs: "system" for server status, "gym" for health connect PRO
   const [activeTab, setActiveTab] = useState<"system" | "gym">("gym");
 
@@ -625,3 +625,5 @@ export function SystemHealthWidget() {
     </div>
   );
 }
+
+export const SystemHealthWidget = memo(SystemHealthWidgetComponent);

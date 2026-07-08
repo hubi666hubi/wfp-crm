@@ -65,7 +65,7 @@ function generateInitialHistory(): HealthDataPoint[] {
   return defaultHistory;
 }
 
-export function SystemHealthMonitor() {
+const SystemHealthMonitorComponent = function SystemHealthMonitor() {
   const sysLogsStore = useSystemLogsStore();
   const [isDiagnosticRunning, setIsDiagnosticRunning] = useState(false);
   const [diagnosticResult, setDiagnosticResult] = useState<{
@@ -900,3 +900,5 @@ export function SystemHealthMonitor() {
     </div>
   );
 }
+
+export const SystemHealthMonitor = memo(SystemHealthMonitorComponent);

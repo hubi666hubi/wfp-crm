@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { memo, useState, useEffect } from "react";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "../../lib/firebase";
 import { motion } from "motion/react";
 import { Activity, Zap, Users, ShieldAlert, CheckCircle2 } from "lucide-react";
 
-export function RealtimeOperationsMonitor() {
+const RealtimeOperationsMonitorComponent = function RealtimeOperationsMonitor() {
   const [activeLeads, setActiveLeads] = useState(0);
   const [dopamineLoops, setDopamineLoops] = useState(0);
   const [unresolvedThreats, setUnresolvedThreats] = useState(0);
@@ -129,3 +129,5 @@ export function RealtimeOperationsMonitor() {
     </div>
   );
 }
+
+export const RealtimeOperationsMonitor = memo(RealtimeOperationsMonitorComponent);
