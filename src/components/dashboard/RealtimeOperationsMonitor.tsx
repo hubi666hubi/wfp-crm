@@ -17,8 +17,9 @@ export function RealtimeOperationsMonitor() {
 
     const unsubAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // 1. Active Leads (CRM Leads)
-        unsubLeads = onSnapshot(collection(db, "crm_leads"), (snapshot) => {
+        // 1. Active Leads (CRM Leads) - Filtered by userId for security & performance
+        const leadsQuery = query(collection(db, "crm_leads"), where("userId", "==", user.uid));
+        unsubLeads = onSnapshot(leadsQuery, (snapshot) => {
           setActiveLeads(snapshot.size);
         }, (error) => console.error("Leads snapshot error:", error));
 
@@ -28,16 +29,14 @@ export function RealtimeOperationsMonitor() {
           setDopamineLoops(snapshot.size);
         }, (error) => console.error("Loops snapshot error:", error));
 
-        // 3. System Health (Shield Logs)
-        unsubShield = onSnapshot(collection(db, "shield_logs"), (snapshot) => {
-          let threats = 0;
-          snapshot.forEach(doc => {
-            const data = doc.data();
-            if (data.status === "unresolved" || data.status === "monitoring") {
-              threats++;
-            }
-          });
-          setUnresolvedThreats(threats);
+        // 3. System Health (Shield Logs) - Server-side filtering of unresolved threats
+        const shieldQuery = query(
+          collection(db, "shield_logs"),
+          where("userId", "==", user.uid),
+          where("status", "in", ["unresolved", "monitoring"])
+        );
+        unsubShield = onSnapshot(shieldQuery, (snapshot) => {
+          setUnresolvedThreats(snapshot.size);
         }, (error) => console.error("Shield snapshot error:", error));
       } else {
         unsubLeads();

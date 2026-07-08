@@ -6507,6 +6507,7 @@ Napisz raport w sposób zwięzły, konkretny, unikając lania wody ("AI-slop"). 
         try {
           const stripe = new Stripe(key);
           const sessions = await stripe.checkout.sessions.list({ limit: 20 });
+          const batch = db.batch();
           
           for (const session of sessions.data) {
             if (session.payment_status === "paid") {
@@ -6516,9 +6517,8 @@ Napisz raport w sposób zwięzły, konkretny, unikając lania wody ("AI-slop"). 
               const amount = (session.amount_total || 19900) / 100;
 
               if (email) {
-                // Update / Set in Firestore cache 'clients'
                 const clientRef = db.collection("clients").doc(clientId);
-                await clientRef.set({
+                batch.set(clientRef, {
                   email: email,
                   clientEmail: email,
                   name: name,
@@ -6534,6 +6534,7 @@ Napisz raport w sposób zwięzły, konkretny, unikając lania wody ("AI-slop"). 
               }
             }
           }
+          if (syncedCount > 0) await batch.commit();
           stripeActive = true;
         } catch (stripeErr: any) {
           console.warn("[Stripe Sync] Failed to query Stripe API directly, falling back to database refresh:", stripeErr.message);
@@ -6544,9 +6545,7 @@ Napisz raport w sposób zwięzły, konkretny, unikając lania wody ("AI-slop"). 
       // Additionally, let's inject a new realistic simulated transaction to show that "re-fetch" actually retrieved new details!
       if (!stripeActive || syncedCount === 0) {
         const clientsSnap = await db.collection("clients").get();
-        clientsSnap.forEach(() => {
-          syncedCount++;
-        });
+        syncedCount += clientsSnap.size;
 
         // Let's add a fresh new simulated premium customer to "clients" collection so the user sees a brand new synced live entry!
         const randomId = `clients_sync_${Math.floor(Math.random() * 900000) + 100000}`;

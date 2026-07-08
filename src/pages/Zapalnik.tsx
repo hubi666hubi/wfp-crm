@@ -173,6 +173,8 @@ export function Zapalnik() {
   }, []);
 
   // Derive the selected lead directly from current leads list on every render
+
+
   const computedLeadsWithFastLane = useMemo(() => {
     const hasZrzut = leads.some(l => l.source === 'Kolejka ZRZUT' || l.source?.includes('ZRZUT') || l.name?.includes('ZRZUT'));
     if (hasZrzut) return leads;
@@ -209,6 +211,15 @@ export function Zapalnik() {
     }
     return leads;
   }, [leads]);
+
+  const groupedLeads = useMemo(() => {
+    const groups: Record<string, typeof computedLeadsWithFastLane> = {};
+    computedLeadsWithFastLane.forEach(lead => {
+      if (!groups[lead.status]) groups[lead.status] = [];
+      groups[lead.status].push(lead);
+    });
+    return groups;
+  }, [computedLeadsWithFastLane]);
 
   const selectedLead = selectedLeadId ? computedLeadsWithFastLane.find(l => l.id === selectedLeadId) || null : null;
 
@@ -808,8 +819,8 @@ export function Zapalnik() {
           {/* KANBAN GRID CHASSIS */}
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
             {PIPELINE_COLUMNS.map((column) => {
-              // Filter leads in this status
-              const colLeads = computedLeadsWithFastLane.filter(l => l.status === column.key);
+              // Efficient O(1) lookup from pre-grouped map
+              const colLeads = groupedLeads[column.key] || [];
               
               return (
                 <div 
