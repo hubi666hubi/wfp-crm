@@ -126,7 +126,6 @@ function App() {
        <div className="min-h-screen bg-black flex items-center justify-center">
          <div 
            className="text-rose-500 animate-pulse font-mono tracking-widest text-lg"
-           onAnimationIteration={() => console.log('Cykl animacji inicjalizacji systemu zakończony')}
          >
             INICJALIZACJA SYSTEMU OMEGA...
          </div>
