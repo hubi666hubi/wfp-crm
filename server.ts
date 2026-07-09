@@ -6505,6 +6505,9 @@ Napisz raport w sposób zwięzły, konkretny, unikając lania wody ("AI-slop"). 
           const stripe = new Stripe(key);
           const sessions = await stripe.checkout.sessions.list({ limit: 20 });
           
+          const batch = db.batch();
+          let hasBatchOperations = false;
+
           for (const session of sessions.data) {
             if (session.payment_status === "paid") {
               const email = session.customer_details?.email || session.metadata?.clientEmail;
@@ -6515,7 +6518,7 @@ Napisz raport w sposób zwięzły, konkretny, unikając lania wody ("AI-slop"). 
               if (email) {
                 // Update / Set in Firestore cache 'clients'
                 const clientRef = db.collection("clients").doc(clientId);
-                await clientRef.set({
+                batch.set(clientRef, {
                   email: email,
                   clientEmail: email,
                   name: name,
@@ -6527,9 +6530,14 @@ Napisz raport w sposób zwięzły, konkretny, unikając lania wody ("AI-slop"). 
                   stripeSessionId: session.id,
                   synchronizedAt: new Date().toISOString()
                 }, { merge: true });
+                hasBatchOperations = true;
                 syncedCount++;
               }
             }
+          }
+
+          if (hasBatchOperations) {
+            await batch.commit();
           }
           stripeActive = true;
         } catch (stripeErr: any) {
