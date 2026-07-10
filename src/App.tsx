@@ -33,6 +33,8 @@ const PricingPage = lazy(() => import('./pages/Pricing').then(m => ({ default: m
 const ProGenerators = lazy(() => import('./pages/ProGenerators').then(m => ({ default: m.ProGenerators })));
 const FactoryRegistry = lazy(() => import('./pages/FactoryRegistry').then(m => ({ default: m.FactoryRegistry })));
 const Stitch = lazy(() => import('./pages/Stitch').then(m => ({ default: m.Stitch })));
+const DocsJules = lazy(() => import('./pages/DocsJules').then(m => ({ default: m.DocsJules })));
+
 
 function PlaceholderModule({ title }: { title: string }) {
   return (
@@ -226,6 +228,8 @@ function App() {
           <Route path="/factory-registry" element={<FactoryRegistry />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/stitch" element={<Stitch />} />
+          <Route path="/docs/jules-platform" element={<DocsJules />} />
+
         </Routes>
       </Suspense>
     </AppLayout>
