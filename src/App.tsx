@@ -101,7 +101,6 @@ function App() {
       }
     } catch (error: unknown) {
       if (error instanceof Error && 'code' in error && (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request')) {
-        console.log("Logowanie anulowane przez użytkownika.");
         toast.info("Logowanie anulowane przez użytkownika");
       } else {
         console.error("Login failed", error);
