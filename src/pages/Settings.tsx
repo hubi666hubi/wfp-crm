@@ -630,9 +630,6 @@ export function Settings() {
                   onChange={(e) => {
                     const newValue = e.target.value;
                     setDistributorDelay(newValue);
-                    console.log(
-                      `Aktualne opóźnienie dystrybucji: ${newValue} min`,
-                    );
                   }}
                   className="flex-1 accent-emerald-500"
                 />
