@@ -1,0 +1,118 @@
+enum LeadPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+type Campaign @table(name: "campaigns") {
+  id: UUID! @default(expr: "uuidV4()")
+  userId: String! @default(expr: "auth.uid")
+  name: String!
+  status: String! @default(value: "ACTIVE")
+  reach: Int! @default(value: 0)
+  comments: Int! @default(value: 0)
+  dmsSent: Int! @default(value: 0)
+  responseSpeed: Float! @default(value: 0.0)
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type CampaignConversion @table(name: "campaign_conversions") {
+  id: UUID! @default(expr: "uuidV4()")
+  campaign: Campaign! @ref
+  date: Date!
+  conversions: Int!
+  facebook: Int
+  linkedin: Int
+  direct: Int
+}
+
+type Lead @table(name: "leads") {
+  id: UUID! @default(expr: "uuidV4()")
+  userId: String! @default(expr: "auth.uid")
+  name: String!
+  email: String! @unique
+  bio: String
+  source: String
+  timestamp: Timestamp! @default(expr: "request.time")
+  isHighTicket: Boolean! @default(value: false)
+  score: Int! @default(value: 50)
+  draftMessage: String
+  status: String! @default(value: "Inbound (Wtyczka)")
+  priority: LeadPriority @default(value: MEDIUM)
+  companyName: String!
+  rejectionReason: String
+  necromancyTriggered: Boolean! @default(value: false)
+  lastNecromancyAttempt: Timestamp
+  resurrectionSpell: String
+  lastContact: Timestamp
+  message: String
+  
+  # FB/Outreach specific fields
+  postText: String
+  authorName: String
+  groupName: String
+  yourOffer: String
+  customInstructions: String
+  intentLevel: String
+  painSummary: String
+  estimatedValueHex: String
+  valueFirstMessengerPitch: String
+  detectedCompanyUrl: String
+  publicCommentStrategy: String
+  videoPitchScript: String
+  qualificationScore: Int
+  linkedinConnectPitch: String
+  coldEmailSubject: String
+  coldEmailBody: String
+  sentimentScore: Float
+  sentimentLabel: String
+  priorityScore: Int
+  priorityLabel: String
+  emotionalTriggers: [String!]
+  sentimentExplanation: String
+  outreachPitch: String
+
+  # Semi-structured JSON fields
+  aiEnrichment: Any @default(value: "{}")
+  dmSequence: Any
+  chatHistory: Any
+  pitchCard: Any @default(value: "{}")
+  tacticalBrief: Any
+
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+  
+  # Relationship: Lead optionally belongs to a Campaign
+  campaign: Campaign @ref
+}
+
+type Event @table(name: "events") {
+  id: UUID! @default(expr: "uuidV4()")
+  timestamp: Timestamp! @default(expr: "request.time")
+  eventType: String! @index
+  testRunId: String
+  payload: Any!
+  
+  # Optional relationship to Lead
+  lead: Lead @ref
+  
+  # Optional relationship to EvolutionLog
+  evolutionLog: EvolutionLog @ref
+}
+
+type EvolutionLog @table(name: "evolution_logs") {
+  id: UUID! @default(expr: "uuidV4()")
+  agentId: String!
+  filePath: String! @index
+  codeBefore: String!
+  errorLog: String!
+  success: Boolean!
+  logs: [String!]!
+  critic: Any
+  patch: Any!
+  report: Any
+  deployment: Any
+  score: Float!
+  createdAt: Timestamp! @default(expr: "request.time")
+  executedAt: Timestamp! @default(expr: "request.time")
+}

@@ -22,6 +22,7 @@ import { auth, db } from "../lib/firebase";
 import { collection, query, limit, getDocsFromServer } from "firebase/firestore";
 import { useSystemLogsStore } from "../store/systemLogsStore";
 import { toast } from "sonner";
+import * as Sentry from "@sentry/react";
 
 
 export function Settings() {
@@ -371,6 +372,7 @@ export function Settings() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-User-Email": auth.currentUser?.email || "anonymous@wfp-platform.io"
         },
         body: JSON.stringify({
           supabaseUrl,
@@ -1023,14 +1025,30 @@ export function Settings() {
               Testowanie w czasie rzeczywistym i trace połączeń z Firebase Auth, Firestore oraz Cloud Backend.
             </p>
           </div>
-          <button
-            onClick={runDiagnostics}
-            disabled={diagRunning}
-            className="flex items-center gap-2 px-3.5 py-1.5 bg-neutral-950 hover:bg-neutral-800 text-neutral-200 border border-neutral-800 rounded-lg transition-all text-xs font-mono disabled:opacity-50"
-          >
-            <RefreshCw size={14} className={diagRunning ? "animate-spin" : ""} />
-            {diagRunning ? "DIAGNOZOWANIE..." : "PONÓW DIAGNOSTYKĘ"}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                Sentry.logger.info('User triggered test error', {
+                  action: 'test_error_button_click',
+                });
+                Sentry.metrics.count('test_counter', 1);
+                throw new Error('This is your first error!');
+              }}
+              className="flex items-center gap-2 px-3.5 py-1.5 bg-rose-950/80 hover:bg-rose-900 border border-rose-800 text-rose-200 rounded-lg transition-all text-xs font-mono"
+            >
+              <AlertTriangle size={14} />
+              Break the world
+            </button>
+            
+            <button
+              onClick={runDiagnostics}
+              disabled={diagRunning}
+              className="flex items-center gap-2 px-3.5 py-1.5 bg-neutral-950 hover:bg-neutral-800 text-neutral-200 border border-neutral-800 rounded-lg transition-all text-xs font-mono disabled:opacity-50"
+            >
+              <RefreshCw size={14} className={diagRunning ? "animate-spin" : ""} />
+              {diagRunning ? "DIAGNOZOWANIE..." : "PONÓW DIAGNOSTYKĘ"}
+            </button>
+          </div>
         </div>
 
         {/* Diagnostic KPIs */}

@@ -1,0 +1,173 @@
+# Queries for WFP CRM Data Connect
+
+query ListLeads($status: String, $isHighTicket: Boolean, $limit: Int = 50, $offset: Int = 0) @auth(level: USER) {
+  leads(
+    where: {
+      userId: { eq_expr: "auth.uid" }
+      status: { eq: $status }
+      isHighTicket: { eq: $isHighTicket }
+    }
+    orderBy: [{ timestamp: DESC }]
+    limit: $limit
+    offset: $offset
+  ) {
+    id
+    name
+    email
+    companyName
+    source
+    timestamp
+    isHighTicket
+    score
+    status
+    priority
+    createdAt
+  }
+}
+
+query GetLead($id: UUID!) @auth(level: USER) {
+  lead(id: $id) {
+    id
+    userId
+    name
+    email
+    companyName
+    bio
+    source
+    timestamp
+    isHighTicket
+    score
+    draftMessage
+    status
+    priority
+    message
+    rejectionReason
+    necromancyTriggered
+    lastContact
+    lastNecromancyAttempt
+    resurrectionSpell
+    aiEnrichment
+    dmSequence
+    chatHistory
+    pitchCard
+    tacticalBrief
+    createdAt
+    updatedAt
+    campaign {
+      id
+      name
+    }
+  }
+}
+
+query ListDeadLeads($thirtyDaysAgo: Timestamp!) @auth(level: USER) {
+  leads(
+    where: {
+      _and: [
+        { userId: { eq_expr: "auth.uid" } }
+        { status: { in: ["Rejected", "No Contact", "BabylonInactive"] } }
+        {
+          _or: [
+            { lastContact: { lt: $thirtyDaysAgo } }
+            { lastContact: { isNull: true } }
+          ]
+        }
+      ]
+    }
+  ) {
+    id
+    name
+    email
+    companyName
+    rejectionReason
+    status
+  }
+}
+
+query ListCampaigns($status: String, $limit: Int = 20, $offset: Int = 0) @auth(level: USER) {
+  campaigns(
+    where: {
+      userId: { eq_expr: "auth.uid" }
+      status: { eq: $status }
+    }
+    orderBy: [{ createdAt: DESC }]
+    limit: $limit
+    offset: $offset
+  ) {
+    id
+    name
+    status
+    reach
+    comments
+    dmsSent
+    responseSpeed
+    createdAt
+  }
+}
+
+query GetCampaignDetails($campaignId: UUID!) @auth(level: USER) {
+  campaign(id: $campaignId) {
+    id
+    name
+    status
+    reach
+    comments
+    dmsSent
+    responseSpeed
+    createdAt
+    campaignConversions_on_campaign(orderBy: [{ date: ASC }]) {
+      id
+      date
+      conversions
+      facebook
+      linkedin
+      direct
+    }
+  }
+}
+
+query ListEventsByType($eventType: String!, $limit: Int = 100) @auth(level: USER) {
+  events(
+    where: { eventType: { eq: $eventType } }
+    orderBy: [{ timestamp: DESC }]
+    limit: $limit
+  ) {
+    id
+    timestamp
+    eventType
+    testRunId
+    payload
+  }
+}
+
+query ListEvolutionLogs($success: Boolean, $limit: Int = 50, $offset: Int = 0) @auth(level: USER) {
+  evolutionLogs(
+    where: { success: { eq: $success } }
+    orderBy: [{ createdAt: DESC }]
+    limit: $limit
+    offset: $offset
+  ) {
+    id
+    filePath
+    success
+    createdAt
+  }
+}
+
+query GetEvolutionLog($id: UUID!) @auth(level: USER) {
+  evolutionLog(id: $id) {
+    id
+    agentId
+    filePath
+    codeBefore
+    errorLog
+    success
+    logs
+    critic
+    patch
+    report
+    deployment
+    score
+    createdAt
+  }
+}

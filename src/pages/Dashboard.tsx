@@ -276,77 +276,105 @@ export function Dashboard() {
   const viralScriptsNeededDaily = Math.max(1, Math.ceil(emailsNeededDaily / 7));
 
   useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) return;
+    let unsubscribeSnap: (() => void) | null = null;
 
-    const q = query(
-      collection(db, "clients"),
-      where("userId", "==", user.uid)
-    );
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setCrmClientsCount(snapshot.size);
+    const unsubscribeAuth = auth.onAuthStateChanged((user) => {
+      if (unsubscribeSnap) {
+        unsubscribeSnap();
+        unsubscribeSnap = null;
+      }
+
+      if (user) {
+        const q = query(
+          collection(db, "clients"),
+          where("userId", "==", user.uid)
+        );
+        unsubscribeSnap = onSnapshot(q, (snapshot) => {
+          setCrmClientsCount(snapshot.size);
+        });
+      } else {
+        setCrmClientsCount(0);
+      }
     });
-    return () => unsubscribe();
+
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeSnap) {
+        unsubscribeSnap();
+      }
+    };
   }, []);
 
   const dependencyManager = new DependencyManager(tasks);
 
   useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) return;
+    let unsubscribeSnap: (() => void) | null = null;
 
-    const docRef = doc(db, "dashboards", user.uid);
-    const unsubscribe = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data.tasks) setTasks(data.tasks);
-        if (data.conversionHistory)
-          setConversionHistory(data.conversionHistory);
-        if (data.stats) {
-          const statsWithIcons = data.stats.map(
-            (s: (typeof initialStats)[0]) => {
-              const orig = initialStats.find((os) => os.id === s.id);
-              return { ...s, icon: orig ? orig.icon : Activity };
-            },
-          );
-          setStats(statsWithIcons);
-          const loopsStat = statsWithIcons.find(
-            (s: (typeof initialStats)[0]) => s.id === "loops",
-          );
-          if (loopsStat) {
-            setLoopsHistory((prev) => {
-              if (prev.length > 0) return prev;
-              
-              // Generate some initial mock history leading up to current value
-              const history = [];
-              let current = loopsStat.value - 60;
-              for (let i = 19; i >= 0; i--) {
-                const d = new Date();
-                d.setSeconds(d.getSeconds() - i * 5);
-                history.push({
-                  time: d.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit",
-                  }),
-                  value: current,
+    const unsubscribeAuth = auth.onAuthStateChanged((user) => {
+      if (unsubscribeSnap) {
+        unsubscribeSnap();
+        unsubscribeSnap = null;
+      }
+
+      if (user) {
+        const docRef = doc(db, "dashboards", user.uid);
+        unsubscribeSnap = onSnapshot(docRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (data.tasks) setTasks(data.tasks);
+            if (data.conversionHistory)
+              setConversionHistory(data.conversionHistory);
+            if (data.stats) {
+              const statsWithIcons = data.stats.map(
+                (s: (typeof initialStats)[0]) => {
+                  const orig = initialStats.find((os) => os.id === s.id);
+                  return { ...s, icon: orig ? orig.icon : Activity };
+                },
+              );
+              setStats(statsWithIcons);
+              const loopsStat = statsWithIcons.find(
+                (s: (typeof initialStats)[0]) => s.id === "loops",
+              );
+              if (loopsStat) {
+                setLoopsHistory((prev) => {
+                  if (prev.length > 0) return prev;
+                  
+                  // Generate some initial mock history leading up to current value
+                  const history = [];
+                  let current = loopsStat.value - 60;
+                  for (let i = 19; i >= 0; i--) {
+                    const d = new Date();
+                    d.setSeconds(d.getSeconds() - i * 5);
+                    history.push({
+                      time: d.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                      }),
+                      value: current,
+                    });
+                    current += Math.floor(Math.random() * 4) + 1;
+                  }
+                  // Add actual current value as last point
+                  const dCurrent = new Date();
+                  history.push({
+                    time: dCurrent.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    }),
+                    value: loopsStat.value,
+                  });
+                  return history;
                 });
-                current += Math.floor(Math.random() * 4) + 1;
               }
-              // Add actual current value as last point
-              const dCurrent = new Date();
-              history.push({
-                time: dCurrent.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  second: "2-digit",
-                }),
-                value: loopsStat.value,
-              });
-              return history;
-            });
+            }
+          } else {
+            setTasks([]);
+            setStats([]);
+            setLoopsHistory([]);
           }
-        }
+        });
       } else {
         setTasks([]);
         setStats([]);
@@ -354,14 +382,19 @@ export function Dashboard() {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeAuth();
+      if (unsubscribeSnap) {
+        unsubscribeSnap();
+      }
+    };
   }, []);
 
   const generateSampleData = () => {
     const user = auth.currentUser;
     if (user) {
       const sanitizedStats = initialStats.map((s) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+         
         const { icon, ...rest } = s;
         return rest;
       });

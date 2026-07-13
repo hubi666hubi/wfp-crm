@@ -180,9 +180,9 @@ export function FloatingStatusIndicator() {
   return (
     <>
       <div 
-        className="fixed top-20 right-6 z-40 select-none font-sans"
-        id="floating-sync-status-indicator"
-      >
+          className="fixed top-20 right-6 z-40 select-none font-sans"
+          id="floating-sync-status-indicator"
+        >
         <AnimatePresence mode="wait">
           {isMinimized ? (
             /* Pulsing Glowing Mini Dot Button */
@@ -192,7 +192,7 @@ export function FloatingStatusIndicator() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
               onClick={toggleMinimized}
-              className="flex items-center justify-center w-8 h-8 rounded-full border border-neutral-800 bg-neutral-950/80 backdrop-blur-md hover:border-rose-500/50 shadow-[0_4px_15px_rgba(0,0,0,0.8)] transition-all group cursor-pointer"
+              className="flex items-center justify-center w-8 h-8 rounded-full border border-neutral-800 bg-neutral-950/80 backdrop-blur-md hover:border-rose-500/50 shadow-[0_4px_15px_rgba(0,0,0,0.8)] transition-all group cursor-pointer pointer-events-auto"
               title="Miernik Synchronizacji (Zwiń / Kliknij aby otworzyć)"
             >
               <div className="relative">
@@ -209,7 +209,8 @@ export function FloatingStatusIndicator() {
               initial={{ scale: 0.92, opacity: 0, y: -5 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.92, opacity: 0, y: -5 }}
-              className="flex items-center gap-2.5 bg-neutral-950/90 hover:bg-neutral-950/100 border border-neutral-800/80 rounded-full py-1.5 pl-3 pr-2.5 shadow-[0_6px_25px_rgba(0,0,0,0.85)] backdrop-blur-md transition-all z-10"
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              className="flex items-center gap-2.5 bg-neutral-950/90 hover:bg-neutral-950/100 border border-neutral-800/80 rounded-full py-1.5 pl-3 pr-2.5 shadow-[0_6px_25px_rgba(0,0,0,0.85)] backdrop-blur-md transition-all z-10 pointer-events-auto"
             >
               <div 
                 className="flex items-center gap-2 cursor-pointer group"

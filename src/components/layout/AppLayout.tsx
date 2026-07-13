@@ -72,6 +72,8 @@ const navigation = [
   { name: 'Notatki (Google Keep)', to: '/keep', icon: StickyNote },
   { name: 'Kalendarz (Google Calendar)', to: '/calendar', icon: Calendar },
   { name: 'Stitch Uplink', to: '/stitch', icon: Cpu },
+  { name: 'Nekropolis Agharta', to: '/nekropolis', icon: Target },
+  { name: 'Zwierciadło Omega', to: '/omega-console', icon: Eye },
   { name: 'Konfiguracja Agentów', to: '/settings', icon: SettingsIcon },
 ];
 
@@ -92,6 +94,7 @@ export function AppLayout({ children, user }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [paletteQuery, setPaletteQuery] = useState('');
+
   const [selectedIndex, setSelectedIndex] = useState(0);
   
   const [hyperFocus, setHyperFocus] = useState<boolean>(() => {
@@ -340,11 +343,7 @@ export function AppLayout({ children, user }: AppLayoutProps) {
       </motion.div>
 
       {/* Main content */}
-      <div className={`flex-1 flex flex-col min-w-0 overflow-hidden transition-all duration-300 ${
-        hyperFocus 
-          ? 'bg-neutral-950' 
-          : 'bg-black bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-neutral-900/40 via-black to-black'
-      }`}>
+      <div className={`flex-1 flex flex-col min-w-0 overflow-hidden transition-all duration-300 ${ hyperFocus ? 'bg-neutral-950' : 'bg-black bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-neutral-900/40 via-black to-black' }`} onClick={() => setIsCommandPaletteOpen(false)}>
         <header className="bg-neutral-950 border-b border-neutral-800 h-16 flex items-center px-4 lg:px-8 justify-between lg:justify-start">
           <div className={`flex items-center gap-2 lg:hidden transition-all ${
             hyperFocus ? 'opacity-30 hover:opacity-100' : ''
@@ -437,119 +436,90 @@ export function AppLayout({ children, user }: AppLayoutProps) {
         </main>
       </div>
 
-      {/* GORGEOUS COMMAND PALETTE MODAL INJECTION */}
+      {/* Command Palette Overlay */}
       <AnimatePresence>
         {isCommandPaletteOpen && (
-          <div className="fixed inset-0 z-[9999] flex items-start justify-center pt-[10vh] px-4 overflow-hidden">
-            {/* Backdrop Blur */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[200] flex items-start justify-center pt-24 px-4"
+            onClick={() => setIsCommandPaletteOpen(false)}
+          >
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+
+            {/* Modal */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsCommandPaletteOpen(false)}
-              className="fixed inset-0 bg-black/85 backdrop-blur-sm"
-            />
-            
-            {/* Modal Container */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96, y: -15 }}
+              initial={{ opacity: 0, scale: 0.97, y: -10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: -15 }}
-              transition={{ duration: 0.15, ease: "easeOut" }}
-              className="relative w-full max-w-xl bg-neutral-950 border border-neutral-900 rounded-3xl shadow-[0_4px_30px_rgba(0,0,0,0.95)] overflow-hidden flex flex-col z-10"
+              exit={{ opacity: 0, scale: 0.97, y: -10 }}
+              transition={{ duration: 0.15 }}
+              className="relative w-full max-w-2xl bg-neutral-950 border border-neutral-800 rounded-2xl shadow-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
             >
-              {/* Input search box */}
-              <div className="p-4 border-b border-neutral-900 flex items-center gap-3 bg-neutral-950">
-                <Search className="h-5 w-5 text-neutral-500 flex-shrink-0" />
+              {/* Search Input */}
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-800">
+                <Search className="h-4 w-4 text-neutral-500 flex-shrink-0" />
                 <input
                   ref={paletteInputRef}
                   type="text"
                   value={paletteQuery}
-                  onChange={(e) => {
-                    setPaletteQuery(e.target.value);
-                    setSelectedIndex(0);
-                  }}
-                  placeholder="Wyszukaj moduł, zadanie lub leada w systemie..."
-                  className="w-full bg-transparent border-none text-white placeholder-neutral-500 focus:ring-0 focus:outline-none text-sm font-sans"
+                  onChange={(e) => { setPaletteQuery(e.target.value); setSelectedIndex(0); }}
+                  placeholder="Szukaj modułu, zadania, leada..."
+                  className="flex-1 bg-transparent border-0 ring-0 focus:outline-none text-sm text-white placeholder-neutral-500 font-sans"
+                  autoComplete="off"
                 />
-                <button
-                  onClick={() => setIsCommandPaletteOpen(false)}
-                  className="p-1 rounded-xl hover:bg-neutral-900 text-neutral-500 hover:text-neutral-300 transition-colors cursor-pointer"
-                >
-                  <X size={16} />
-                </button>
+                <kbd className="bg-neutral-900 border border-neutral-800 px-1.5 py-0.5 rounded text-neutral-500 font-mono text-[10px]">ESC</kbd>
               </div>
 
-              {/* Dynamic list items */}
-              <div className="flex-1 overflow-y-auto max-h-[350px] custom-scrollbar bg-neutral-950">
-                <div className="p-2.5 border-b border-neutral-900 bg-neutral-950">
-                  <span className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest pl-2">
-                    {paletteQuery.trim() ? "Pasujące wyniki" : "Sugerowane skróty"}
-                  </span>
-                </div>
-
-                {paletteResults.length > 0 ? (
-                  <ul className="py-1">
-                    {paletteResults.map((item, index) => {
-                      const isSelected = index === selectedIndex;
-                      return (
-                        <li key={item.id}>
-                          <button
-                            onClick={() => handleResultClick(item.path)}
-                            onMouseEnter={() => setSelectedIndex(index)}
-                            className={`w-full text-left px-4 py-3 flex items-start gap-4 transition-all group cursor-pointer ${
-                              isSelected ? "bg-rose-500/10 border-l-2 border-rose-500 pl-[14px]" : "hover:bg-neutral-900/40"
-                            }`}
-                          >
-                            <div className={`p-1.5 rounded transition-all ${
-                              isSelected ? "text-rose-400 bg-rose-500/20" : "text-neutral-500 bg-neutral-900 group-hover:text-rose-400 group-hover:bg-rose-500/10"
-                            }`}>
-                              <item.icon size={16} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className={`text-sm font-semibold transition-colors ${
-                                isSelected ? "text-rose-50" : "text-neutral-300 group-hover:text-neutral-100"
-                              }`}>
-                                {item.title}
-                              </h4>
-                              <p className="text-xs text-neutral-500 mt-0.5 capitalize">
-                                {item.type === 'module' ? 'Moduł Systemu' : item.type === 'task' ? 'Zadanie (Dashboard)' : item.type === 'lead' ? 'Lead (CRM)' : 'Zasób'}
-                              </p>
-                            </div>
-                            {isSelected && (
-                              <ChevronRight size={14} className="text-rose-500 self-center animate-pulse" />
-                            )}
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
+              {/* Results */}
+              <div className="max-h-80 overflow-y-auto py-2">
+                {paletteResults.length === 0 ? (
+                  <div className="px-4 py-8 text-center text-neutral-500 text-sm font-sans">Brak wyników</div>
                 ) : (
-                  <div className="p-10 text-center text-sm text-neutral-500 font-sans">
-                    Brak wyników wyszukiwania dla "<span className="text-neutral-400">{paletteQuery}</span>"
-                  </div>
+                  paletteResults.map((item, idx) => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.id}
+                        onClick={() => handleResultClick(item.path)}
+                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors cursor-pointer text-left ${
+                          idx === selectedIndex
+                            ? 'bg-rose-500/10 text-rose-300'
+                            : 'text-neutral-300 hover:bg-neutral-900'
+                        }`}
+                      >
+                        <Icon size={15} className="flex-shrink-0 text-neutral-500" />
+                        <span className="flex-1 truncate font-sans">{item.title}</span>
+                        <span className="text-[10px] font-mono text-neutral-600 uppercase">{item.type}</span>
+                        <ChevronRight size={13} className="text-neutral-600 flex-shrink-0" />
+                      </button>
+                    );
+                  })
                 )}
               </div>
 
-              {/* Layout Footer with Controls */}
+              {/* Footer */}
               <div className="p-3 bg-neutral-950 border-t border-neutral-900 flex items-center justify-between text-[10px] text-neutral-500 font-sans font-medium px-4">
                 <div className="flex items-center gap-3">
                   <span>
-                    <kbd className="bg-neutral-900 border border-neutral-800 px-1.5 py-0.5 rounded text-neutral-400 font-mono text-[9px] mr-1">↑↓</kbd> 
+                    <kbd className="bg-neutral-900 border border-neutral-800 px-1.5 py-0.5 rounded text-neutral-400 font-mono text-[9px] mr-1">↑↓</kbd>
                     Nawigacja
                   </span>
                   <span>
-                    <kbd className="bg-neutral-900 border border-neutral-800 px-1.5 py-0.5 rounded text-neutral-400 font-mono text-[9px] mr-1">↵ Enter</kbd> 
+                    <kbd className="bg-neutral-900 border border-neutral-800 px-1.5 py-0.5 rounded text-neutral-400 font-mono text-[9px] mr-1">↵ Enter</kbd>
                     Wybierz
                   </span>
                 </div>
                 <span>
-                  <kbd className="bg-neutral-900 border border-neutral-800 px-1.5 py-0.5 rounded text-neutral-400 font-mono text-[9px] mr-1">ESC</kbd> 
+                  <kbd className="bg-neutral-900 border border-neutral-800 px-1.5 py-0.5 rounded text-neutral-400 font-mono text-[9px] mr-1">ESC</kbd>
                   Zamknij
                 </span>
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
 

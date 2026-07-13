@@ -1,0 +1,6 @@
+# connector/connector.yaml
+connectorId: "crm-connector"
+generate:
+  javascriptSdk:
+    outputDir: "../../server/dataconnect"
+    package: "@zapalnik/crm-dataconnect"

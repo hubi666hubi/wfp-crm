@@ -1,0 +1,6 @@
+opencv-python
+transformers
+numpy==1.23.5
+soundfile
+librosa
+onnxruntime

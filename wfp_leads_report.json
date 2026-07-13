@@ -1,0 +1,20 @@
+{
+    "average_lead_value": 9500.0,
+    "priority_distribution": {
+        "LOW": 1,
+        "MEDIUM": 2,
+        "HIGH": 3
+    },
+    "source_efficiency": {
+        "fb": 0.0,
+        "inbound": 0.0,
+        "direct": 50.0
+    },
+    "errors_summary": {
+        "duplicates_removed": 1,
+        "invalid_emails_cleaned": 1,
+        "invalid_urls_cleaned": 1,
+        "missing_scores_filled": 2,
+        "casing_standardized": 1
+    }
+}

@@ -1,0 +1,13 @@
+specVersion: "v1"
+serviceId: "crm-service"
+location: "europe-west1"
+schemaValidation: "COMPATIBLE"
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "crm_db"
+      # For production, setup Cloud SQL instance connection
+      # cloudSql:
+      #   instanceId: "crm-db-instance"
+connectorDirs: ["./connector"]

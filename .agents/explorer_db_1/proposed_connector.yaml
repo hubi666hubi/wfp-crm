@@ -1,0 +1,5 @@
+connectorId: "crm"
+generate:
+  javascriptSdk:
+    outputDir: "../../server/dataconnect"
+    package: "@crm/dataconnect"

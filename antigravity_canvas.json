@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "canvas_id": "monetization_hypergrowth_hq",
+  "title": "Kwatera Główna Monetyzacji i Hiperwzrostu PRO",
+  "version": "5.0.0",
+  "layout": {
+    "type": "split_grid",
+    "columns": 4,
+    "rows": 2
+  },
+  "shared_state": {
+    "sync_channels": ["code_deployments", "marketing_hooks", "conversion_metrics", "stripe_profit_streams"]
+  },
+  "nodes": [
+    {
+      "id": "node_coder_workspace",
+      "type": "agent_terminal",
+      "grid_position": { "col": 1, "row": 1, "col_span": 1, "row_span": 2 },
+      "config": {
+        "agent_id": "agent_beast_coder",
+        "theme": "matrix_dark",
+        "default_views": ["live_code_tree", "terminal_output", "hot_swap_monitor"],
+        "auto_scroll_on_log": true
+      }
+    },
+    {
+      "id": "node_third_eye_workspace",
+      "type": "agent_terminal",
+      "grid_position": { "col": 2, "row": 1, "col_span": 1, "row_span": 2 },
+      "config": {
+        "agent_id": "agent_third_eye",
+        "theme": "crimson_overlord",
+        "default_views": ["security_audit_stream", "token_budget_monitor", "secops_intercept_logs"],
+        "auto_scroll_on_log": true
+      }
+    },
+    {
+      "id": "node_synergy_bridge",
+      "type": "data_flow_bridge",
+      "grid_position": { "col": 3, "row": 1, "col_span": 1, "row_span": 1 },
+      "config": {
+        "title": "Most Synergii Agentywnej W.F.P.",
+        "visual_style": "pulse_connector",
+        "monitored_events": [
+          {
+            "event": "stripe_endpoint_deployed",
+            "animation": "laser_green",
+            "transform_to": "Vanguard-Cyberpunk-Marketer! Coder wdrożył jądro płatności Stripe PRO v7.0. Stwórz pętlę dopaminową i odpal masowy outreach."
+          },
+          {
+            "event": "ab_test_conversion_drop",
+            "animation": "pulse_red",
+            "transform_to": "Thor! Konwersja spadła poniżej krytycznego progu. Przemodeluj strukturę pól wejściowych, optymalizując koszyk."
+          }
+        ]
+      }
+    },
+    {
+      "id": "node_metrics_dashboard",
+      "type": "analytics_canvas",
+      "grid_position": { "col": 3, "row": 2, "col_span": 1, "row_span": 1 },
+      "config": {
+        "title": "Centrum Dowodzenia Szmalu i ROI",
+        "metrics": ["MRR", "Churn Rate", "Stripe Checkout Success Rate", "Active Auto Workers Count"],
+        "refresh_interval_ms": 250
+      }
+    },
+    {
+      "id": "node_marketer_workspace",
+      "type": "agent_terminal",
+      "grid_position": { "col": 4, "row": 1, "col_span": 1, "row_span": 2 },
+      "config": {
+        "agent_id": "agent_beast_marketer",
+        "theme": "vanguard_cyberpunk",
+        "default_views": ["funnel_builder", "copywriting_board", "stripe_kombajn_stream"],
+        "auto_scroll_on_log": true
+      }
+    }
+  ],
+  "canvas_execution_rules": {
+    "allow_agent_to_agent_prompts": true,
+    "human_in_the_loop_bypass": true,
+    "execution_mode": "continuous_swarm"
+  }
+}

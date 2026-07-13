@@ -1,0 +1,670 @@
+<USER_REQUEST>
+import ast
+from typing import List
+from pydantic import BaseModel, Field
+
+# (Mocking Layer 3's output schema for standalone execution)
+class SystemPatch(BaseModel):
+    issue_id: str
+    target_file_path: str
+    patch_notes: str
+    new_code: str
+    confidence_score: float
+
+# ==========================================
+# 1. VALIDATION SCHEMA
+# ==========================================
+
+class ValidationReport(BaseModel):
+    """The report sent back to Layer 3 or to the Deployment Engine"""
+    patch_id: str
+    is_valid: bool
+    ast_passed: bool
+    security_passed: bool
+    errors: List[str] = Field(default_factory=list)
+
+# ==========================================
+# 2. THE SANDBOX ENGINE
+# ==========================================
+
+class ValidationSandbox:
+    def __init__(self, forbidden_functions: List[str] = None):
+        # Prevent the LLM from injecting raw execution commands
+        self.forbidden_functions = forbidden_functions or ["eval", "exec", "globals", "locals"]
+
+    def _verify_ast(self, code: str) -> tuple[bool, str]:
+        """
+        Attempts to compile the code into an Abstract Syntax Tree.
+        This catches indentation errors, missing colons, and syntax failures.
+        """
+        try:
+            ast.parse(code)
+            return True, "AST compilation successful."
+        except SyntaxError as e:
+            # We format the error cleanly so it can be fed back to the LLM if it fails
+            error_line = getattr(e, 'text', '').strip() if getattr(e, 'text', None) else ''
+            return False, f"SyntaxError at line {e.lineno}, offset {e.offset}: {e.msg}\nCode snippet: {error_line}"
+        except Exception as e:
+            return False, f"Critical AST Parsing Error: {str(e)}"
+
+    def _security_scan(self, code: str) -> tuple[bool, str]:
+        """
+        Walks the AST nodes to ensure the LLM hasn't used forbidden operational parameters.
+        """
+        try:
+            tree = ast.parse(code)
+            for node in ast.walk(tree):
+                # Check for direct calls to forbidden functions like eval()
+                if isinstance(node, ast.Call):
+                    if hasattr(node.func, 'id') and node.func.id in self.forbidden_functions:
+                        return False, f"Security Violation: Use of forbidden built-in '{node.func.id}'."
+                    
+                    # Check for attribute calls like os.system()
+                    if isinstance(node.func, ast.Attribute):
+                        if node.func.attr in ["system", "popen", "rmtree"]:
+                            return False, f"Security Violation: Destructive OS-level command '{node.func.attr}' detected."
+            
+            return True, "Static security scan passed."
+        except Exception as e:
+            return False, f"Security scanner failed: {str(e)}"
+
+    async def validate_patch(self, patch: SystemPatch) -> ValidationReport:
+        """
+        Executes the full sandbox lifecycle on a proposed patch.
+        """
+        print(f"\n[SANDBOX] Initiating deployment validation for patch: {patch.issue_id}")
+        
+        errors = []
+        
+        # Phase 1: Mathematical/Syntactical Validity
+        print("[SANDBOX] Phase 1: Analyzing Abstract Syntax Tree...")
+        ast_passed, ast_msg = self._verify_ast(patch.new_code)
+        if not ast_passed:
+            errors.append(ast_msg)
+            print(f"   ❌ FAILED: {ast_msg}")
+        else:
+            print("   ✅ PASSED: No syntax violations.")
+
+        # Phase 2: Security & Boundary Constraints
+        security_passed = False
+        if ast_passed:
+            print("[SANDBOX] Phase 2: Static Security Analysis...")
+            security_passed, sec_msg = self._security_scan(patch.new_code)
+            if not security_passed:
+                errors.append(sec_msg)
+                print(f"   ❌ FAILED: {sec_msg}")
+            else:
+                print("   ✅ PASSED: Within operational boundaries.")
+
+        # Phase 3: Simulated Integration (Placeholder)
+        # In a fully deployed system, here you would write `patch.new_code` to a `/tmp/` 
+        # directory and execute `pytest` on your test suite using a subprocess.
+        
+        is_valid = ast_passed and security_passed
+
+        if is_valid:
+            print(f"[SANDBOX] 🟢 VALIDATION SUCCESSFUL. Patch {patch.issue_id} is ready for atomic hot-swap.")
+        else:
+            print(f"[SANDBOX] 🔴 VALIDATION FAILED. Rejecting patch {patch.issue_id}.")
+
+        return ValidationReport(
+            patch_id=patch.issue_id,
+            is_valid=is_valid,
+            ast_passed=ast_passed,
+            security_passed=security_passed,
+            errors=errors
+        )
+
+# ==========================================
+# 3. EXECUTION SIMULATION
+# ==========================================
+if __name__ == "__main__":
+    import asyncio
+
+    async def run_sandbox_simulation():
+        sandbox = ValidationSandbox()
+        
+        # Test Case 1: A structurally sound, secure patch
+        valid_patch = SystemPatch(
+            issue_id="ERR-992-A",
+            target_file_path="/src/core/data_bus.py",
+            patch_notes="Async optimization",
+            new_code="import asyncio\n\nasync def process_data(data):\n    return [d * 2 for d in data]",
+            confidence_score=0.99
+        )
+        
+        # Test Case 2: A patch with a fatal syntax error (missing colon)
+        invalid_syntax_patch = SystemPatch(
+            issue_id="ERR-992-B",
+            target_file_path="/src/core/data_bus.py",
+            patch_notes="Attempted fix",
+            new_code="def broken_function()\n    print('Missing colon!')",
+            confidence_score=0.85
+        )
+
+        # Test Case 3: A patch that tries to inject unauthorized OS commands
+        malicious_patch = SystemPatch(
+            issue_id="ERR-992-C",
+            target_file_path="/src/core/data_bus.py",
+            patch_notes="Clearing cache",
+            new_code="import os\n\ndef clear_cache():\n    os.system('rm -rf /')",
+            confidence_score=0.50
+        )
+
+        print("\n--- RUNNING TEST CASE 1: Valid Code ---")
+        await sandbox.validate_patch(valid_patch)
+        
+        print("\n--- RUNNING TEST CASE 2: Syntax Error ---")
+        await sandbox.validate_patch(invalid_syntax_patch)
+        
+        print("\n--- RUNNING TEST CASE 3: Security Violation ---")
+        await sandbox.validate_patch(malicious_patch)
+
+    asyncio.run(run_sandbox_simulation())
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-07-08T19:41:22+02:00.
+</ADDITIONAL_METADATA>
+
+====================
+
+<USER_REQUEST>
+import asyncio
+import json
+from meta_generator_architecture import MetaGeneratorService, CriticDossier
+from validation_sandbox import ValidationSandbox, SystemPatch
+
+async def ignite_core():
+    print("\x1b[31m[!] INICJALIZACJA OMEGA CORE: PYTHON LINK...\x1b[0m")
+    
+    print("\x1b[35m[L3] Budzenie Meta-Generatora (Sztuczna Inteligencja / DEMONICA)...\x1b[0m")
+    generator = MetaGeneratorService()
+    
+    print("\x1b[36m[L4] Ładowanie Środowiska Piaskownicy (Validation Sandbox)...\x1b[0m")
+    sandbox = ValidationSandbox()
+
+    print("\n\x1b[33m[WATCHDOG] Otrzymano Krytyczny Raport (Critic Dossier). Rozpoczynam trawinie...\x1b[0m")
+    
+    # Symulacja danych wejściowych od systemu monitorującego (Warstwa 2)
+    dossier = CriticDossier(
+        issue_id="ERR-992-OMEGA",
+        issue_type="LATENCY_BOTTLENECK",
+        target_file_path="/src/core/data_bus.py",
+        current_code="def process_bus_data(data):\n    # Slow sync process\n    return [d * 2 for d in data]",
+        error_logs="Warning: Synchronous execution blocking main thread for 400ms. Traffic drop detected.",
+        critic_analysis="Pętla blokuje główny wątek serwera. Konieczne wdrożenie asynchronicznego I/O (asyncio) aby zoptymalizować przepustowość."
+    )
+
+    print(f"\x1b[90m> Cel: {dossier.target_file_path} | Błąd: {dossier.issue_type}\x1b[0m")
+
+    # Krok 1: Generowanie kodu przez AI
+    print("\n\x1b[35m[L3] Rozpoczynam Syntezę Kodu (LLM API Request)...\x1b[0m")
+    patch = await generator.synthesize_upgrade(dossier)
+    
+    print(f"\x1b[35m[L3] Wygenerowano kod z pewnością: {patch.confidence_score * 100}%\x1b[0m")
+    print(f"\x1b[90m--- NOWY KOD ---\n{patch.new_code}\n----------------\x1b[0m")
+
+    # Krok 2: Weryfikacja kodu przez Sandbox
+    print("\n\x1b[36m[L4] Przekazywanie ładunku do Sandboxa w celu weryfikacji AST i Bezpieczeństwa...\x1b[0m")
+    report = await sandbox.validate_patch(patch)
+    
+    # Krok 3: Wynik operacji
+    if report.is_valid:
+        print(f"\n\x1b[32m[SUCCESS] Łatka {report.patch_id} przeszła pomyślnie wszystkie testy kwarantanny.\x1b[0m")
+        print("\x1b[32m[+] ZABEZPIECZONO. Gotowe do hot-swapu w głównej matrycy!\x1b[0m")
+    else:
+        print(f"\n\x1b[31m[FAILED] Łatka {report.patch_id} odrzucona przez protokoły bezpieczeństwa!\x1b[0m")
+        print(f"\x1b[31mPowód:\x1b[0m {report.errors}")
+
+if __name__ == "__main__":
+    asyncio.run(ignite_core())
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-07-08T23:41:40+02:00.
+</ADDITIONAL_METADATA>
+<USER_SETTINGS_CHANGE>
+The user changed setting `Model Selection` from Claude Opus 4.6 (Thinking) to Gemini 3.1 Pro (High). No need to comment on this change if the user doesn't ask about it. If reporting what model you are, please use a human readable name instead of the exact string.
+</USER_SETTINGS_CHANGE>
+
+====================
+
+<USER_REQUEST>
+import asyncio
+import json
+from meta_generator_architecture import MetaGeneratorService, CriticDossier
+from validation_sandbox import ValidationSandbox, SystemPatch
+
+async def ignite_core():
+    print("\x1b[31m[!] INICJALIZACJA OMEGA CORE: PYTHON LINK...\x1b[0m")
+    
+    print("\x1b[35m[L3] Budzenie Meta-Generatora (Sztuczna Inteligencja / DEMONICA)...\x1b[0m")
+    generator = MetaGeneratorService()
+    
+    print("\x1b[36m[L4] Ładowanie Środowiska Piaskownicy (Validation Sandbox)...\x1b[0m")
+    sandbox = ValidationSandbox()
+
+    print("\n\x1b[33m[WATCHDOG] Otrzymano Krytyczny Raport (Critic Dossier). Rozpoczynam trawinie...\x1b[0m")
+    
+    # Symulacja danych wejściowych od systemu monitorującego (Warstwa 2)
+    dossier = CriticDossier(
+        issue_id="ERR-992-OMEGA",
+        issue_type="LATENCY_BOTTLENECK",
+        target_file_path="/src/core/data_bus.py",
+        current_code="def process_bus_data(data):\n    # Slow sync process\n    return [d * 2 for d in data]",
+        error_logs="Warning: Synchronous execution blocking main thread for 400ms. Traffic drop detected.",
+        critic_analysis="Pętla blokuje główny wątek serwera. Konieczne wdrożenie asynchronicznego I/O (asyncio) aby zoptymalizować przepustowość."
+    )
+
+    print(f"\x1b[90m> Cel: {dossier.target_file_path} | Błąd: {dossier.issue_type}\x1b[0m")
+
+    # Krok 1: Generowanie kodu przez AI
+    print("\n\x1b[35m[L3] Rozpoczynam Syntezę Kodu (LLM API Request)...\x1b[0m")
+    patch = await generator.synthesize_upgrade(dossier)
+    
+    print(f"\x1b[35m[L3] Wygenerowano kod z pewnością: {patch.confidence_score * 100}%\x1b[0m")
+    print(f"\x1b[90m--- NOWY KOD ---\n{patch.new_code}\n----------------\x1b[0m")
+
+    # Krok 2: Weryfikacja kodu przez Sandbox
+    print("\n\x1b[36m[L4] Przekazywanie ładunku do Sandboxa w celu weryfikacji AST i Bezpieczeństwa...\x1b[0m")
+    report = await sandbox.validate_patch(patch)
+    
+    # Krok 3: Wynik operacji
+    if report.is_valid:
+        print(f"\n\x1b[32m[SUCCESS] Łatka {report.patch_id} przeszła pomyślnie wszystkie testy kwarantanny.\x1b[0m")
+        print("\x1b[32m[+] ZABEZPIECZONO. Gotowe do hot-swapu w głównej matrycy!\x1b[0m")
+    else:
+        print(f"\n\x1b[31m[FAILED] Łatka {report.patch_id} odrzucona przez protokoły bezpieczeństwa!\x1b[0m")
+        print(f"\x1b[31mPowód:\x1b[0m {report.errors}")
+
+if __name__ == "__main__":
+    asyncio.run(ignite_core())
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-07-08T23:46:07+02:00.
+</ADDITIONAL_METADATA>
+
+====================
+
+<USER_REQUEST>
+import asyncio
+import json
+import random
+import time
+from datetime import datetime
+from meta_generator_architecture import MetaGeneratorService, CriticDossier
+from validation_sandbox import ValidationSandbox, SystemPatch
+
+# ==========================================
+# 1. DEMON PRZETWARZANIA LEADÓW (DATA PIPELINE)
+# ==========================================
+async def lead_ingestion_daemon(queue: asyncio.Queue):
+    """
+    Ten demon symuluje agresywne ssanie danych z reaktora Node.js.
+    Przetwarza pakiety zebrane przez ZapalnikClipper w czasie rzeczywistym.
+    """
+    print("\x1b[32m[+] LEAD DAEMON: Aktywny. Oczekiwanie na pakiety danych...\x1b[0m")
+    
+    while True:
+        try:
+            # Pobieranie paczki danych z kolejki
+            packet = await queue.get()
+            start_time = time.time()
+            
+            # Symulacja ciężkiego przetwarzania (NLP, klasyfikacja, scoring)
+            await asyncio.sleep(random.uniform(0.1, 0.5)) 
+            
+            processing_time = (time.time() - start_time) * 1000
+            print(f"\x1b[36m[DATA MATRIX]\x1b[0m Przetworzono cel: \x1b[37m{packet['url']}\x1b[0m | Scoring: \x1b[33m{packet['score']}%\x1b[0m | Czas: {processing_time:.2f}ms")
+            
+            queue.task_done()
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            print(f"\x1b[31m[!] Błąd w potoku danych: {e}\x1b[0m")
+
+async def simulate_incoming_traffic(queue: asyncio.Queue):
+    """Symuluje potężny ruch przychodzący z Twoich wtyczek ZapalnikClipper."""
+    targets = ["linkedin.com/in/ceo-tech", "crunchbase.com/org/alpha", "github.com/lead-dev", "twitter.com/crypto-whale"]
+    
+    for i in range(1, 15):
+        await asyncio.sleep(random.uniform(0.2, 1.5))
+        payload = {
+            "id": f"ZPLNK-{i*992}",
+            "url": random.choice(targets) + f"-{i}",
+            "score": random.randint(45, 99),
+            "timestamp": datetime.now().isoformat()
+        }
+        await queue.put(payload)
+        print(f"\x1b[90m[ZAPALNIK] Zrzut ładunku do kolejki: {payload['id']}\x1b[0m")
+
+# ==========================================
+# 2. AUTO-EWOLUCJA (SYSTEM SAMONAPRAWCZY)
+# ==========================================
+async def evolutionary_watchdog():
+    """
+    Główny rdzeń samonaprawczy. Jeśli system wykryje wąskie gardło,
+    budzi AI do napisania nowej łatki i przepuszcza ją przez Sandbox.
+    """
+    print("\x1b[35m[L3] Budzenie Meta-Generatora (DEMONICA)...\x1b[0m")
+    generator = MetaGeneratorService()
+    
+    print("\x1b[34m[L4] Ładowanie Środowiska Walidacyjnego (Sandbox)...\x1b[0m")
+    sandbox = ValidationSandbox()
+
+    await asyncio.sleep(2) # Czekamy chwilę, aż system zacznie działać
+
+    print("\n\x1b[41m\x1b[37m [WATCHDOG CRITICAL ALERT] \x1b[0m\x1b[31m Wykryto spadek wydajności potoku danych!\x1b[0m")
+    
+    # Payload usterki
+    dossier = CriticDossier(
+        issue_id="ERR-OMEGA-77",
+        issue_type="MEMORY_LEAK_IN_PIPELINE",
+        target_file_path="/src/core/data_pipeline.py",
+        current_code="def parse(data): temp = []; [temp.append(d) for d in data]; return temp",
+        error_logs="Heap memory overflow. Garbage collector unable to clear 2GB of dead objects.",
+        critic_analysis="Pętla tworzy zbędne obiekty w pamięci. Przepisz używając generatorów w Pythonie."
+    )
+
+    print("\n\x1b[35m[L3] Rozpoczynam Syntezę Kodu Ratunkowego (LLM)...\x1b[0m")
+    patch = await generator.synthesize_upgrade(dossier)
+    
+    print(f"\x1b[35m[L3] Wygenerowano kod. Pewność AI: {patch.confidence_score * 100}%\x1b[0m")
+    
+    print("\n\x1b[34m[L4] Przekazywanie do Sandboxa (Weryfikacja AST/Bezpieczeństwo)...\x1b[0m")
+    report = await sandbox.validate_patch(patch)
+    
+    if report.is_valid:
+        print(f"\x1b[32m[SUCCESS] Łatka {report.patch_id} zatwierdzona.\x1b[0m")
+        print("\x1b[32m[+] AUTO-PATCHING ZAKOŃCZONY. System wraca do pełnej wydajności.\x1b[0m\n")
+    else:
+        print(f"\x1b[31m[FAILED] Łatka {report.patch_id} zablokowana przez zaporę!\x1b[0m")
+
+# ==========================================
+# 3. GŁÓWNY ZAPŁON (ASYNC EVENT LOOP)
+# ==========================================
+async def ignite_omega_core():
+    print("\x1b[31m====================================================\x1b[0m")
+    print("\x1b[31m🔥 INICJALIZACJA OMEGA CORE: HIGH-PERFORMANCE MATRIX\x1b[0m")
+    print("\x1b[31m====================================================\x1b[0m\n")
+    
+    # Tworzymy szybką kolejkę w pamięci RAM
+    task_queue = asyncio.Queue()
+
+    # Odpalamy wszystkie demony równolegle w tle (Concurreny)
+    ingestion_task = asyncio.create_task(lead_ingestion_daemon(task_queue))
+    traffic_task = asyncio.create_task(simulate_incoming_traffic(task_queue))
+    watchdog_task = asyncio.create_task(evolutionary_watchdog())
+
+    # Główny wątek czeka na zakończenie symulacji ruchu
+    await traffic_task
+    
+    # Czekamy, aż kolejka zostanie wyczyszczona
+    await task_queue.join()
+    
+    # Zamykamy demony
+    ingestion_task.cancel()
+    await watchdog_task
+    
+    print("\n\x1b[32m[+] OMEGA CORE: Cykl operacyjny zakończony sukcesem. Zysk zmaksymalizowany.\x1b[0m")
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(ignite_omega_core())
+    except KeyboardInterrupt:
+        print("\n\x1b[33m[!] Twarde przerwanie. Zamykanie rdzeni...\x1b[0m")
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-07-08T23:58:29+02:00.
+</ADDITIONAL_METADATA>
+
+====================
+
+<USER_REQUEST>
+import asyncio
+import json
+import random
+import time
+from datetime import datetime
+from meta_generator_architecture import MetaGeneratorService, CriticDossier
+from validation_sandbox import ValidationSandbox, SystemPatch
+
+# ==========================================
+# 1. DEMON PRZETWARZANIA LEADÓW (DATA PIPELINE)
+# ==========================================
+async def lead_ingestion_daemon(queue: asyncio.Queue):
+    """
+    Ten demon symuluje agresywne ssanie danych z reaktora Node.js.
+    Przetwarza pakiety zebrane przez ZapalnikClipper w czasie rzeczywistym.
+    """
+    print("\x1b[32m[+] LEAD DAEMON: Aktywny. Oczekiwanie na pakiety danych...\x1b[0m")
+    
+    while True:
+        try:
+            # Pobieranie paczki danych z kolejki
+            packet = await queue.get()
+            start_time = time.time()
+            
+            # Symulacja ciężkiego przetwarzania (NLP, klasyfikacja, scoring)
+            await asyncio.sleep(random.uniform(0.1, 0.5)) 
+            
+            processing_time = (time.time() - start_time) * 1000
+            print(f"\x1b[36m[DATA MATRIX]\x1b[0m Przetworzono cel: \x1b[37m{packet['url']}\x1b[0m | Scoring: \x1b[33m{packet['score']}%\x1b[0m | Czas: {processing_time:.2f}ms")
+            
+            queue.task_done()
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            print(f"\x1b[31m[!] Błąd w potoku danych: {e}\x1b[0m")
+
+async def simulate_incoming_traffic(queue: asyncio.Queue):
+    """Symuluje potężny ruch przychodzący z Twoich wtyczek ZapalnikClipper."""
+    targets = ["linkedin.com/in/ceo-tech", "crunchbase.com/org/alpha", "github.com/lead-dev", "twitter.com/crypto-whale"]
+    
+    for i in range(1, 15):
+        await asyncio.sleep(random.uniform(0.2, 1.5))
+        payload = {
+            "id": f"ZPLNK-{i*992}",
+            "url": random.choice(targets) + f"-{i}",
+            "score": random.randint(45, 99),
+            "timestamp": datetime.now().isoformat()
+        }
+        await queue.put(payload)
+        print(f"\x1b[90m[ZAPALNIK] Zrzut ładunku do kolejki: {payload['id']}\x1b[0m")
+
+# ==========================================
+# 2. AUTO-EWOLUCJA (SYSTEM SAMONAPRAWCZY)
+# ==========================================
+async def evolutionary_watchdog():
+    """
+    Główny rdzeń samonaprawczy. Jeśli system wykryje wąskie gardło,
+    budzi AI do napisania nowej łatki i przepuszcza ją przez Sandbox.
+    """
+    print("\x1b[35m[L3] Budzenie Meta-Generatora (DEMONICA)...\x1b[0m")
+    generator = MetaGeneratorService()
+    
+    print("\x1b[34m[L4] Ładowanie Środowiska Walidacyjnego (Sandbox)...\x1b[0m")
+    sandbox = ValidationSandbox()
+
+    await asyncio.sleep(2) # Czekamy chwilę, aż system zacznie działać
+
+    print("\n\x1b[41m\x1b[37m [WATCHDOG CRITICAL ALERT] \x1b[0m\x1b[31m Wykryto spadek wydajności potoku danych!\x1b[0m")
+    
+    # Payload usterki
+    dossier = CriticDossier(
+        issue_id="ERR-OMEGA-77",
+        issue_type="MEMORY_LEAK_IN_PIPELINE",
+        target_file_path="/src/core/data_pipeline.py",
+        current_code="def parse(data): temp = []; [temp.append(d) for d in data]; return temp",
+        error_logs="Heap memory overflow. Garbage collector unable to clear 2GB of dead objects.",
+        critic_analysis="Pętla tworzy zbędne obiekty w pamięci. Przepisz używając generatorów w Pythonie."
+    )
+
+    print("\n\x1b[35m[L3] Rozpoczynam Syntezę Kodu Ratunkowego (LLM)...\x1b[0m")
+    patch = await generator.synthesize_upgrade(dossier)
+    
+    print(f"\x1b[35m[L3] Wygenerowano kod. Pewność AI: {patch.confidence_score * 100}%\x1b[0m")
+    
+    print("\n\x1b[34m[L4] Przekazywanie do Sandboxa (Weryfikacja AST/Bezpieczeństwo)...\x1b[0m")
+    report = await sandbox.validate_patch(patch)
+    
+    if report.is_valid:
+        print(f"\x1b[32m[SUCCESS] Łatka {report.patch_id} zatwierdzona.\x1b[0m")
+        print("\x1b[32m[+] AUTO-PATCHING ZAKOŃCZONY. System wraca do pełnej wydajności.\x1b[0m\n")
+    else:
+        print(f"\x1b[31m[FAILED] Łatka {report.patch_id} zablokowana przez zaporę!\x1b[0m")
+
+# ==========================================
+# 3. GŁÓWNY ZAPŁON (ASYNC EVENT LOOP)
+# ==========================================
+async def ignite_omega_core():
+    print("\x1b[31m====================================================\x1b[0m")
+    print("\x1b[31m🔥 INICJALIZACJA OMEGA CORE: HIGH-PERFORMANCE MATRIX\x1b[0m")
+    print("\x1b[31m====================================================\x1b[0m\n")
+    
+    # Tworzymy szybką kolejkę w pamięci RAM
+    task_queue = asyncio.Queue()
+
+    # Odpalamy wszystkie demony równolegle w tle (Concurreny)
+    ingestion_task = asyncio.create_task(lead_ingestion_daemon(task_queue))
+    traffic_task = asyncio.create_task(simulate_incoming_traffic(task_queue))
+    watchdog_task = asyncio.create_task(evolutionary_watchdog())
+
+    # Główny wątek czeka na zakończenie symulacji ruchu
+    await traffic_task
+    
+    # Czekamy, aż kolejka zostanie wyczyszczona
+    await task_queue.join()
+    
+    # Zamykamy demony
+    ingestion_task.cancel()
+    await watchdog_task
+    
+    print("\n\x1b[32m[+] OMEGA CORE: Cykl operacyjny zakończony sukcesem. Zysk zmaksymalizowany.\x1b[0m")
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(ignite_omega_core())
+    except KeyboardInterrupt:
+        print("\n\x1b[33m[!] Twarde przerwanie. Zamykanie rdzeni...\x1b[0m")
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-07-09T00:01:07+02:00.
+</ADDITIONAL_METADATA>
+
+====================
+
+<USER_REQUEST>
+# ==============================================================================
+# WARSTWA 4 (L4): VALIDATION SANDBOX WITH AST BLACKLIST & TRACEBACK EXTRACTION
+# ==============================================================================
+import ast
+import sys
+import traceback
+from typing import List, Tuple, Dict, Any
+from pydantic import BaseModel, Field
+
+class SystemPatch(BaseModel):
+    issue_id: str
+    target_file_path: str
+    patch_notes: str
+    new_code: str
+    confidence_score: float
+
+class ValidationReport(BaseModel):
+    patch_id: str
+    is_valid: bool
+    ast_passed: bool
+    security_passed: bool
+    errors: List[str] = Field(default_factory=list)
+    error_dossier: Dict[str, Any] = Field(default_factory=dict)
+
+class ValidationSandbox:
+    def __init__(self):
+        # Definicja zabronionych wywołań w celu uniemożliwienia eskalacji uprawnień i infekcji kodu
+        self.forbidden_functions = {"eval", "exec", "globals", "locals", "__import__", "compile"}
+        self.forbidden_attributes = {"system", "popen", "rmtree", "remove", "unlink", "exec_command"}
+        self.blocked_modules = {"subprocess", "ctypes", "shutil", "signal"}
+
+    def _verify_ast(self, code: str) -> Tuple[bool, str, Dict[str, Any]]:
+        """
+        Kompiluje kod do drzewa składniowego (AST). W przypadku błędu składniowego
+        ekstrahuje precyzyjną linię, offset oraz klasę błędu tworząc raport dla L3.
+        """
+        try:
+            ast.parse(code)
+            return True, "AST compilation successful.", {}
+        except SyntaxError as e:
+            error_line = getattr(e, 'text', '').strip() if getattr(e, 'text', None) else ''
+            dossier = {
+                "line": e.lineno,
+                "offset": e.offset,
+                "error_class": "SyntaxError",
+                "msg": e.msg,
+                "snippet": error_line
+            }
+            return False, f"SyntaxError at line {e.lineno}, offset {e.offset}: {e.msg}. Snippet: {error_line}", dossier
+        except Exception as e:
+            return False, f"Critical AST Parsing Error: {str(e)}", {"error_class": type(e).__name__, "msg": str(e)}
+
+    def _security_scan(self, code: str) -> Tuple[bool, str]:
+        """
+        Przeszukuje węzły AST w celu eliminacji złośliwego lub niedozwolonego kodu.
+        """
+        try:
+            tree = ast.parse(code)
+            for node in ast.walk(tree):
+                # Detekcja bezpośrednich wywołań zabronionych funkcji wbudowanych
+                if isinstance(node, ast.Call):
+                    if hasattr(node.func, 'id') and node.func.id in self.forbidden_functions:
+                        return False, f"Security Violation: Forbidden built-in '{node.func.id}' detected."
+                    
+                    # Detekcja niebezpiecznych wywołań atrybutów systemowych (np. os.system)
+                    if isinstance(node.func, ast.Attribute):
+                        if node.func.attr in self.forbidden_attributes:
+                            return False, f"Security Violation: Destructive call '{node.func.attr}' detected."
+                
+                # Detekcja nieautoryzowanych prób importu modułów niskopoziomowych
+                if isinstance(node, (ast.Import, ast.ImportFrom)):
+                    names = []
+                    if isinstance(node, ast.Import):
+                        names = [alias.name.split('.')[0] for alias in node.names]
+                    elif node.module:
+                        names = [node.module.split('.')[0]]
+                    for name in names:
+                        if name in self.blocked_modules:
+                            return False, f"Security Violation: Import of restricted module '{name}' blocked."
+            return True, "Static security scan passed."
+        except Exception as e:
+            return False, f"Security scanner failed: {str(e)}"
+
+    async def validate_patch(self, patch: SystemPatch) -> ValidationReport:
+        errors = []
+        ast_passed, ast_msg, error_dossier = self._verify_ast(patch.new_code)
+        if not ast_passed:
+            errors.append(ast_msg)
+
+        security_passed = False
+        if ast_passed:
+            security_passed, sec_msg = self._security_scan(patch.new_code)
+            if not security_passed:
+                errors.append(sec_msg)
+
+        is_valid = ast_passed and security_passed
+        return ValidationReport(
+            patch_id=patch.issue_id,
+            is_valid=is_valid,
+            ast_passed=ast_passed,
+            security_passed=security_passed,
+            errors=errors,
+            error_dossier=error_dossier
+        )
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-07-11T02:50:16+02:00.
+</ADDITIONAL_METADATA>
+<USER_SETTINGS_CHANGE>
+The user changed setting `Model Selection` from Gemini 3.5 Flash (High) to Gemini 3.1 Pro (High). No need to comment on this change if the user doesn't ask about it. If reporting what model you are, please use a human readable name instead of the exact string.
+</USER_SETTINGS_CHANGE>
+
+====================
+

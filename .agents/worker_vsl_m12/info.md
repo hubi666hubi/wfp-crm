@@ -1,0 +1,1 @@
+Worker VSL metadata placeholder.

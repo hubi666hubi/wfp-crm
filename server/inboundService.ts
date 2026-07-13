@@ -1,23 +1,46 @@
 import { GoogleGenAI } from "@google/genai";
-import fetch from "node-fetch";
 import { getDb } from "./db";
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { connectDataConnectEmulator, getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, listLeads, upsertLead, getLead } from '@zapalnik/crm-dataconnect';
+import crypto from 'crypto';
+
+const clientApp = getApps().length === 0 
+  ? initializeApp({ projectId: process.env.FIREBASE_PROJECT_ID || 'zapalnik-crm' })
+  : getApp();
+
+const dc = getDataConnect(clientApp, connectorConfig);
+if (process.env.NODE_ENV !== 'production') {
+  try {
+    connectDataConnectEmulator(dc, '127.0.0.1', 9399);
+  } catch (err) {
+    // Suppress emulator errors if already connected
+  }
+}
+
+
+const logVerbose = (...args: any[]) => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(...args);
+  }
+};
 
 async function generateInboundContentWithFallback(ai: GoogleGenAI, params: any) {
   try {
     params.model = "gemini-3.5-flash";
     return await ai.models.generateContent(params);
   } catch (err1: any) {
-    console.log(`[Inbound Fallback] gemini-3.5-flash failed, trying gemini-3.1-flash-lite. Error: ${err1?.message || err1}`);
+    logVerbose(`[Inbound Fallback] gemini-3.5-flash failed, trying gemini-3.1-flash-lite. Error: ${err1?.message || err1}`);
     try {
       params.model = "gemini-3.1-flash-lite";
       return await ai.models.generateContent(params);
     } catch (err2: any) {
-      console.log(`[Inbound Fallback] gemini-3.1-flash-lite failed, trying gemini-2.5-flash. Error: ${err2?.message || err2}`);
+      logVerbose(`[Inbound Fallback] gemini-3.1-flash-lite failed, trying gemini-2.5-flash. Error: ${err2?.message || err2}`);
       try {
         params.model = "gemini-2.5-flash";
         return await ai.models.generateContent(params);
       } catch (err3: any) {
-        console.log(`[Inbound Fallback] gemini-2.5-flash failed, trying gemini-1.5-flash. Error: ${err3?.message || err3}`);
+        logVerbose(`[Inbound Fallback] gemini-2.5-flash failed, trying gemini-1.5-flash. Error: ${err3?.message || err3}`);
         try {
           params.model = "gemini-1.5-flash";
           return await ai.models.generateContent(params);
@@ -117,22 +140,35 @@ class InboundService {
 
   private async saveLeadToDb(lead: InboundLead) {
     try {
-      const db = getDb();
-      await db.collection("inbound_leads").doc(lead.id).set(lead, { merge: true });
+      await upsertLead(dc, {
+        id: lead.id,
+        name: lead.name,
+        email: lead.email,
+        bio: lead.bio,
+        source: lead.source,
+        isHighTicket: lead.isHighTicket,
+        score: lead.score,
+        draftMessage: lead.draftMessage,
+        status: lead.status,
+        aiEnrichment: lead.aiEnrichment,
+        chatHistory: lead.chatHistory,
+        dmSequence: lead.dmSequence,
+        pitchCard: lead.pitchCard,
+        tacticalBrief: lead.tacticalBrief,
+      });
     } catch (e) {
-      console.warn("[InboundService] Failed to save lead to Firestore:", e);
+      console.warn("[InboundService] Failed to save lead to Data Connect:", e);
     }
   }
 
   private async seedLeadsIfEmpty() {
     try {
-      const db = getDb();
-      const snapshot = await db.collection("inbound_leads").limit(1).get();
-      if (snapshot.empty) {
-        console.log("[InboundService] Firestore database is empty. Seeding default premium leads...");
+      const { data } = await listLeads(dc, { limit: 1 });
+      if (!data || !data.leads || data.leads.length === 0) {
+        logVerbose("[InboundService] PostgreSQL database is empty. Seeding default premium leads...");
         const defaultLeads: InboundLead[] = [
           {
-            id: "lead_1",
+            id: "11111111-1111-1111-1111-111111111111",
             name: "Michał Wiśniewski",
             bio: "CEO w ScaleFlow Media. Pomagamy markom e-commerce skalować przychody z reklam FB/IG Ads. Zespół 12 osób, szukamy automatyzacji raportowania i routowania leadów z CRM.",
             source: "LinkedIn",
@@ -143,7 +179,7 @@ class InboundService {
             status: "Inbound (Wtyczka)"
           },
           {
-            id: "lead_2",
+            id: "22222222-2222-2222-2222-222222222222",
             name: "Anna Kowalska",
             bio: "Co-founder w SmartSaaS. Budujemy system do rezerwacji online dla branży Beauty. Poszukuję asystenta AI do obsługi zapytań e-mailowych na pierwszym linii wsparcia.",
             source: "LinkedIn",
@@ -155,36 +191,80 @@ class InboundService {
           }
         ];
         for (const lead of defaultLeads) {
-          await db.collection("inbound_leads").doc(lead.id).set(lead);
+          await upsertLead(dc, {
+            id: lead.id,
+            name: lead.name,
+            bio: lead.bio,
+            source: lead.source,
+            isHighTicket: lead.isHighTicket,
+            score: lead.score,
+            draftMessage: lead.draftMessage,
+            status: lead.status
+          });
         }
       }
     } catch (e) {
-      console.warn("[InboundService] Failed to seed default leads:", e);
+      console.warn("[InboundService] Failed to seed default leads in Data Connect:", e);
     }
   }
 
   public async getLeads() {
     try {
-      const db = getDb();
       await this.seedLeadsIfEmpty();
-      const snapshot = await db.collection("inbound_leads").get();
+      const { data } = await listLeads(dc);
       const leads: InboundLead[] = [];
-      snapshot.forEach(doc => {
-        leads.push({ id: doc.id, ...doc.data() } as InboundLead);
-      });
+      if (data && data.leads) {
+        data.leads.forEach(l => {
+          leads.push({
+            id: l.id,
+            name: l.name,
+            email: l.email || undefined,
+            bio: l.bio || "",
+            source: l.source || "",
+            timestamp: l.createdAt,
+            isHighTicket: l.isHighTicket,
+            score: l.score || 0,
+            draftMessage: l.draftMessage || "",
+            status: l.status,
+            priority: l.priority || undefined,
+            aiEnrichment: l.aiEnrichment as AIEnrichment | undefined,
+            chatHistory: l.chatHistory as ChatMessage[] | undefined,
+            dmSequence: l.dmSequence as DMStep[] | undefined,
+            pitchCard: l.pitchCard as PitchCardData | undefined,
+            tacticalBrief: l.tacticalBrief as TacticalBriefData | undefined,
+          } as any);
+        });
+      }
       this.inMemoryLeads = leads;
     } catch (e) {
-      console.warn("[InboundService] Failed to load leads from Firestore, using memory:", e);
+      console.warn("[InboundService] Failed to load leads from Data Connect, using memory:", e);
     }
     return [...this.inMemoryLeads].sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }
 
   private async fetchLead(id: string): Promise<InboundLead | null> {
     try {
-      const db = getDb();
-      const doc = await db.collection("inbound_leads").doc(id).get();
-      if (doc.exists) {
-        const lead = { id: doc.id, ...doc.data() } as InboundLead;
+      const { data } = await getLead(dc, { id });
+      if (data && data.lead) {
+        const l = data.lead;
+        const lead: InboundLead = {
+          id: l.id,
+          name: l.name,
+          email: l.email || undefined,
+          bio: l.bio || "",
+          source: l.source || "",
+          timestamp: l.createdAt,
+          isHighTicket: l.isHighTicket,
+          score: l.score || 0,
+          draftMessage: l.draftMessage || "",
+          status: l.status,
+          aiEnrichment: l.aiEnrichment as any,
+          chatHistory: l.chatHistory as any,
+          dmSequence: l.dmSequence as any,
+          pitchCard: l.pitchCard as any,
+          tacticalBrief: l.tacticalBrief as any,
+        } as any;
+        
         const index = this.inMemoryLeads.findIndex(l => l.id === id);
         if (index !== -1) {
           this.inMemoryLeads[index] = lead;
@@ -194,7 +274,7 @@ class InboundService {
         return lead;
       }
     } catch (e) {
-      console.warn("[InboundService] Failed to fetch lead from Firestore, using memory:", e);
+      console.warn("[InboundService] Failed to fetch lead from Data Connect, using memory:", e);
     }
     return this.inMemoryLeads.find(l => l.id === id) || null;
   }
@@ -237,14 +317,14 @@ Odpowiedz TYLKO i WYŁĄCZNIE czystym, prawidłowym formatem JSON bez żadnych b
         draftMessage = data.message;
       }
     } catch(err: any) {
-      console.log("[Inbound Service] Fallback triggered for processInboundLead due to service limits/errors:", err.message || err);
+      logVerbose("[Inbound Service] Fallback triggered for processInboundLead due to service limits/errors:", err.message || err);
       score = 78;
       isHighTicket = true;
       draftMessage = `Cześć ${name.split(' ')[0]}!\n\nZapisuję nasz formularz z platformy ${source}. Widzę, że zajmujesz się skalowaniem działań biznesowych.\n\nCzy wiesz, że robienie powtarzalnych zadań ręcznie każdego dnia potrafi spowolnić firmę o ponad 15 godzin w tygodniu? Posiadamy gotowy, zwinny schemat integracji, który to eliminuje.\n\nCzy interesuje Cię krótka (2-minutowa) prezentacja wideo opisująca jak to ułożyć u siebie bez kodowania?`;
     }
     
     const newLead: InboundLead = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       name,
       bio, 
       source,
@@ -357,7 +437,7 @@ Struktura wyjściowa musi odpowiadać dokładnie temu schematowi:
       await this.saveLeadToDb(lead);
       return lead;
     } catch (e: any) {
-      console.log("[Inbound Service] Fallback triggered for enrichLeadWithAI:", e.message || e);
+      logVerbose("[Inbound Service] Fallback triggered for enrichLeadWithAI:", e.message || e);
       const fallbackEnrichment: AIEnrichment = {
         icebreakers: [
           `Gratuluję świetnego profilu na ${lead.source}! Podoba mi się Twoje nastawienie na optymalizację i rozwój.`,
@@ -452,7 +532,7 @@ Zwróć odpowiedź wyłącznie w czystym, poprawnym formacie JSON bez markdownu 
       await this.saveLeadToDb(lead);
       return lead;
     } catch (e: any) {
-      console.log("[Inbound Service] Fallback triggered for generateSequenceWithAI:", e.message || e);
+      logVerbose("[Inbound Service] Fallback triggered for generateSequenceWithAI:", e.message || e);
       const recipientFirstName = lead.name ? lead.name.split(' ')[0] : "Szanowny Kliencie";
       const fallbackSteps: DMStep[] = [
         {
@@ -560,7 +640,7 @@ Zwróć wyłącznie czysty, poprawny JSON, bez markdownowych znaczników \`\`\`j
       await this.saveLeadToDb(lead);
       return lead;
     } catch (e: any) {
-      console.log("[Inbound Service] Fallback triggered for generatePitchCardWithAI:", e.message || e);
+      logVerbose("[Inbound Service] Fallback triggered for generatePitchCardWithAI:", e.message || e);
       const computedCompany = lead.bio.match(/[A-Za-z0-9\sęóąśłżźćńÓĄŚŁŻŹĆŃ]{3,20}\s(S.A.|Sp.\sz\so.o.|Agency|Group|Studio|Interactive)/i)?.[0] || `${lead.name} Enterprises`;
       const fallbackPitchCard: PitchCardData = {
         companyName: computedCompany,
@@ -703,7 +783,7 @@ Zwróć wyłącznie czysty, poprawny JSON, bez markdownowych znaczników \`\`\`j
       await this.saveLeadToDb(lead);
       return lead;
     } catch (e: any) {
-      console.log("[Inbound Service] Fallback triggered for generateTacticalBriefWithAI:", e.message || e);
+      logVerbose("[Inbound Service] Fallback triggered for generateTacticalBriefWithAI:", e.message || e);
       const fallbackBrief: TacticalBriefData = {
         missionObjective: `Przełamać opór operacyjny leada ${lead.name} wskazując na marnowanie cennego czasu na manualny data entry oraz zamknąć spotkanie demo na prezentację pilotażową.`,
         vulnerabilityAssessment: [

@@ -1,0 +1,78 @@
+# schema/schema.gql
+# Database schema for CRM Zapalnik SQL Connect
+
+type Lead @table(name: "leads")
+  @index(fields: ["status", "timestamp"], order: [ASC, DESC])
+  @index(fields: ["email"]) {
+  id: UUID! @default(expr: "uuidV4()")
+  userId: String
+  name: String!
+  email: String
+  companyName: String
+  bio: String
+  source: String
+  timestamp: Timestamp! @default(expr: "request.time")
+  isHighTicket: Boolean @default(value: false)
+  score: Int @default(value: 0)
+  draftMessage: String
+  status: String! @default(value: "Inbound (Wtyczka)")
+  priority: String @default(value: "LOW")
+  message: String
+  rejectionReason: String
+  necromancyTriggered: Boolean @default(value: false)
+  lastContact: Timestamp
+  lastNecromancyAttempt: Timestamp
+  resurrectionSpell: String
+  
+  # Semi-structured data matching CRM's AI analyses
+  aiEnrichment: Any
+  dmSequence: Any
+  chatHistory: Any
+  pitchCard: Any
+  tacticalBrief: Any
+  
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+  
+  # Relationship: Lead optionally belongs to a Campaign
+  campaign: Campaign @ref(fields: "campaignId", references: "id")
+  campaignId: UUID
+}
+
+type Campaign @table(name: "campaigns")
+  @index(fields: ["userId", "createdAt"], order: [ASC, DESC]) {
+  id: UUID! @default(expr: "uuidV4()")
+  title: String!
+  type: String! @default(value: "campaign")
+  status: String! @default(value: "ACTIVE")
+  dopamineFlow: String
+  startDate: Date
+  endDate: Date
+  conversions: Int @default(value: 0)
+  conversionHistory: Any
+  createdAt: Timestamp! @default(expr: "request.time")
+  userId: String @default(expr: "auth.uid")
+}
+
+type Event @table(name: "events")
+  @index(fields: ["eventType", "timestamp"], order: [ASC, DESC]) {
+  id: UUID! @default(expr: "uuidV4()")
+  timestamp: Timestamp! @default(expr: "request.time")
+  eventType: String! @index
+  testRunId: String
+  payload: Any
+}
+
+type EvolutionLog @table(name: "evolution_logs")
+  @index(fields: ["issueId", "createdAt"], order: [ASC, DESC]) {
+  id: UUID! @default(expr: "uuidV4()")
+  issueId: String!
+  targetFilePath: String!
+  logs: Any! # jsonb array of log lines
+  criticResult: Any
+  patchResult: Any
+  sandboxReport: Any
+  deploymentResult: Any
+  success: Boolean!
+  createdAt: Timestamp! @default(expr: "request.time")
+}

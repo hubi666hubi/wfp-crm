@@ -23,22 +23,11 @@ import {
   Activity
 } from "lucide-react";
 import { toast } from "sonner";
-import { 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  Cell,
-  Legend
-} from "recharts";
 import { useSettingsStore } from "../store/settingsStore";
 import { auth } from "../lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { ProStatsCard } from "../components/dashboard/ProStatsCard";
+import { ResonanceDecayChart, PortalVelocityChart, CategoryViralChart, FinancialRevenueChart } from "../components/dashboard/ProCharts";
 
 interface TrendItem {
   id: string;
@@ -74,6 +63,7 @@ export function ProDashboard() {
   const [isUserPremium, setIsUserPremium] = useState<boolean>(() => {
     return localStorage.getItem("omega_user_premium") === "true";
   });
+  const isSystemUnlocked = isProAccessUnlocked || isUserPremium;
   const [verifyingPremium, setVerifyingPremium] = useState<boolean>(false);
   const [revenueLoading, setRevenueLoading] = useState<boolean>(false);
   const [revenueStats, setRevenueStats] = useState<{
@@ -101,7 +91,7 @@ export function ProDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleInicjujZrzut = async (t: TrendItem) => {
+  const handleInicjujZrzut = useCallback(async (t: TrendItem) => {
     const pasHook = `Marnujesz godziny na bezużyteczny prospecting? Trend "${t.topic}" przejmuje rynek, a Twoja konkurencja już automatyzuje ten proces.`;
     
     // Save to local cache for VSL generator
@@ -143,7 +133,7 @@ export function ProDashboard() {
     setTimeout(() => {
       navigate('/vsl-generator');
     }, 1200);
-  };
+  }, [navigate, addLog]);
 
   // Selector for trends in charts / hook generator
   const [selectedTrendId, setSelectedTrendId] = useState<string>("");
@@ -245,8 +235,10 @@ export function ProDashboard() {
     // Sprawdzamy czy jesteśmy w trybie demo-sandbox
     const isDemo = localStorage.getItem("auth_demo_logged_in") === "true";
     if (isDemo) {
-      setUserEmail("hubi666hubi@gmail.com");
-      verifyPremiumStatus("hubi666hubi@gmail.com", true);
+      setTimeout(() => {
+        setUserEmail("hubi666hubi@gmail.com");
+        verifyPremiumStatus("hubi666hubi@gmail.com", true);
+      }, 0);
       return;
     }
 
@@ -264,7 +256,7 @@ export function ProDashboard() {
   }, [verifyPremiumStatus]);
 
   // Trigger Stripe Payment Gateway with current user config
-  const handleUpgradeToPremium = async () => {
+  const handleUpgradeToPremium = useCallback(async () => {
     setCheckoutLoading(true);
     addLog(`Stripe Billing: Inicjowanie sesji zakupowej dla ${userEmail}...`);
     try {
@@ -312,10 +304,10 @@ export function ProDashboard() {
     } finally {
       setCheckoutLoading(false);
     }
-  };
+  }, [userEmail, addLog]);
 
   // Sync Factory: manually trigger raw session fetching and update local cache
-  const handleSyncFactory = async () => {
+  const handleSyncFactory = useCallback(async () => {
     setSyncLoading(true);
     addLog("Stripe Sync Flow: Inicjowanie synchronizacji Sync Factory dla sesji Stripe i cache Firestore...");
     
@@ -340,16 +332,16 @@ export function ProDashboard() {
         return data;
       })(),
       {
-        loading: "Uruchamianie Sync Factory... Autoryzowanie z chmurą Stripe i odświeżanie cache docelowego.",
-        success: (data) => `Zsynchronizowano! ${data.message}`,
-        error: (err) => `Problem z synchronizacją: ${err.message}`
+         loading: "Uruchamianie Sync Factory... Autoryzowanie z chmurą Stripe i odświeżanie cache docelowego.",
+         success: (data) => `Zsynchronizowano! ${data.message}`,
+         error: (err) => `Problem z synchronizacją: ${err.message}`
       }
     );
 
     setTimeout(() => {
       setSyncLoading(false);
     }, 1500);
-  };
+  }, [addLog, fetchRevenueStats]);
 
   // Intercepting Stripe Success/Cancel return params
   useEffect(() => {
@@ -397,7 +389,7 @@ export function ProDashboard() {
   }, [watchlist]);
 
   // Handle premium unlock
-  const handleVerifyAccess = (e: React.FormEvent) => {
+  const handleVerifyAccess = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (!passcode.trim()) {
       toast.error("Wprowadź kod autoryzacyjny!");
@@ -419,17 +411,17 @@ export function ProDashboard() {
       setVerifying(false);
       setPasscode("");
     }, 1200);
-  };
+  }, [passcode, addLog]);
 
-  const handleLockAccess = () => {
+  const handleLockAccess = useCallback(() => {
     setIsProAccessUnlocked(false);
     localStorage.setItem("omega_pro_access", "false");
     addLog("Operator wylogowany z modułu priorytetowego PRO.");
     toast.info("Zablokowano bezpieczny dostęp do analiz PRO.");
-  };
+  }, [addLog]);
 
   // Watchlist helpers
-  const toggleWatchlist = (id: string, name: string) => {
+  const toggleWatchlist = useCallback((id: string, name: string) => {
     setWatchlist(prev => {
       const exists = prev.includes(id);
       if (exists) {
@@ -442,7 +434,7 @@ export function ProDashboard() {
         return [...prev, id];
       }
     });
-  };
+  }, [addLog]);
 
   // Computed Values - Advanced Metrics Aggregates
   const stats = useMemo(() => {
@@ -863,53 +855,7 @@ export function ProDashboard() {
           )}
 
           {/* Quick Realtime Analytics Widgets Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            
-            {/* Widget 1 */}
-            <div className="bg-neutral-950 border border-neutral-900 rounded-2xl p-5 flex flex-col justify-between">
-              <div>
-                <span className="text-[10px] font-mono text-neutral-500 uppercase block mb-1">Średnia Wirująca Prędkość</span>
-                <span className="text-2xl font-black text-rose-500 font-mono">{stats.avgVelocity} <span className="text-xs text-neutral-400">spikes/h</span></span>
-              </div>
-              <div className="mt-3 text-xs text-neutral-400 flex items-center gap-1 font-sans">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse inline-block" /> Stały scanning serwerów
-              </div>
-            </div>
-
-            {/* Widget 2 */}
-            <div className="bg-neutral-950 border border-neutral-900 rounded-2xl p-5 flex flex-col justify-between">
-              <div>
-                <span className="text-[10px] font-mono text-neutral-500 uppercase block mb-1">Maksymalny Współczynnik Wiralności</span>
-                <span className="text-2xl font-black text-white font-mono">{stats.maxViralCoeff} / 10</span>
-              </div>
-              <div className="mt-3 text-xs text-neutral-400 flex items-center gap-1">
-                <span className="text-emerald-400 font-bold block">Absolutny Peak rynkowy</span>
-              </div>
-            </div>
-
-            {/* Widget 3 */}
-            <div className="bg-neutral-950 border border-neutral-900 rounded-2xl p-5 flex flex-col justify-between">
-              <div>
-                <span className="text-[10px] font-mono text-neutral-500 uppercase block mb-1">Przewaga Sektora Tematycznego</span>
-                <span className="text-2xl font-black text-amber-500 font-mono">{stats.marketingShare}%</span>
-              </div>
-              <div className="mt-3 text-xs text-neutral-450">
-                Segment B2g: <span className="text-white font-semibold">Marketing & Sales</span>
-              </div>
-            </div>
-
-            {/* Widget 4 */}
-            <div className="bg-neutral-950 border border-neutral-900 rounded-2xl p-5 flex flex-col justify-between">
-              <div>
-                <span className="text-[10px] font-mono text-neutral-500 uppercase block mb-1">Aktywne Sektory Analiz</span>
-                <span className="text-2xl font-black text-blue-500 font-mono">{stats.activeSectors} <span className="text-xs text-neutral-400">branż</span></span>
-              </div>
-              <div className="mt-3 text-xs text-neutral-450 font-mono">
-                Zdigitalizowane: Tech, Finance, Marketing
-              </div>
-            </div>
-
-          </div>
+          <ProStatsCard stats={stats} />
 
           {/* Tab Selection Row for Premium Modules */}
           <div className="flex border-b border-neutral-900">
@@ -1106,61 +1052,7 @@ export function ProDashboard() {
                       {/* Interactive area chart (decay projection) */}
                       <span className="text-[10px] font-mono text-neutral-500 uppercase mb-3 block">📈 7-dniowa krzywa aktywności trendu</span>
                       <div className="h-[210px] w-full bg-black/40 border border-neutral-900/60 rounded-2xl p-2">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart
-                            data={projectionChartData}
-                            margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                          >
-                            <defs>
-                              <linearGradient id="colorResonance" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.25} />
-                                <stop offset="95%" stopColor="#f43f5e" stopOpacity={0.0} />
-                              </linearGradient>
-                              <linearGradient id="colorActivity" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#60a5fa" stopOpacity={0.25} />
-                                <stop offset="95%" stopColor="#60a5fa" stopOpacity={0.0} />
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
-                            <XAxis 
-                              dataKey="day" 
-                              stroke="#737373" 
-                              fontSize={9} 
-                              tickLine={false} 
-                            />
-                            <YAxis 
-                              stroke="#737373" 
-                              fontSize={9} 
-                              tickLine={false} 
-                            />
-                            <Tooltip 
-                              contentStyle={{ 
-                                backgroundColor: '#0a0a0a', 
-                                border: '1px solid #262626', 
-                                borderRadius: '12px',
-                                fontSize: '11px',
-                                fontFamily: 'monospace'
-                              }} 
-                            />
-                            <Legend fontSize={9} />
-                            <Area 
-                              type="monotone" 
-                              dataKey="Indeks Rezonansu" 
-                              stroke="#f43f5e" 
-                              fillOpacity={1} 
-                              fill="url(#colorResonance)" 
-                              strokeWidth={2}
-                            />
-                            <Area 
-                              type="monotone" 
-                              dataKey="Aktywność (Projections)" 
-                              stroke="#60a5fa" 
-                              fillOpacity={1} 
-                              fill="url(#colorActivity)" 
-                              strokeWidth={2}
-                            />
-                          </AreaChart>
-                        </ResponsiveContainer>
+                        <ResonanceDecayChart data={projectionChartData} />
                       </div>
                     </div>
 
@@ -1273,40 +1165,7 @@ export function ProDashboard() {
                       </p>
 
                       <div className="h-[250px] w-full bg-black/40 border border-neutral-900/60 rounded-2xl p-2">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
-                            data={portalChartData}
-                            margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                          >
-                            <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
-                            <XAxis 
-                              dataKey="name" 
-                              stroke="#737373" 
-                              fontSize={9} 
-                              tickLine={false} 
-                            />
-                            <YAxis 
-                              stroke="#737373" 
-                              fontSize={9} 
-                              tickLine={false} 
-                            />
-                            <Tooltip 
-                              contentStyle={{ 
-                                backgroundColor: '#0a0a0a', 
-                                border: '1px solid #262626', 
-                                borderRadius: '12px',
-                                fontSize: '11px',
-                                fontFamily: 'monospace'
-                              }} 
-                            />
-                            <Bar dataKey="Średnia Prędkość (spikes/h)" fill="#f43f5e" radius={[4, 4, 0, 0]}>
-                              {portalChartData.map((entry, index) => {
-                                const colors = ["#f43f5e", "#ec4899", "#3b82f6", "#0a66c2", "#ef4444"];
-                                return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
-                              })}
-                            </Bar>
-                          </BarChart>
-                        </ResponsiveContainer>
+                        <PortalVelocityChart data={portalChartData} />
                       </div>
                     </div>
 
@@ -1328,42 +1187,7 @@ export function ProDashboard() {
                       </p>
 
                       <div className="h-[250px] w-full bg-black/40 border border-neutral-900/60 rounded-2xl p-2">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
-                            data={categoryChartData}
-                            margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                          >
-                            <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
-                            <XAxis 
-                              dataKey="category" 
-                              stroke="#737373" 
-                              fontSize={9} 
-                              tickLine={false} 
-                            />
-                            <YAxis 
-                              stroke="#737373" 
-                              fontSize={9} 
-                              tickLine={false} 
-                              domain={[0, 10]}
-                              tickCount={6}
-                            />
-                            <Tooltip 
-                              contentStyle={{ 
-                                backgroundColor: '#0a0a0a', 
-                                border: '1px solid #262626', 
-                                borderRadius: '12px',
-                                fontSize: '11px',
-                                fontFamily: 'monospace'
-                              }} 
-                            />
-                            <Bar dataKey="Wskaźnik Wiralowości (1-10)" fill="#fbbf24" radius={[4, 4, 0, 0]}>
-                              {categoryChartData.map((entry, index) => {
-                                const colors = ["#fbbf24", "#10b981", "#3b82f6", "#a855f7", "#ec4899"];
-                                return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
-                              })}
-                            </Bar>
-                          </BarChart>
-                        </ResponsiveContainer>
+                        <CategoryViralChart data={categoryChartData} />
                       </div>
                     </div>
 
@@ -1530,56 +1354,13 @@ export function ProDashboard() {
                             </button>
                           </div>
                         </div>
-
                         {monthlyRevenueChart.length === 0 ? (
                           <div className="h-[210px] flex items-center justify-center text-xs text-neutral-600 font-mono">
                             Czekanie na pierwszą płatność...
                           </div>
                         ) : (
                           <div className="h-[210px] w-full">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <AreaChart data={monthlyRevenueChart} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                                <defs>
-                                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
-                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                                  </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#171717" vertical={false} />
-                                <XAxis 
-                                  dataKey="Data" 
-                                  stroke="#525252" 
-                                  fontSize={10} 
-                                  tickLine={false} 
-                                  axisLine={false} 
-                                  fontFamily="monospace"
-                                />
-                                <YAxis 
-                                  stroke="#525252" 
-                                  fontSize={10} 
-                                  tickLine={false} 
-                                  axisLine={false}
-                                  fontFamily="monospace"
-                                />
-                                <Tooltip 
-                                  contentStyle={{ 
-                                    backgroundColor: '#0a0a0a', 
-                                    border: '1px solid #1f1f1f', 
-                                    borderRadius: '12px',
-                                    fontSize: '11px',
-                                    fontFamily: 'monospace'
-                                  }} 
-                                />
-                                <Area 
-                                  type="monotone" 
-                                  dataKey="Przychód (PLN)" 
-                                  stroke="#10b981" 
-                                  strokeWidth={2}
-                                  fillOpacity={1} 
-                                  fill="url(#colorRevenue)" 
-                                />
-                              </AreaChart>
-                            </ResponsiveContainer>
+                            <FinancialRevenueChart data={monthlyRevenueChart} />
                           </div>
                         )}
                       </div>

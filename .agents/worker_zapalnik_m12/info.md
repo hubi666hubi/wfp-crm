@@ -1,0 +1,1 @@
+Worker Zapalnik metadata placeholder.

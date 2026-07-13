@@ -1,0 +1,187 @@
+# connector/queries.gql
+# Native GraphQL Queries for Zapalnik CRM / Nekropolis
+
+# Get all leads for the authenticated user, ordered by timestamp descending
+query ListLeads @auth(level: USER) {
+  leads(
+    where: { userId: { eq_expr: "auth.uid" } }
+    orderBy: [{ timestamp: DESC }]
+  ) {
+    id
+    name
+    email
+    bio
+    source
+    timestamp
+    isHighTicket
+    score
+    draftMessage
+    status
+    priority
+    companyName
+    rejectionReason
+    necromancyTriggered
+    lastNecromancyAttempt
+    resurrectionSpell
+    lastContact
+    aiEnrichment
+    dmSequence
+    chatHistory
+    pitchCard
+    tacticalBrief
+    campaign {
+      id
+      name
+    }
+  }
+}
+
+# Get a single lead by ID
+query GetLead($id: UUID!) @auth(level: USER) {
+  lead(id: $id) {
+    id
+    name
+    email
+    bio
+    source
+    timestamp
+    isHighTicket
+    score
+    draftMessage
+    status
+    priority
+    companyName
+    rejectionReason
+    necromancyTriggered
+    lastNecromancyAttempt
+    resurrectionSpell
+    lastContact
+    aiEnrichment
+    dmSequence
+    chatHistory
+    pitchCard
+    tacticalBrief
+    campaign {
+      id
+      name
+    }
+  }
+}
+
+# Find dead leads for Necropolis reanimation (status in ['Rejected', 'No Contact', 'BabylonInactive'])
+query ListDeadLeads($thirtyDaysAgo: Timestamp!) @auth(level: USER) {
+  leads(
+    where: {
+      userId: { eq_expr: "auth.uid" }
+      status: { in: ["Rejected", "No Contact", "BabylonInactive"] }
+      _or: [
+        { lastContact: { lt: $thirtyDaysAgo } }
+        { lastContact: { isNull: true } }
+      ]
+    }
+  ) {
+    id
+    name
+    email
+    companyName
+    rejectionReason
+    status
+  }
+}
+
+# List all campaigns for the authenticated user
+query ListCampaigns @auth(level: USER) {
+  campaigns(
+    where: { userId: { eq_expr: "auth.uid" } }
+    orderBy: [{ createdAt: DESC }]
+  ) {
+    id
+    name
+    status
+    reach
+    comments
+    dmsSent
+    responseSpeed
+    createdAt
+  }
+}
+
+# Get campaign details with conversion history
+query GetCampaignDetails($campaignId: UUID!) @auth(level: USER) {
+  campaign(id: $campaignId) {
+    id
+    name
+    status
+    reach
+    comments
+    dmsSent
+    responseSpeed
+    createdAt
+    campaignConversions_on_campaign(orderBy: [{ date: ASC }]) {
+      id
+      date
+      conversions
+      facebook
+      linkedin
+      direct
+    }
+  }
+}
+
+# Get all system events of a specific type (e.g. ZAPALNIK_CLIP)
+query ListEventsByType($eventType: String!, $limit: Int!) @auth(level: USER) {
+  events(
+    where: { eventType: { eq: $eventType } }
+    orderBy: [{ timestamp: DESC }]
+    limit: $limit
+  ) {
+    id
+    timestamp
+    eventType
+    testRunId
+    payload
+  }
+}
+
+# Get recent evolution logs for a specific file
+query ListEvolutionLogsByFile($filePath: String!, $limit: Int!) @auth(level: USER) {
+  evolutionLogs(
+    where: { filePath: { eq: $filePath } }
+    orderBy: [{ createdAt: DESC }]
+    limit: $limit
+  ) {
+    id
+    agentId
+    filePath
+    errorLog
+    success
+    logs
+    critic
+    patch
+    report
+    deployment
+    score
+    createdAt
+  }
+}
+
+# Get all recent evolution logs for display in the Nekropolis dashboard
+query ListAllEvolutionLogs($limit: Int!) @auth(level: USER) {
+  evolutionLogs(
+    orderBy: [{ createdAt: DESC }]
+    limit: $limit
+  ) {
+    id
+    agentId
+    filePath
+    errorLog
+    success
+    logs
+    critic
+    patch
+    report
+    deployment
+    score
+    createdAt
+  }
+}

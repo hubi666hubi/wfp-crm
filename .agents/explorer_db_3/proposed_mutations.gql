@@ -1,0 +1,166 @@
+# connector/mutations.gql
+
+# --- Lead Mutations ---
+
+# Public mutation to create a new lead (e.g. via public webhook or chrome extension)
+mutation CreateLeadPublic(
+  $name: String!
+  $email: String
+  $companyName: String
+  $bio: String
+  $source: String!
+  $message: String
+  $priority: String
+) @auth(level: PUBLIC) {
+  lead_insert(data: {
+    name: $name
+    email: $email
+    companyName: $companyName
+    bio: $bio
+    source: $source
+    message: $message
+    priority: $priority
+    status: "Inbound (Wtyczka)"
+  })
+}
+
+# Authenticated mutation to upsert a lead (insert if id is new/absent, update if exists)
+mutation UpsertLead(
+  $id: UUID
+  $userId: String
+  $name: String!
+  $email: String
+  $companyName: String
+  $bio: String
+  $source: String
+  $isHighTicket: Boolean
+  $score: Int
+  $draftMessage: String
+  $status: String
+  $priority: String
+  $message: String
+  $rejectionReason: String
+  $necromancyTriggered: Boolean
+  $lastContact: Timestamp
+  $lastNecromancyAttempt: Timestamp
+  $resurrectionSpell: String
+  $aiEnrichment: Any
+  $dmSequence: Any
+  $chatHistory: Any
+  $pitchCard: Any
+  $tacticalBrief: Any
+  $campaignId: UUID
+) @auth(level: USER) {
+  lead_upsert(data: {
+    id: $id
+    userId: $userId
+    name: $name
+    email: $email
+    companyName: $companyName
+    bio: $bio
+    source: $source
+    isHighTicket: $isHighTicket
+    score: $score
+    draftMessage: $draftMessage
+    status: $status
+    priority: $priority
+    message: $message
+    rejectionReason: $rejectionReason
+    necromancyTriggered: $necromancyTriggered
+    lastContact: $lastContact
+    lastNecromancyAttempt: $lastNecromancyAttempt
+    resurrectionSpell: $resurrectionSpell
+    aiEnrichment: $aiEnrichment
+    dmSequence: $dmSequence
+    chatHistory: $chatHistory
+    pitchCard: $pitchCard
+    tacticalBrief: $tacticalBrief
+    campaignId: $campaignId
+    updatedAt_expr: "request.time"
+  })
+}
+
+# Update lead status only
+mutation UpdateLeadStatus(
+  $id: UUID!
+  $status: String!
+) @auth(level: USER) {
+  lead_update(
+    id: $id
+    data: {
+      status: $status
+      updatedAt_expr: "request.time"
+    }
+  )
+}
+
+# Delete a lead
+mutation DeleteLead($id: UUID!) @auth(level: USER) {
+  lead_delete(id: $id)
+}
+
+# --- Event Mutations ---
+
+# Log a new system event (e.g., ZAPALNIK_CLIP)
+mutation CreateEvent(
+  $eventType: String!
+  $testRunId: String
+  $payload: Any
+) @auth(level: PUBLIC) {
+  event_insert(data: {
+    eventType: $eventType
+    testRunId: $testRunId
+    payload: $payload
+  })
+}
+
+# --- Campaign Mutations ---
+
+# Create or update a marketing campaign
+mutation CreateCampaign(
+  $title: String!
+  $type: String
+  $status: String
+  $dopamineFlow: String
+  $startDate: Date
+  $endDate: Date
+  $conversions: Int
+  $conversionHistory: Any
+) @auth(level: USER) {
+  campaign_insert(data: {
+    title: $title
+    type: $type
+    status: $status
+    dopamineFlow: $dopamineFlow
+    startDate: $startDate
+    endDate: $endDate
+    conversions: $conversions
+    conversionHistory: $conversionHistory
+    userId_expr: "auth.uid"
+  })
+}
+
+# --- Evolution Log Mutations ---
+
+# Save a self-evolution log (called by Python engine)
+mutation CreateEvolutionLog(
+  $issueId: String!
+  $targetFilePath: String!
+  $logs: Any!
+  $criticResult: Any
+  $patchResult: Any
+  $sandboxReport: Any
+  $deploymentResult: Any
+  $success: Boolean!
+) @auth(level: PUBLIC) {
+  evolutionLog_insert(data: {
+    issueId: $issueId
+    targetFilePath: $targetFilePath
+    logs: $logs
+    criticResult: $criticResult
+    patchResult: $patchResult
+    sandboxReport: $sandboxReport
+    deploymentResult: $deploymentResult
+    success: $success
+  })
+}

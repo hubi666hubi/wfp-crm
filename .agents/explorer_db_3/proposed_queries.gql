@@ -1,0 +1,164 @@
+# connector/queries.gql
+
+# --- Leads Queries ---
+
+# Fetch a single Lead by its UUID
+query GetLead($id: UUID!) @auth(level: USER) {
+  lead(id: $id) {
+    id
+    userId
+    name
+    email
+    companyName
+    bio
+    source
+    timestamp
+    isHighTicket
+    score
+    draftMessage
+    status
+    priority
+    message
+    rejectionReason
+    necromancyTriggered
+    lastContact
+    lastNecromancyAttempt
+    resurrectionSpell
+    aiEnrichment
+    dmSequence
+    chatHistory
+    pitchCard
+    tacticalBrief
+    createdAt
+    updatedAt
+    campaignId
+    campaign {
+      id
+      title
+      status
+    }
+  }
+}
+
+# List all Leads with optional filtering on status and isHighTicket, sorted by timestamp DESC
+query ListLeads(
+  $status: String
+  $isHighTicket: Boolean
+  $limit: Int = 50
+  $offset: Int = 0
+) @auth(level: USER) {
+  leads(
+    where: {
+      status: { eq: $status }
+      isHighTicket: { eq: $isHighTicket }
+    }
+    orderBy: [{ timestamp: DESC }]
+    limit: $limit
+    offset: $offset
+  ) {
+    id
+    name
+    email
+    companyName
+    source
+    timestamp
+    isHighTicket
+    score
+    status
+    priority
+    createdAt
+    campaignId
+  }
+}
+
+# --- System Events Queries ---
+
+# List all events, filtered by eventType if provided, sorted by timestamp DESC
+query ListEvents(
+  $eventType: String
+  $limit: Int = 100
+  $offset: Int = 0
+) @auth(level: USER) {
+  events(
+    where: {
+      eventType: { eq: $eventType }
+    }
+    orderBy: [{ timestamp: DESC }]
+    limit: $limit
+    offset: $offset
+  ) {
+    id
+    timestamp
+    eventType
+    testRunId
+    payload
+  }
+}
+
+# --- Marketing Campaigns Queries ---
+
+# List marketing campaigns, sorted by creation date
+query ListCampaigns(
+  $status: String
+  $limit: Int = 20
+  $offset: Int = 0
+) @auth(level: USER) {
+  campaigns(
+    where: {
+      status: { eq: $status }
+    }
+    orderBy: [{ createdAt: DESC }]
+    limit: $limit
+    offset: $offset
+  ) {
+    id
+    title
+    type
+    status
+    dopamineFlow
+    startDate
+    endDate
+    conversions
+    createdAt
+  }
+}
+
+# --- Evolution Logs Queries ---
+
+# List self-evolution logs, sorted by creation date
+query ListEvolutionLogs(
+  $success: Boolean
+  $limit: Int = 50
+  $offset: Int = 0
+) @auth(level: USER) {
+  evolutionLogs(
+    where: {
+      success: { eq: $success }
+    }
+    orderBy: [{ createdAt: DESC }]
+    limit: $limit
+    offset: $offset
+  ) {
+    id
+    issueId
+    targetFilePath
+    success
+    createdAt
+  }
+}
+
+# Fetch a detailed Evolution Log record by ID
+query GetEvolutionLog($id: UUID!) @auth(level: USER) {
+  evolutionLog(id: $id) {
+    id
+    issueId
+    targetFilePath
+    logs
+    criticResult
+    patchResult
+    sandboxReport
+    deploymentResult
+    success
+    createdAt
+  }
+}

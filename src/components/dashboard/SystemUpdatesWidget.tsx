@@ -16,6 +16,7 @@ import {
 import { useSettingsStore } from "../../store/settingsStore";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { auth } from "../../lib/firebase";
 
 interface UpdateItem {
   id: string;
@@ -90,6 +91,7 @@ export function SystemUpdatesWidget() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "X-User-Email": auth.currentUser?.email || "anonymous@wfp-platform.io"
         },
         body: JSON.stringify({
           supabaseUrl,

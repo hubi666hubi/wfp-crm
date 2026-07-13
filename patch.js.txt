@@ -1,0 +1,54 @@
+const fs = require('fs');
+
+const filename = "server.ts";
+
+if (!fs.existsSync(filename)) {
+    console.log(`❌ Błąd: Nie znaleziono pliku ${filename} w tym folderze.`);
+    process.exit(1);
+}
+
+console.log("🤖 Uruchamiam patcher przez Node.js...");
+
+let code = fs.readFileSync(filename, 'utf8');
+
+const startMarker = "async function generateContentWithFallback";
+const endMarker = "async function startServer()";
+
+const startIdx = code.indexOf(startMarker);
+const endIdx = code.indexOf(endMarker);
+
+if (startIdx !== -1 && endIdx !== -1) {
+    const newFallback = `async function generateContentWithFallback(ai: GoogleGenAI, params: Record<string, unknown>) {
+  const models = ["gemini-3.5-flash", "gemini-1.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash"];
+  let lastError: any = null;
+  for (const modelName of models) {
+    try {
+      params.model = modelName;
+      // @ts-expect-error - parameters generic usage
+      return await ai.models.generateContent(params);
+    } catch (err: any) {
+      lastError = err;
+      console.log(\`\\x1b[33m⚠️ [WATCHDOG]: Model \${modelName} zgłosił problem. Przerzut na kolejny... Błąd: \${err?.message || err}\x1b[0m\`);
+    }
+  }
+  throw lastError || new Error("🚨 Wszystkie darmowe modele na tym kluczu API zostały wyczerpane.");
+}\n\n`;
+
+    code = code.substring(0, startIdx) + newFallback + code.substring(endIdx);
+    console.log("✅ Nadpisano stary silnik. Wdrożono awaryjny rotator modeli.");
+} else {
+    console.log("⚠️ Nie znaleziono funkcji fallback w pliku.");
+}
+
+// Przepięcie endpointów za pomocą wyrażenia regularnego
+const pattern = /await\s+ai\.models\.generateContent\(\{\s*model:\s*"gemini-3.5-flash",/g;
+const replacement = 'await generateContentWithFallback(ai, {\n        model: "gemini-3.5-flash",';
+
+const matches = code.match(pattern);
+const count = matches ? matches.length : 0;
+
+code = code.replace(pattern, replacement);
+console.log(`✅ Przepięto automatycznie ${count} zablokowanych endpointów na bezpieczny fallback.`);
+
+fs.writeFileSync(filename, code, 'utf8');
+console.log("🚀 Sukces! Plik server.ts został w pełni zaktualizowany.");

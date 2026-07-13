@@ -68,15 +68,15 @@ interface AnomalyLog {
   tag?: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const current = payload.find(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       (p: any) => p.dataKey === "conversions" || p.name?.includes("konwersji"),
     );
     const prev = payload.find(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       (p: any) =>
         p.dataKey === "prevMonthConversions" || p.name?.includes("Poprzedni"),
     );
@@ -87,7 +87,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
           {label}
         </p>
         <div className="space-y-2">
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          { }
           {payload.map((entry: any, index: number) => {
             const isCVR = entry.name?.includes("CVR") || false;
             const val = isCVR
@@ -431,7 +431,7 @@ export function CampaignConversionChart({ data: originalData }: Props) {
 
       startY += 8;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       (pdf as any).autoTable({
         startY: startY,
         head: [["Metryka", "Wartość"]],
@@ -447,7 +447,7 @@ export function CampaignConversionChart({ data: originalData }: Props) {
         margin: { left: margin, right: margin },
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       startY = (pdf as any).lastAutoTable.finalY + 15;
 
       pdf.setFontSize(16);
@@ -460,7 +460,7 @@ export function CampaignConversionChart({ data: originalData }: Props) {
         String(item.conversions),
       ]);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       (pdf as any).autoTable({
         startY: startY,
         head: [["Data", "Liczba konwersji"]],

@@ -1,0 +1,65 @@
+@echo off
+title 🪐 OMEGA MATRIX CENTRAL CONTROL INTERFACE v4.0
+cls
+
+:: Kolorystyka fioletowo-różowa (Cyberpunk Matrix Console)
+color 0D
+
+echo ==============================================================================
+echo   🪐 OMEGA MATRIX CENTRAL CONTROL INTERFACE - TOTAL SWARM IGNITION SEQUENCE
+echo ==============================================================================
+echo [BOOT] Sprawdzanie uprawnien i lokalizacji katalogu macierzystego...
+
+set "PROJECT_ROOT=C:\Users\brend\Desktop\XX2"
+cd /d "%PROJECT_ROOT%"
+
+:: 1. Ładowanie i eksportowanie kluczy z pliku .env
+if exist .env (
+    echo [BOOT] Wykryto plik konfiguracyjny .env. Eksportowanie kluczy kryptograficznych...
+    for /f "usebackq delims=" %%x in (".env") do (
+        echo %%x | findstr /v "^#" >nul
+        if not errorlevel 1 (
+            echo   ^> Eksportowanie: %%x
+            set "%%x"
+        )
+    )
+) else (
+    echo [OSTRZEZENIE] Brak pliku .env w katalogu %PROJECT_ROOT%. Uruchamianie z domyslnymi kluczami.
+)
+
+echo.
+echo ==============================================================================
+echo   [KROK 01] ODPAŁ KONTENERÓW DOCKER (POSTGRESQL CONNECT OMEGA ^& REDIS CLUSTER)
+echo ==============================================================================
+echo [DOCKER] Sprawdzanie i podnoszenie kontenerów w tle...
+docker-compose down >nul 2>&1
+docker-compose up -d --remove-orphans
+
+if %errorlevel% neq 0 (
+    echo [BLAD KRYTYCZNY] Docker nie jest uruchomiony lub napotkal blad podczas podnoszenia kontenerow.
+    pause
+    exit /b %errorlevel%
+)
+echo 🟢 [DOCKER SUCCESS] Bazy danych PostgreSQL Connect oraz Redis dzialaja w trybie NOMINAL.
+
+echo.
+echo ==============================================================================
+echo   [KROK 02] ROZRUCH RDZENIA ASYNCHRONICZNEGO PYTHON (AUTO-EWOLUCJA L3/L4/L5)
+echo ==============================================================================
+echo [PYTHON] Zaplon demonow i piaskownicy walidacyjnej w osobnym oknie terminala...
+start "🐍 OMEGA CORE - ASYNC PYTHON SYSTEM" cmd /k "cd /d %PROJECT_ROOT% && title PYTHON RE-EVOLUTION CORE && python backend/app/main_omega.py"
+
+echo.
+echo ==============================================================================
+echo   [KROK 03] KONTROLNA KOMPILACJA I START SERWERA EXPRESS CORE (NODE.JS IPC)
+echo ==============================================================================
+echo [NODE] Uruchamianie glownego skryptu startera run_omega_core.js...
+node run_omega_core.js
+
+if %errorlevel% neq 0 (
+    echo [BLAD KRYTYCZNY] Serwer Express lub kompilacja TypeScript zakatowala blad.
+    pause
+    exit /b %errorlevel%
+)
+
+pause

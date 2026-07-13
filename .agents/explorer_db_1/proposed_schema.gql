@@ -1,0 +1,103 @@
+# crm schema
+
+type Lead @table {
+  id: UUID! @default(expr: "uuidV4()")
+  name: String!
+  email: String @unique
+  bio: String
+  companyName: String
+  industry: String
+  source: String @default(value: "inbound")
+  createdAt: Timestamp! @default(expr: "request.time")
+  lastContact: Timestamp! @default(expr: "request.time")
+  isHighTicket: Boolean! @default(value: false)
+  score: Int! @default(value: 0)
+  status: String! @default(value: "Inbound (Wtyczka)")
+  rejectionReason: String
+  value: Int @default(value: 0)
+  intentLevel: String
+  painSummary: String
+  yourOffer: String
+  
+  # Semi-structured JSON fields for advanced CRM features
+  aiEnrichment: Any @col(dataType: "jsonb")
+  dmSequence: Any @col(dataType: "jsonb")
+  chatHistory: Any @col(dataType: "jsonb")
+  pitchCard: Any @col(dataType: "jsonb")
+  tacticalBrief: Any @col(dataType: "jsonb")
+  
+  # FB/Outreach specific fields
+  publicCommentStrategy: String
+  videoPitchScript: String
+  qualificationScore: Int
+  linkedinConnectPitch: String
+  coldEmailSubject: String
+  coldEmailBody: String
+  
+  # Sentiment analysis fields
+  sentimentScore: Float
+  sentimentLabel: String
+  priorityScore: Int
+  priorityLabel: String
+  emotionalTriggers: [String!] @col(dataType: "text[]")
+  sentimentExplanation: String
+  outreachPitch: String
+}
+
+type Campaign @table {
+  id: UUID! @default(expr: "uuidV4()")
+  name: String! @unique
+  status: String! @default(value: "DRAFT")
+  description: String
+  createdAt: Timestamp! @default(expr: "request.time")
+  competitorWeaknesses: [String!] @col(dataType: "text[]")
+  webhookUrl: String
+}
+
+# Many-to-Many Join Table linking Campaigns and Leads
+type CampaignLead @table(key: ["campaign", "lead"]) {
+  campaign: Campaign!
+  lead: Lead!
+  status: String! @default(value: "TARGETED")
+  addedAt: Timestamp! @default(expr: "request.time")
+}
+
+# Self-Evolution loop runs and records
+type EvolutionLog @table {
+  id: UUID! @default(expr: "uuidV4()")
+  timestamp: Timestamp! @default(expr: "request.time")
+  filePath: String!
+  agentId: String!
+  codeBefore: String!
+  codeAfter: String!
+  errorLog: String!
+  criticAnalysis: String!
+  patchNotes: String!
+  astPassed: Boolean! @default(value: false)
+  securityPassed: Boolean! @default(value: false)
+  isValid: Boolean! @default(value: false)
+  isDeployed: Boolean! @default(value: false)
+  backupPath: String
+  score: Float! @default(value: 0.0)
+  durationMs: Int! @default(value: 0)
+  tokenUsage: Int! @default(value: 0)
+}
+
+# System Events audit log, supporting links to Leads, Campaigns, and Evolution runs
+type Event @table {
+  id: UUID! @default(expr: "uuidV4()")
+  timestamp: Timestamp! @default(expr: "request.time")
+  eventType: String! @index
+  testRunId: String
+  payload: Any @col(dataType: "jsonb")
+  
+  # Relations
+  lead: Lead @ref(fields: "leadId", references: "id")
+  leadId: UUID
+  
+  campaign: Campaign @ref(fields: "campaignId", references: "id")
+  campaignId: UUID
+  
+  evolutionLog: EvolutionLog @ref(fields: "evolutionLogId", references: "id")
+  evolutionLogId: UUID
+}

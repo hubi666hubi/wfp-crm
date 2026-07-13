@@ -1,0 +1,157 @@
+# connector/mutations.gql
+# Native GraphQL Mutations for Zapalnik CRM / Nekropolis
+
+# Insert or update a lead (Upsert)
+mutation UpsertLead(
+  $id: UUID
+  $name: String!
+  $email: String!
+  $bio: String
+  $source: String
+  $isHighTicket: Boolean
+  $score: Int
+  $draftMessage: String
+  $status: String
+  $priority: LeadPriority
+  $companyName: String
+  $campaignId: UUID
+) @auth(level: USER) {
+  lead_upsert(data: {
+    id: $id
+    userId_expr: "auth.uid"
+    name: $name
+    email: $email
+    bio: $bio
+    source: $source
+    isHighTicket: $isHighTicket
+    score: $score
+    draftMessage: $draftMessage
+    status: $status
+    priority: $priority
+    companyName: $companyName
+    campaignId: $campaignId
+  })
+}
+
+# Update specific fields of an existing lead by ID (e.g. status, AI enrichment, sequences)
+mutation UpdateLead(
+  $id: UUID!
+  $status: String
+  $priority: LeadPriority
+  $aiEnrichment: Any
+  $dmSequence: Any
+  $chatHistory: Any
+  $pitchCard: Any
+  $tacticalBrief: Any
+  $rejectionReason: String
+  $necromancyTriggered: Boolean
+  $lastNecromancyAttempt: Timestamp
+  $resurrectionSpell: String
+  $lastContact: Timestamp
+) @auth(level: USER) {
+  lead_update(
+    id: $id
+    data: {
+      status: $status
+      priority: $priority
+      aiEnrichment: $aiEnrichment
+      dmSequence: $dmSequence
+      chatHistory: $chatHistory
+      pitchCard: $pitchCard
+      tacticalBrief: $tacticalBrief
+      rejectionReason: $rejectionReason
+      necromancyTriggered: $necromancyTriggered
+      lastNecromancyAttempt: $lastNecromancyAttempt
+      resurrectionSpell: $resurrectionSpell
+      lastContact: $lastContact
+    }
+  )
+}
+
+# Delete a lead by ID
+mutation DeleteLead($id: UUID!) @auth(level: USER) {
+  lead_delete(id: $id)
+}
+
+# Insert or update a marketing campaign (Upsert)
+mutation UpsertCampaign(
+  $id: UUID
+  $name: String!
+  $status: String
+  $reach: Int
+  $comments: Int
+  $dmsSent: Int
+  $responseSpeed: Float
+) @auth(level: USER) {
+  campaign_upsert(data: {
+    id: $id
+    userId_expr: "auth.uid"
+    name: $name
+    status: $status
+    reach: $reach
+    comments: $comments
+    dmsSent: $dmsSent
+    responseSpeed: $responseSpeed
+  })
+}
+
+# Add a campaign conversion history record
+mutation InsertCampaignConversion(
+  $campaignId: UUID!
+  $date: Date!
+  $conversions: Int!
+  $facebook: Int
+  $linkedin: Int
+  $direct: Int
+) @auth(level: USER) {
+  campaignConversion_insert(data: {
+    campaignId: $campaignId
+    date: $date
+    conversions: $conversions
+    facebook: $facebook
+    linkedin: $linkedin
+    direct: $direct
+  })
+}
+
+# Log a system event (e.g. ZAPALNIK_CLIP)
+mutation InsertEvent(
+  $eventType: String!
+  $testRunId: String!
+  $payload: Any!
+) @auth(level: USER) {
+  event_insert(data: {
+    eventType: $eventType
+    testRunId: $testRunId
+    payload: $payload
+  })
+}
+
+# Record a code evolution engine iteration
+mutation InsertEvolutionLog(
+  $agentId: String
+  $filePath: String!
+  $codeBefore: String!
+  $errorLog: String!
+  $success: Boolean!
+  $logs: [String!]!
+  $critic: Any
+  $patch: Any
+  $report: Any
+  $deployment: Any
+  $score: Float
+) @auth(level: USER) {
+  evolutionLog_insert(data: {
+    agentId: $agentId
+    filePath: $filePath
+    codeBefore: $codeBefore
+    errorLog: $errorLog
+    success: $success
+    logs: $logs
+    critic: $critic
+    patch: $patch
+    report: $report
+    deployment: $deployment
+    score: $score
+  })
+}

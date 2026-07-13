@@ -1,0 +1,13 @@
+# dataconnect.yaml
+specVersion: "v1"
+serviceId: "zapalnik-crm"
+location: "us-central1"
+schemaValidation: "STRICT"
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "zapalnik_crm_db"
+      cloudSql:
+        instanceId: "zapalnik-crm-instance"
+connectorDirs: ["./connector"]

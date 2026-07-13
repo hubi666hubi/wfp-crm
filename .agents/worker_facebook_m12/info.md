@@ -1,0 +1,1 @@
+Worker Facebook metadata placeholder.

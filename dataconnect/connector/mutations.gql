@@ -1,0 +1,223 @@
+# Mutations for WFP CRM Data Connect
+
+mutation CreateLeadPublic(
+  $name: String!
+  $email: String
+  $companyName: String
+  $bio: String
+  $source: String!
+  $message: String
+  $priority: LeadPriority
+) @auth(level: PUBLIC) {
+  lead_insert(data: {
+    name: $name
+    email: $email
+    companyName: $companyName
+    bio: $bio
+    source: $source
+    message: $message
+    priority: $priority
+    status: "Inbound (Wtyczka)"
+  })
+}
+
+mutation UpsertLead(
+  $id: UUID
+  $name: String!
+  $email: String
+  $companyName: String
+  $bio: String
+  $source: String
+  $isHighTicket: Boolean
+  $score: Int
+  $draftMessage: String
+  $status: String
+  $priority: LeadPriority
+  $message: String
+  $rejectionReason: String
+  $necromancyTriggered: Boolean
+  $lastContact: Timestamp
+  $lastNecromancyAttempt: Timestamp
+  $resurrectionSpell: String
+  $aiEnrichment: Any
+  $dmSequence: Any
+  $chatHistory: Any
+  $pitchCard: Any
+  $tacticalBrief: Any
+  $campaignId: UUID
+) @auth(level: USER) {
+  lead_upsert(data: {
+    id: $id
+    userId_expr: "auth.uid"
+    name: $name
+    email: $email
+    companyName: $companyName
+    bio: $bio
+    source: $source
+    isHighTicket: $isHighTicket
+    score: $score
+    draftMessage: $draftMessage
+    status: $status
+    priority: $priority
+    message: $message
+    rejectionReason: $rejectionReason
+    necromancyTriggered: $necromancyTriggered
+    lastContact: $lastContact
+    lastNecromancyAttempt: $lastNecromancyAttempt
+    resurrectionSpell: $resurrectionSpell
+    aiEnrichment: $aiEnrichment
+    dmSequence: $dmSequence
+    chatHistory: $chatHistory
+    pitchCard: $pitchCard
+    tacticalBrief: $tacticalBrief
+    campaignId: $campaignId
+    updatedAt_expr: "request.time"
+  })
+}
+
+mutation UpdateLead(
+  $id: UUID!
+  $status: String
+  $priority: LeadPriority
+  $aiEnrichment: Any
+  $dmSequence: Any
+  $chatHistory: Any
+  $pitchCard: Any
+  $tacticalBrief: Any
+  $rejectionReason: String
+  $necromancyTriggered: Boolean
+  $lastNecromancyAttempt: Timestamp
+  $resurrectionSpell: String
+  $lastContact: Timestamp
+) @auth(level: USER) {
+  lead_update(
+    id: $id
+    data: {
+      status: $status
+      priority: $priority
+      aiEnrichment: $aiEnrichment
+      dmSequence: $dmSequence
+      chatHistory: $chatHistory
+      pitchCard: $pitchCard
+      tacticalBrief: $tacticalBrief
+      rejectionReason: $rejectionReason
+      necromancyTriggered: $necromancyTriggered
+      lastNecromancyAttempt: $lastNecromancyAttempt
+      resurrectionSpell: $resurrectionSpell
+      lastContact: $lastContact
+      updatedAt_expr: "request.time"
+    }
+  )
+}
+
+mutation DeleteLead($id: UUID!) @auth(level: USER) {
+  lead_delete(id: $id)
+}
+
+mutation UpsertCampaign(
+  $id: UUID
+  $name: String!
+  $status: String
+  $reach: Int
+  $comments: Int
+  $dmsSent: Int
+  $responseSpeed: Float
+) @auth(level: USER) {
+  campaign_upsert(data: {
+    id: $id
+    userId_expr: "auth.uid"
+    name: $name
+    status: $status
+    reach: $reach
+    comments: $comments
+    dmsSent: $dmsSent
+    responseSpeed: $responseSpeed
+  })
+}
+
+mutation InsertCampaignConversion(
+  $campaignId: UUID!
+  $date: Date!
+  $conversions: Int!
+  $facebook: Int
+  $linkedin: Int
+  $direct: Int
+) @auth(level: USER) {
+  campaignConversion_insert(data: {
+    campaignId: $campaignId
+    date: $date
+    conversions: $conversions
+    facebook: $facebook
+    linkedin: $linkedin
+    direct: $direct
+  })
+}
+
+mutation CreateEvent(
+  $eventType: String!
+  $testRunId: String
+  $payload: Any!
+  $leadId: UUID
+  $evolutionLogId: UUID
+) @auth(level: PUBLIC) {
+  event_insert(data: {
+    eventType: $eventType
+    testRunId: $testRunId
+    payload: $payload
+    leadId: $leadId
+    evolutionLogId: $evolutionLogId
+  })
+}
+
+mutation CreateEvolutionLog(
+  $agentId: String
+  $filePath: String!
+  $codeBefore: String!
+  $errorLog: String!
+  $success: Boolean!
+  $logs: [String!]!
+  $critic: Any
+  $patch: Any
+  $report: Any
+  $deployment: Any
+  $score: Float
+) @auth(level: PUBLIC) {
+  evolutionLog_insert(data: {
+    agentId: $agentId
+    filePath: $filePath
+    codeBefore: $codeBefore
+    errorLog: $errorLog
+    success: $success
+    logs: $logs
+    critic: $critic
+    patch: $patch
+    report: $report
+    deployment: $deployment
+    score: $score
+  })
+}
+
+mutation UpsertLeadAndLog(
+  $id: UUID!,
+  $email: String!,
+  $name: String!,
+  $companyName: String!,
+  $status: String!,
+  $score: Int!,
+  $isHighTicket: Boolean!,
+  $aiEnrichment: Any!,
+  $pitchCard: Any!
+) @auth(level: PUBLIC) {
+  lead_upsert(data: {
+    id: $id,
+    email: $email,
+    name: $name,
+    companyName: $companyName,
+    status: $status,
+    score: $score,
+    isHighTicket: $isHighTicket,
+    aiEnrichment: $aiEnrichment,
+    pitchCard: $pitchCard
+  })
+}
+

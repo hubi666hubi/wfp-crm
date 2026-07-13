@@ -62,16 +62,26 @@ export function GmailIntegration() {
     return () => unsubscribe();
   }, []);
 
+  const isMountedRef = useRef(true);
+  const gmailAbortControllerRef = useRef<AbortController | null>(null);
+
   const fetchEmails = async () => {
-    setLoading(true);
-    setError('');
+    if (gmailAbortControllerRef.current) {
+      gmailAbortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    gmailAbortControllerRef.current = controller;
+
+    if (isMountedRef.current) setLoading(true);
+    if (isMountedRef.current) setError('');
     
     try {
       const token = getAccessToken();
       if (!token) throw new Error('Brak tokenu dostępu. Zaloguj się ponownie.');
 
       const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=5', {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal
       });
       
       const data = await response.json();
@@ -81,7 +91,8 @@ export function GmailIntegration() {
         const fullMessages = await Promise.all(
           data.messages.map(async (msg: { id: string }) => {
             const msgRes = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}`, {
-              headers: { Authorization: `Bearer ${token}` }
+              headers: { Authorization: `Bearer ${token}` },
+              signal: controller.signal
             });
             const msgData = await msgRes.json();
             
@@ -95,22 +106,41 @@ export function GmailIntegration() {
             };
           })
         );
-        setMessages(fullMessages);
+        if (isMountedRef.current && !controller.signal.aborted) {
+          setMessages(fullMessages);
+        }
       } else {
-        setMessages([]);
+        if (isMountedRef.current && !controller.signal.aborted) {
+          setMessages([]);
+        }
       }
       
     } catch (err: unknown) {
+      if (controller.signal.aborted) return;
       console.error(err);
-      setError(err instanceof Error ? err.message : 'Wystąpił błąd podczas pobierania wiadomości.');
+      if (isMountedRef.current) {
+        setError(err instanceof Error ? err.message : 'Wystąpił błąd podczas pobierania wiadomości.');
+      }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current && !controller.signal.aborted) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    let isMounted = true;
+    isMountedRef.current = isMounted;
+
     fetchEmails();
+
+    return () => {
+      isMounted = false;
+      isMountedRef.current = isMounted;
+      if (gmailAbortControllerRef.current) {
+        gmailAbortControllerRef.current.abort();
+      }
+    };
   }, []);
 
   const handleSuggestAiReply = async (msg?: GmailMessage) => {
@@ -334,7 +364,7 @@ export function GmailIntegration() {
     setActionLoading(null);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   
   const executeFollowUp = async (clientId: string, level: 1 | 2) => {
     const client = clients.find(c => c.id === clientId);
     if (!client || !client.paymentLink) return;

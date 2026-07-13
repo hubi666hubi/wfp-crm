@@ -1,0 +1,44 @@
+Company,Email,Website,Score,Status,Source,Est Value (USD)
+Comp C,dup2@test.com,https://compc.com,95,Do kontaktu,fb,$4000
+Comp D,dup3@test.com,https://compd.com,60,Do kontaktu,fb,$5000
+,comp_empty@test.com,https://emptycomp.com,50,Do kontaktu,fb,$200
+,,,30,Do kontaktu,fb,$100
+,,,35,Do kontaktu,fb,$200
+Score Test 1,score1@test.com,https://s1.com,100,Do kontaktu,fb,
+Score Test 2,score2@test.com,https://s2.com,0,Do kontaktu,fb,
+Score Test 3,score3@test.com,https://s3.com,85,Do kontaktu,fb,
+Score Test 4,score4@test.com,https://s4.com,96,Do kontaktu,fb,
+Score Test 5,score5@test.com,https://s5.com,90,Do kontaktu,fb,
+Score Test 6,score6@test.com,https://s6.com,90,Do kontaktu,fb,
+Score Test 7,score7@test.com,https://s7.com,65,Do kontaktu,fb,
+Score Test 8,score8@test.com,https://s8.com,65,Do kontaktu,fb,
+Score Test 9,score9@test.com,https://s9.com,30,Do kontaktu,fb,
+Score Test 10,score10@test.com,https://s10.com,30,Do kontaktu,fb,
+Score Test 11,score11@test.com,https://s11.com,75,Do kontaktu,fb,
+Score Test 12,score12@test.com,https://s12.com,75,Do kontaktu,fb,
+Score Test 13,score13@test.com,https://s13.com,0,Do kontaktu,fb,
+Score Test 14,score14@test.com,https://s14.com,100,Do kontaktu,fb,
+Multiple Spaces,co1@test.com,https://co1.com,75,Do kontaktu,fb,
+The Apple and Banana in the Forest,co2@test.com,https://co2.com,75,Do kontaktu,fb,
+My HubSpot Integration LLC,co3@test.com,https://co3.com,75,Do kontaktu,fb,
+eBay Inc.,co4@test.com,https://co4.com,75,Do kontaktu,fb,
+iPhone LTD,co5@test.com,https://co5.com,75,Do kontaktu,fb,
+Google Sp. z o.o.,co6@test.com,https://co6.com,75,Do kontaktu,fb,
+Status Fb 1,stfb1@test.com,https://stfb1.com,75,Do kontaktu,fb,
+Status Fb 2,stfb2@test.com,https://stfb2.com,75,Wysłano PM / Komentarz,fb,
+Status Fb 3,stfb3@test.com,https://stfb3.com,75,Odpowiedział,fb,
+Status Fb 4,stfb4@test.com,https://stfb4.com,75,Negocjacja,fb,
+Status Fb 5,stfb5@test.com,https://stfb5.com,75,Zamknięty / Aktywny,fb,
+Status Inbound 1,stin1@test.com,https://stin1.com,75,Inbound (Wtyczka),inbound,
+Status Inbound 2,stin2@test.com,https://stin2.com,75,Wysłana wiadomość,inbound,
+Status Inbound 3,stin3@test.com,https://stin3.com,75,Rozmowa w toku,inbound,
+Status Inbound 4,stin4@test.com,https://stin4.com,75,Zakwalifikowane,inbound,
+Status Inbound 5,stin5@test.com,https://stin5.com,75,Zamknięte / Sukces,inbound,
+Val 1,val1@test.com,https://v1.com,75,Do kontaktu,fb,"$12,345.67"
+Val 2,val2@test.com,https://v2.com,75,Do kontaktu,fb,"€ 12 345,67"
+Val 3,val3@test.com,https://v3.com,75,Do kontaktu,fb,12345.67 PLN
+Val 4,val4@test.com,https://v4.com,75,Do kontaktu,fb,"12,345.67"
+Val 5,val5@test.com,https://v4.com,75,Do kontaktu,fb,"12345,67"
+Val 6,val6@test.com,https://v6.com,75,Do kontaktu,fb,"12.345,67 €"
+Val 7,val7@test.com,https://v7.com,75,Do kontaktu,fb,
+Val 8,val8@test.com,https://v8.com,75,Do kontaktu,fb,abc

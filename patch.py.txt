@@ -1,0 +1,58 @@
+import re
+import os
+
+filename = "server.ts"
+
+# 1. Autodetekcja ukrytego rozszerzenia .txt zrobionego przez Notatnik
+if not os.path.exists(filename) and os.path.exists("src/" + filename):
+    filename = "src/" + filename
+
+if not os.path.exists(filename):
+    print(f"❌ Błąd: Nie znaleziono pliku '{filename}'.")
+    print("👉 Upewnij się, że Twój skrypt nie nazywa się przypadkiem 'patch.py.txt'!")
+    exit()
+
+print("🤖 Uruchamiam pancerny patcher 2.0...")
+
+with open(filename, "r", encoding="utf-8") as f:
+    code = f.read()
+
+start_marker = "async function generateContentWithFallback"
+end_marker = "async function startServer()"
+
+start_idx = code.find(start_marker)
+end_idx = code.find(end_marker)
+
+if start_idx != -1 and end_idx != -1:
+    # Nowa, luźniejsza logika: łapie KAŻDY błąd bez wyjątków i rotuje dalej
+    new_fallback = """async function generateContentWithFallback(ai: GoogleGenAI, params: Record<string, unknown>) {
+  const models = ["gemini-3.5-flash", "gemini-1.5-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash"];
+  let lastError: any = null;
+  for (const modelName of models) {
+    try {
+      params.model = modelName;
+      // @ts-expect-error - parameters generic usage
+      return await ai.models.generateContent(params);
+    } catch (err: any) {
+      lastError = err;
+      console.log(`\\x1b[33m⚠️ [WATCHDOG]: Model ${modelName} zgłosił problem. Przerzut na kolejny... Błąd: ${err?.message || err}\\x1b[0m`);
+    }
+  }
+  throw lastError || new Error("🚨 Wszystkie darmowe modele na tym kluczu API zostały wyczerpane.");
+}\n\n"""
+    code = code[:start_idx] + new_fallback + code[end_idx:]
+    print("✅ Zaktualizowano silnik rotacji (szerokie przechwytywanie błędów).")
+else:
+    print("⚠️ Nie znaleziono podstawowej funkcji fallback.")
+
+# 2. Elastyczne przepięcie wszystkich 7 punktów zapytania
+pattern = r'await\s+ai\.models\.generateContent\(\{\s*model:\s*"gemini-3.5-flash",'
+replacement = 'await generateContentWithFallback(ai, {\n        model: "gemini-3.5-flash",'
+
+code, count = re.subn(pattern, replacement, code)
+print(f"✅ Przepięto automatycznie {count} bezpośrednich wywołań na tryb awaryjny.")
+
+with open(filename, "w", encoding="utf-8") as f:
+    f.write(code)
+
+print("🚀 Sukces! Plik server.ts zaktualizowany. Zrestartuj swój proces node/vite.")

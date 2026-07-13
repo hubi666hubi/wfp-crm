@@ -1,0 +1,6 @@
+name: SkillMonetizationAudit
+description: >-
+  Audits monetization schemas, subscriptions status, usage limits, and transactional logs.
+version: "1.0"
+author: "Antigravity Architect"
+entrypoint: "analyzer.py"

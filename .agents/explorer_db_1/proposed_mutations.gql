@@ -1,0 +1,171 @@
+# crm connector mutations
+
+# 1. Upsert a lead (insert or update)
+mutation UpsertLead(
+  $id: UUID
+  $name: String!
+  $email: String
+  $bio: String
+  $companyName: String
+  $industry: String
+  $source: String
+  $status: String
+  $score: Int
+  $isHighTicket: Boolean
+  $value: Int
+  $intentLevel: String
+  $painSummary: String
+  $yourOffer: String
+  $aiEnrichment: Any
+  $dmSequence: Any
+  $chatHistory: Any
+  $pitchCard: Any
+  $tacticalBrief: Any
+  $rejectionReason: String
+  $lastContact: Timestamp
+) @auth(level: USER) {
+  lead_upsert(
+    data: {
+      id: $id
+      name: $name
+      email: $email
+      bio: $bio
+      companyName: $companyName
+      industry: $industry
+      source: $source
+      status: $status
+      score: $score
+      isHighTicket: $isHighTicket
+      value: $value
+      intentLevel: $intentLevel
+      painSummary: $painSummary
+      yourOffer: $yourOffer
+      aiEnrichment: $aiEnrichment
+      dmSequence: $dmSequence
+      chatHistory: $chatHistory
+      pitchCard: $pitchCard
+      tacticalBrief: $tacticalBrief
+      rejectionReason: $rejectionReason
+      lastContact: $lastContact
+      createdAt_expr: "request.time"
+    }
+  )
+}
+
+# 2. Update a lead's status and lastContact time
+mutation UpdateLeadStatus(
+  $id: UUID!
+  $status: String!
+  $rejectionReason: String
+) @auth(level: USER) {
+  lead_update(
+    id: $id
+    data: {
+      status: $status
+      rejectionReason: $rejectionReason
+      lastContact_expr: "request.time"
+    }
+  )
+}
+
+# 3. Create a system event (e.g. ZAPALNIK_CLIP hit)
+mutation CreateEvent(
+  $eventType: String!
+  $testRunId: String
+  $payload: Any
+  $leadId: UUID
+  $campaignId: UUID
+  $evolutionLogId: UUID
+) @auth(level: USER) {
+  event_insert(
+    data: {
+      id_expr: "uuidV4()"
+      timestamp_expr: "request.time"
+      eventType: $eventType
+      testRunId: $testRunId
+      payload: $payload
+      leadId: $leadId
+      campaignId: $campaignId
+      evolutionLogId: $evolutionLogId
+    }
+  )
+}
+
+# 4. Upsert a marketing campaign
+mutation UpsertCampaign(
+  $id: UUID
+  $name: String!
+  $status: String
+  $description: String
+  $competitorWeaknesses: [String!]
+  $webhookUrl: String
+) @auth(level: USER) {
+  campaign_upsert(
+    data: {
+      id: $id
+      name: $name
+      status: $status
+      description: $description
+      competitorWeaknesses: $competitorWeaknesses
+      webhookUrl: $webhookUrl
+      createdAt_expr: "request.time"
+    }
+  )
+}
+
+# 5. Link a lead to a campaign (target lead)
+mutation TargetLeadInCampaign(
+  $campaignId: UUID!
+  $leadId: UUID!
+  $status: String
+) @auth(level: USER) {
+  campaignLead_upsert(
+    data: {
+      campaignId: $campaignId
+      leadId: $leadId
+      status: $status
+      addedAt_expr: "request.time"
+    }
+  )
+}
+
+# 6. Create a code evolution log from the self-evolution engine
+mutation CreateEvolutionLog(
+  $filePath: String!
+  $agentId: String!
+  $codeBefore: String!
+  $codeAfter: String!
+  $errorLog: String!
+  $criticAnalysis: String!
+  $patchNotes: String!
+  $astPassed: Boolean!
+  $securityPassed: Boolean!
+  $isValid: Boolean!
+  $isDeployed: Boolean!
+  $backupPath: String
+  $score: Float!
+  $durationMs: Int!
+  $tokenUsage: Int!
+) @auth(level: USER) {
+  evolutionLog_insert(
+    data: {
+      id_expr: "uuidV4()"
+      timestamp_expr: "request.time"
+      filePath: $filePath
+      agentId: $agentId
+      codeBefore: $codeBefore
+      codeAfter: $codeAfter
+      errorLog: $errorLog
+      criticAnalysis: $criticAnalysis
+      patchNotes: $patchNotes
+      astPassed: $astPassed
+      securityPassed: $securityPassed
+      isValid: $isValid
+      isDeployed: $isDeployed
+      backupPath: $backupPath
+      score: $score
+      durationMs: $durationMs
+      tokenUsage: $tokenUsage
+    }
+  )
+}

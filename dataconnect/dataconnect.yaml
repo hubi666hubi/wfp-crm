@@ -1,0 +1,22 @@
+specVersion: "v1alpha"
+serviceId: "wfp-crm-omega-service"
+location: "europe-west1"
+
+# Warstwa Trwałości Danych: Relacyjne mapowanie struktur SQL i Firebase Connect
+connectorDirs:
+  - "connector"
+
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "firebase_dataconnect_db"
+      cloudSql:
+        instanceId: "wfp-crm-omega-instance"
+      schemaValidation: "STRICT"
+
+# Automatyczne generowanie kodu SDK TypeScript do jądra serwera
+generate:
+  typescriptSdk:
+    outputDir: "../server/dataconnect"
+    packageJsonDir: "../server"

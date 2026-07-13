@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { AdvancedPromptEditor } from '../components/AdvancedPromptEditor';
+import { GeneratorForm } from '../components/generators/GeneratorForm';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -224,7 +225,7 @@ export function ProGenerators() {
     return calculateMonteCarloPure(3000, 4000, 2.5, 2.2, 0.7, 5500, 1500, 0.4);
   });
 
-  const runMonteCarloSimulation = () => {
+  const runMonteCarloSimulation = useCallback(() => {
     setIsMcSimulating(true);
 
     setTimeout(() => {
@@ -251,7 +252,7 @@ export function ProGenerators() {
         duration: 5000,
       });
     }, 1200);
-  };
+  }, [mcRuns, mcReach, mcCostPerLead, mcExpectedConv, mcConvStdDev, mcDealValue, mcOverhead, mcSkewness]);
 
   // Poll intervals
   const pollTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -264,7 +265,7 @@ export function ProGenerators() {
   }, []);
 
   // --- PROMPT OPTIMIZE HELPER ---
-  const handleOptimizePrompt = async (generationType: 'image' | 'video') => {
+  const handleOptimizePrompt = useCallback(async (generationType: 'image' | 'video') => {
     const rawInput = generationType === 'image' ? imgPrompt : videoPrompt;
     if (!rawInput.trim()) {
       toast.error("Wpisz krótki pomysł lub hasło robocze w polu promptu pierwsze.");
@@ -310,10 +311,10 @@ export function ProGenerators() {
     } finally {
       setIsOptimizing(false);
     }
-  };
+  }, [imgPrompt, videoPrompt, enableSearchGrounding]);
 
   // --- IMAGE HELPERS ---
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
+  const handleImageUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -336,9 +337,9 @@ export function ProGenerators() {
       }
     };
     reader.readAsDataURL(file);
-  };
+  }, []);
 
-  const clearImage = (type: 'image' | 'video') => {
+  const clearImage = useCallback((type: 'image' | 'video') => {
     if (type === 'image') {
       setSourceImage(null);
       if (imgFileRef.current) imgFileRef.current.value = '';
@@ -346,9 +347,9 @@ export function ProGenerators() {
       setVideoSourceImage(null);
       if (videoFileRef.current) videoFileRef.current.value = '';
     }
-  };
+  }, []);
 
-  const handleGenerateImage = async () => {
+  const handleGenerateImage = useCallback(async () => {
     if (!imgPrompt.trim()) {
       toast.error("Wpisz opis grafiki, którą chcesz stworzyć.");
       return;
@@ -385,10 +386,37 @@ export function ProGenerators() {
     } finally {
       setIsGeneratingImg(false);
     }
-  };
+  }, [imgPrompt, imgAspect, imgSize, sourceImage, sourceImageMime]);
+
+  const downloadGeneratedVideo = useCallback(async (operationName: string) => {
+    try {
+      const dlRes = await fetch("/api/pro-generators/video-download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ operationName })
+      });
+
+      if (!dlRes.ok) {
+        const errorData = await dlRes.json().catch(() => ({}));
+        throw new Error(errorData.error || "Nie udało się pobrać ostatecznego strumienia wideo.");
+      }
+
+      const videoBlob = await dlRes.blob();
+      const videoLocalUrl = URL.createObjectURL(videoBlob);
+      
+      setGeneratedVideoUrl(videoLocalUrl);
+      setVideoProgressPct(100);
+      toast.success("Plik wideo Veo pobrany pomyślnie!", { icon: "🎥" });
+    } catch (err: any) {
+      console.error(err);
+      setVideoErr(err.message || "Błąd podczas uzyskiwania końcowego pliku wideo.");
+    } finally {
+      setIsVideoLoading(false);
+    }
+  }, []);
 
   // --- VIDEO HELPERS (3-STEP VEO WORKFLOW) ---
-  const handleGenerateVideo = async () => {
+  const handleGenerateVideo = useCallback(async () => {
     if (!videoPrompt.trim() && !videoSourceImage) {
       toast.error("Dodaj obraz źródłowy lub wpisz prompt tekstowy, aby zainicjować Veo 3!");
       return;
@@ -488,43 +516,16 @@ export function ProGenerators() {
       setIsVideoLoading(false);
       toast.error("Nie udało się rozpocząć generowania wideo");
     }
-  };
+  }, [videoPrompt, videoSourceImage, videoSourceImageMime, videoAspect, downloadGeneratedVideo]);
 
-  const downloadGeneratedVideo = async (operationName: string) => {
-    try {
-      const dlRes = await fetch("/api/pro-generators/video-download", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ operationName })
-      });
-
-      if (!dlRes.ok) {
-        const errorData = await dlRes.json().catch(() => ({}));
-        throw new Error(errorData.error || "Nie udało się pobrać ostatecznego strumienia wideo.");
-      }
-
-      const videoBlob = await dlRes.blob();
-      const videoLocalUrl = URL.createObjectURL(videoBlob);
-      
-      setGeneratedVideoUrl(videoLocalUrl);
-      setVideoProgressPct(100);
-      toast.success("Plik wideo Veo pobrany pomyślnie!", { icon: "🎥" });
-    } catch (err: any) {
-      console.error(err);
-      setVideoErr(err.message || "Błąd podczas uzyskiwania końcowego pliku wideo.");
-    } finally {
-      setIsVideoLoading(false);
-    }
-  };
-
-  const downloadFile = (dataUrlOrBlob: string, filename: string) => {
+  const downloadFile = useCallback((dataUrlOrBlob: string, filename: string) => {
     const link = document.createElement("a");
     link.href = dataUrlOrBlob;
     link.download = filename;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
+  }, []);
 
   return (
     <div className="space-y-8" id="pro-fortress-generators">
@@ -577,284 +578,29 @@ export function ProGenerators() {
             className="grid grid-cols-1 lg:grid-cols-12 gap-8"
           >
             {/* Panel sterowania grafiki */}
-            <div className="lg:col-span-5 space-y-6">
-              <div className="border border-neutral-800 bg-neutral-950/80 backend-panel rounded-2xl p-6 relative overflow-hidden backdrop-blur-md">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 rounded-full blur-3xl pointer-events-none" />
-                
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4 font-mono flex items-center gap-1.5 border-b border-neutral-900 pb-3">
-                  <Sliders size={16} className="text-rose-500" /> Parametryzacja silnika graficznego
-                </h3>
-
-                <div className="space-y-4">
-                  {/* Wybór Trybu Edytora */}
-                  <div className="flex border-b border-neutral-900 pb-2 mb-2 items-center justify-between">
-                    <span className="text-[10px] font-mono text-neutral-500 font-bold uppercase tracking-widest">
-                      Tryb edytora promptów
-                    </span>
-                    <div className="flex bg-neutral-950 rounded-lg p-0.5 border border-neutral-850">
-                      <button
-                        type="button"
-                        onClick={() => setImgEditorMode('simple')}
-                        className={`px-3 py-1 text-[10px] font-mono font-bold uppercase rounded-md transition-colors cursor-pointer ${
-                          imgEditorMode === 'simple'
-                            ? "bg-rose-500/10 text-rose-400"
-                            : "text-neutral-500 hover:text-neutral-300"
-                        }`}
-                      >
-                        Szybki Szkic
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setImgEditorMode('templates')}
-                        className={`px-3 py-1 text-[10px] font-mono font-bold uppercase rounded-md transition-colors cursor-pointer flex items-center gap-1 ${
-                          imgEditorMode === 'templates'
-                            ? "bg-rose-500/10 text-rose-400"
-                            : "text-neutral-500 hover:text-neutral-300"
-                        }`}
-                      >
-                        <Zap size={10} className="text-amber-500 animate-pulse" /> Studio Szablonów PRO
-                      </button>
-                    </div>
-                  </div>
-
-                  {imgEditorMode === 'simple' ? (
-                    <>
-                      {/* Opis kreatywny */}
-                      <div className="space-y-1.5">
-                        <label className="text-[11px] font-mono font-bold text-neutral-400 uppercase tracking-widest flex justify-between">
-                          <span>Kreatywny Prompt Wizualny</span>
-                          <span className="text-neutral-600">Model: Gemini 3.1-flash-image</span>
-                        </label>
-                        <textarea
-                          placeholder="Niebieski lśniący robot z mosiężnymi zębatkami siedzący w kokpicie futurystycznego statku, styl cyber-noir z różowym podświetleniem neonowym, hiperdetale, unreal engine 5..."
-                          value={imgPrompt}
-                          onChange={(e) => setImgPrompt(e.target.value)}
-                          rows={4}
-                          className="w-full text-sm rounded-xl bg-neutral-900 border border-neutral-800 px-4 py-3 placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-rose-500/50 text-white leading-relaxed resize-none transition-all"
-                        />
-                      </div>
-
-                      {/* SUPERCHARGER PROMPTU (AUTOMATYCZNY OPTYMALIZATOR Z GOOGLE SEARCH) */}
-                      <div className="bg-neutral-900/60 rounded-xl p-3 border border-neutral-800 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-mono font-bold text-amber-500 uppercase tracking-widest flex items-center gap-1.5 animate-pulse">
-                            <Zap size={12} className="text-amber-550" /> Supercharger Promptu Ω
-                          </span>
-                          <label className="flex items-center gap-2 cursor-pointer select-none">
-                            <input
-                              type="checkbox"
-                              checked={enableSearchGrounding}
-                              onChange={(e) => setEnableSearchGrounding(e.target.checked)}
-                              className="rounded bg-neutral-950 border-neutral-850 text-amber-500 focus:ring-0 focus:ring-offset-0 h-3.5 w-3.5 cursor-pointer accent-amber-500"
-                            />
-                            <span className="text-[10px] font-mono font-bold text-neutral-400 uppercase flex items-center gap-1">
-                              <Globe size={10} className="text-blue-400" /> Google Search
-                            </span>
-                          </label>
-                        </div>
-
-                        <p className="text-[10px] text-neutral-500 leading-normal">
-                          Podaj hasło robocze w polu wyżej i kliknij przycisk, aby stworzyć hiperdetaliczny, profesjonalny prompt.
-                        </p>
-
-                        <div className="flex flex-wrap gap-1.5 pt-1">
-                          <span className="text-[9px] font-mono text-neutral-500 uppercase flex items-center">Szybka baza:</span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setImgPrompt("Luxury cyberpunk sports car on a wet neon Neo-Tokyo street, dramatic reflections");
-                              toast.info("Załadowano bazę: Cyberpunk");
-                            }}
-                            className="text-[10px] px-2 py-1 bg-neutral-950 border border-neutral-850 text-neutral-300 rounded hover:text-white hover:border-neutral-750 transition-colors uppercase font-mono cursor-pointer"
-                          >
-                            Cyberpunk
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setImgPrompt("Intricate celestial watchmaker with floating astronomical gears inside a space nebula");
-                              toast.info("Załadowano bazę: Kosmiczny Zegar");
-                            }}
-                            className="text-[10px] px-2 py-1 bg-neutral-950 border border-neutral-850 text-neutral-300 rounded hover:text-white hover:border-neutral-750 transition-colors uppercase font-mono cursor-pointer"
-                          >
-                            Astronomia
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setImgPrompt("High studio lit minimalist diamond necklace lying on dramatic black sand");
-                              toast.info("Załadowano bazę: Biżuteria");
-                            }}
-                            className="text-[10px] px-2 py-1 bg-neutral-950 border border-neutral-850 text-neutral-300 rounded hover:text-white hover:border-neutral-750 transition-colors uppercase font-mono cursor-pointer"
-                          >
-                            Luxury Perfume
-                          </button>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => handleOptimizePrompt('image')}
-                          disabled={isOptimizing}
-                          className="w-full bg-neutral-950 hover:bg-neutral-900 text-amber-400 hover:text-amber-300 border border-amber-500/20 hover:border-amber-500/40 text-[10px] font-mono font-bold uppercase rounded-lg py-2 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-45 transition-all active:scale-98"
-                        >
-                          {isOptimizing ? (
-                            <>
-                              <Loader2 className="animate-spin text-amber-500" size={12} />
-                              Trwa Optymalizacja & Grounding...
-                            </>
-                          ) : (
-                            <>
-                              <Wand2 size={12} />
-                              Ulepsz Prompt z AI & Grounding
-                            </>
-                          )}
-                        </button>
-
-                        {groundingCitations.length > 0 && activeTab === 'image' && (
-                          <div className="space-y-1.5 pt-1.5 border-t border-neutral-850">
-                            <span className="text-[9px] font-mono text-neutral-500 uppercase flex items-center gap-1">
-                              <Search size={10} className="text-blue-400" /> Najnowsze trendy z Google:
-                            </span>
-                            <div className="flex flex-wrap gap-1">
-                              {groundingCitations.map((cit, idx) => (
-                                <a
-                                  key={idx}
-                                  href={cit.uri}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[9.5px] font-mono bg-neutral-950/80 px-2 py-0.5 rounded border border-neutral-850 hover:border-blue-500/30 text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
-                                >
-                                  <Globe size={8} /> {cit.title.slice(0, 24)}...
-                                </a>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    <AdvancedPromptEditor
-                      generationType="image"
-                      currentPrompt={imgPrompt || "A studio portrait of a futuristic cyborg {{character}} with {{color_scheme}} glowing circuitry, highly detailed photorealistic, unreal engine v5 render, 8k resolution"}
-                      onApplyPrompt={(compiled) => setImgPrompt(compiled)}
-                    />
-                  )}
-
-                  {/* Proporcje i Rozmiary */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-mono font-bold text-neutral-400 uppercase tracking-widest">
-                        Proporcje Obrazu
-                      </label>
-                      <select
-                        value={imgAspect}
-                        onChange={(e) => setImgAspect(e.target.value as AspectRatio)}
-                        className="w-full rounded-xl bg-neutral-900 border border-neutral-800 p-3 text-sm text-neutral-300 focus:outline-none focus:ring-1 focus:ring-rose-500/50"
-                      >
-                        <option value="1:1">Kwadrat (1:1)</option>
-                        <option value="16:9">Widescreen (16:9)</option>
-                        <option value="9:16">Pionowy (9:16)</option>
-                        <option value="4:3">Telewizyjny (4:3)</option>
-                        <option value="3:4">Portret (3:4)</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-mono font-bold text-neutral-400 uppercase tracking-widest">
-                        Rozdzielczość Wejściowa
-                      </label>
-                      <select
-                        value={imgSize}
-                        onChange={(e) => setImgSize(e.target.value as ImageSize)}
-                        className="w-full rounded-xl bg-neutral-900 border border-neutral-800 p-3 text-sm text-neutral-300 focus:outline-none focus:ring-1 focus:ring-rose-500/50"
-                      >
-                        <option value="1K">Standard HD (1K)</option>
-                        <option value="512px">Szybki podgląd (512px)</option>
-                        <option value="2K">Szczegółowy Ultra (2K)</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Edycja istniejącego obrazu (Image-to-Image / Inpainting) */}
-                  <div className="space-y-2 border-t border-neutral-900 pt-4">
-                    <label className="text-[11px] font-mono font-bold text-neutral-400 uppercase tracking-widest flex items-center justify-between">
-                      <span>Obraz Referencyjny / Edycja (Opcjonalnie)</span>
-                      {sourceImage && (
-                        <button 
-                          onClick={() => clearImage('image')}
-                          className="text-neutral-500 hover:text-rose-400 text-[10px] uppercase font-mono tracking-wider flex items-center gap-1 cursor-pointer"
-                        >
-                          <Trash2 size={10} /> Usuń
-                        </button>
-                      )}
-                    </label>
-
-                    {sourceImage ? (
-                      <div className="relative border border-neutral-800 bg-neutral-900 rounded-xl overflow-hidden p-2 flex items-center justify-between">
-                        <img 
-                          src={sourceImage} 
-                          alt="Podgląd edycji" 
-                          referrerPolicy="no-referrer"
-                          className="h-14 w-14 object-cover rounded-lg border border-neutral-700 flex-shrink-0" 
-                        />
-                        <div className="flex-1 px-3 text-left">
-                          <p className="text-xs text-white truncate font-medium">Bieżący Obraz</p>
-                          <p className="text-[10px] text-neutral-500 font-mono">Przekazany do klastra wektorowego</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div 
-                        onClick={() => imgFileRef.current?.click()}
-                        className="border border-dashed border-neutral-800 hover:border-neutral-700 bg-neutral-900/50 p-6 rounded-xl text-center cursor-pointer hover:bg-neutral-900 transition-colors group"
-                      >
-                        <ImageIcon size={22} className="mx-auto text-neutral-500 group-hover:text-rose-400 transition-colors mb-2" />
-                        <p className="text-xs text-neutral-400 font-medium font-sans">
-                          Kliknij, aby wgrać klatkę wejściową do edycji
-                        </p>
-                        <span className="text-[9px] text-neutral-600 font-mono block mt-1">
-                          Przekształć istniejący obraz z nowymi instrukcjami promtu
-                        </span>
-                      </div>
-                    )}
-                    <input
-                      ref={imgFileRef}
-                      type="file"
-                      id="img-upload-field"
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e, 'image')}
-                      className="hidden"
-                    />
-                  </div>
-
-                  {/* AKCJA GENEROWANIA */}
-                  <button
-                    onClick={handleGenerateImage}
-                    disabled={isGeneratingImg}
-                    className="w-full mt-6 bg-gradient-to-r from-rose-600 to-rose-700 text-white rounded-xl py-3.5 px-4 font-bold text-xs font-mono tracking-[0.1em] uppercase shadow-[0_4px_20px_rgba(225,29,72,0.25)] hover:shadow-[0_4px_20px_rgba(225,29,72,0.4)] disabled:opacity-40 disabled:cursor-not-allowed hover:from-rose-500 hover:to-rose-600 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
-                  >
-                    {isGeneratingImg ? (
-                      <>
-                        <Loader2 className="animate-spin text-white" size={16} />
-                        Przetwarzanie w sferze Gemini...
-                      </>
-                    ) : (
-                      <>
-                        <Wand2 size={16} />
-                        {sourceImage ? "Przeprowadź Edycję Obrazu" : "Generuj Nową Grafikę PRO"}
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Informacja o Modelu */}
-              <div className="border border-neutral-800/60 bg-neutral-900/10 rounded-2xl p-4 text-xs text-neutral-500 font-mono leading-relaxed flex gap-3">
-                <CheckCircle size={18} className="text-amber-500/70 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-white font-bold mb-0.5">Model Gemini Imagen 3.1 Preview</h4>
-                  Zapewnia ulepszoną wierność odwzorowania słów kluczowych i skomplikowanych zapytań przestrzennych. Doskonały do renderowania dynamicznych kompozycji technicznych oraz premium grafik kampanii.
-                </div>
-              </div>
+            <div className="lg:col-span-5">
+              <GeneratorForm
+                activeTab="image"
+                prompt={imgPrompt}
+                setPrompt={setImgPrompt}
+                aspect={imgAspect}
+                setAspect={setImgAspect}
+                size={imgSize}
+                setSize={setImgSize}
+                editorMode={imgEditorMode}
+                setEditorMode={setImgEditorMode}
+                sourceImage={sourceImage}
+                onImageUpload={(e) => handleImageUpload(e, 'image')}
+                onClearImage={() => clearImage('image')}
+                enableSearchGrounding={enableSearchGrounding}
+                setEnableSearchGrounding={setEnableSearchGrounding}
+                isOptimizing={isOptimizing}
+                onOptimize={() => handleOptimizePrompt('image')}
+                isGenerating={isGeneratingImg}
+                onGenerate={handleGenerateImage}
+                fileRef={imgFileRef}
+                groundingCitations={groundingCitations}
+              />
             </div>
 
             {/* Panel wizualizacji/efektu */}
@@ -946,280 +692,27 @@ export function ProGenerators() {
             className="grid grid-cols-1 lg:grid-cols-12 gap-8"
           >
             {/* Panel sterowania wideo Veo */}
-            <div className="lg:col-span-5 space-y-6">
-              <div className="border border-neutral-800 bg-neutral-950/80 backend-panel rounded-2xl p-6 relative overflow-hidden backdrop-blur-md">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4 font-mono flex items-center gap-1.5 border-b border-neutral-900 pb-3">
-                  <Film size={16} className="text-amber-500" /> Kinowy sterownik kamery Veo AI
-                </h3>
-
-                <div className="space-y-4">
-                  {/* Wdrożenie Klatki wejściowej (VEO wymaga startowej obrazka) */}
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-mono font-bold text-neutral-450 uppercase tracking-widest flex items-center justify-between">
-                      <span className="text-white">Klatka startowa (Wymagane)</span>
-                      {videoSourceImage && (
-                        <button 
-                          onClick={() => clearImage('video')}
-                          className="text-neutral-500 hover:text-rose-400 text-[10px] uppercase font-mono tracking-wider flex items-center gap-1 cursor-pointer"
-                        >
-                          <Trash2 size={10} /> Zmień
-                        </button>
-                      )}
-                    </label>
-
-                    {videoSourceImage ? (
-                      <div className="relative border border-neutral-800 bg-neutral-900 rounded-xl overflow-hidden p-2 flex items-center justify-between">
-                        <img 
-                          src={videoSourceImage} 
-                          alt="Zwiastun filmu startowego" 
-                          referrerPolicy="no-referrer"
-                          className="h-16 w-16 object-cover rounded-lg border border-neutral-700 flex-shrink-0" 
-                        />
-                        <div className="flex-1 px-3 text-left">
-                          <p className="text-xs text-white truncate font-medium">Bieżący Obraz</p>
-                          <span className="text-[9px] text-green-400 font-mono tracking-wider">
-                            Załadowano do Veo Engine Model
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div 
-                        onClick={() => videoFileRef.current?.click()}
-                        className="border border-dashed border-neutral-800 hover:border-neutral-700 bg-neutral-900/50 p-8 rounded-xl text-center cursor-pointer hover:bg-neutral-900 transition-colors group"
-                        id="video-image-dropzone"
-                      >
-                        <VideoIcon size={24} className="mx-auto text-neutral-500 group-hover:text-amber-500 transition-colors mb-2" />
-                        <p className="text-xs text-white font-medium font-sans">
-                          Wgraj początkową klatkę wideo
-                        </p>
-                        <span className="text-[9px] text-neutral-500 font-mono block mt-1.5 max-w-xs mx-auto">
-                          Wybierz obraz koncepcyjny z folderu, który silnik Veo ożywi w postaci dynamicznej sceny.
-                        </span>
-                      </div>
-                    )}
-                    <input
-                      ref={videoFileRef}
-                      type="file"
-                      id="video-upload-field"
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload(e, 'video')}
-                      className="hidden"
-                    />
-                  </div>
-
-                  {/* Wybór Trybu Edytora */}
-                  <div className="flex border-b border-neutral-900 pb-2 mb-2 items-center justify-between">
-                    <span className="text-[10px] font-mono text-neutral-500 font-bold uppercase tracking-widest">
-                      Tryb edytora promptów
-                    </span>
-                    <div className="flex bg-neutral-950 rounded-lg p-0.5 border border-neutral-850">
-                      <button
-                        type="button"
-                        onClick={() => setVideoEditorMode('simple')}
-                        className={`px-3 py-1 text-[10px] font-mono font-bold uppercase rounded-md transition-colors cursor-pointer ${
-                          videoEditorMode === 'simple'
-                            ? "bg-rose-500/10 text-rose-400"
-                            : "text-neutral-500 hover:text-neutral-300"
-                        }`}
-                      >
-                        Szybki Szkic
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setVideoEditorMode('templates')}
-                        className={`px-3 py-1 text-[10px] font-mono font-bold uppercase rounded-md transition-colors cursor-pointer flex items-center gap-1 ${
-                          videoEditorMode === 'templates'
-                            ? "bg-rose-500/10 text-rose-400"
-                            : "text-neutral-500 hover:text-neutral-300"
-                        }`}
-                      >
-                        <Zap size={10} className="text-amber-500 animate-pulse" /> Studio Szablonów PRO
-                      </button>
-                    </div>
-                  </div>
-
-                  {videoEditorMode === 'simple' ? (
-                    <>
-                      {/* Kinowy prompt ruchów kamery */}
-                      <div className="space-y-1.5 pt-2">
-                        <label className="text-[11px] font-mono font-bold text-neutral-400 uppercase tracking-widest flex justify-between">
-                          <span>Wektor Ruchu / Opis Animacji</span>
-                          <span className="text-neutral-600">Model: Veo 3.1-fast</span>
-                        </label>
-                        <textarea
-                          placeholder="Kinowe oddalenie kamery (zoom out), wokół robota unoszą się jasne pyłki kurzu w promieniach słońca, realistyczna tekstura fizyczna, dym snujący się z silników statku..."
-                          value={videoPrompt}
-                          onChange={(e) => setVideoPrompt(e.target.value)}
-                          rows={4}
-                          className="w-full text-sm rounded-xl bg-neutral-900 border border-neutral-800 px-4 py-3 placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-amber-500/50 text-white leading-relaxed resize-none transition-all"
-                        />
-                      </div>
-
-                      {/* SUPERCHARGER PROMPTU (AUTOMATYCZNY OPTYMALIZATOR Z GOOGLE SEARCH) - VIDEO VEO */}
-                      <div className="bg-neutral-900/60 rounded-xl p-3 border border-neutral-800 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-mono font-bold text-amber-500 uppercase tracking-widest flex items-center gap-1.5 animate-pulse">
-                            <Zap size={12} className="text-amber-550" /> Supercharger Promptu Ω
-                          </span>
-                          <label className="flex items-center gap-2 cursor-pointer select-none">
-                            <input
-                              type="checkbox"
-                              checked={enableSearchGrounding}
-                              onChange={(e) => setEnableSearchGrounding(e.target.checked)}
-                              className="rounded bg-neutral-950 border-neutral-850 text-amber-500 focus:ring-0 focus:ring-offset-0 h-3.5 w-3.5 cursor-pointer accent-amber-500"
-                            />
-                            <span className="text-[10px] font-mono font-bold text-neutral-400 uppercase flex items-center gap-1">
-                              <Globe size={10} className="text-blue-400" /> Google Search
-                            </span>
-                          </label>
-                        </div>
-
-                        <p className="text-[10px] text-neutral-500 leading-normal">
-                          Podaj bazę animacji, a my zoptymalizujemy ją w precyzyjny pod kątem dynamicznego wektora ruchu opis dla Veo.
-                        </p>
-
-                        <div className="flex flex-wrap gap-1.5 pt-1">
-                          <span className="text-[9px] font-mono text-neutral-500 uppercase flex items-center">Szybka baza:</span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setVideoPrompt("Epic 3D sweep around the futuristic robot object, majestic sun beams filtering deep, volumetric smoke");
-                              toast.info("Załadowano bazę: Obrotowa Kamera");
-                            }}
-                            className="text-[10px] px-2 py-1 bg-neutral-950 border border-neutral-850 text-neutral-300 rounded hover:text-white hover:border-neutral-750 transition-colors uppercase font-mono cursor-pointer"
-                          >
-                            Epic Sweep
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setVideoPrompt("Slow-motion pullback reveal of the dark nebula planet, cinematic particle vortex swirling");
-                              toast.info("Załadowano bazę: Oddalenie");
-                            }}
-                            className="text-[10px] px-2 py-1 bg-neutral-950 border border-neutral-850 text-neutral-300 rounded hover:text-white hover:border-neutral-750 transition-colors uppercase font-mono cursor-pointer"
-                          >
-                            Cinematic Zoom
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setVideoPrompt("Soft aesthetic camera pan, gentle warm realistic lights flickering inside and shimmering reflections");
-                              toast.info("Załadowano bazę: Ambient Flow");
-                            }}
-                            className="text-[10px] px-2 py-1 bg-neutral-950 border border-neutral-850 text-neutral-300 rounded hover:text-white hover:border-neutral-750 transition-colors uppercase font-mono cursor-pointer"
-                          >
-                            Aesthetic Flow
-                          </button>
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => handleOptimizePrompt('video')}
-                          disabled={isOptimizing}
-                          className="w-full bg-neutral-950 hover:bg-neutral-900 text-amber-400 hover:text-amber-300 border border-amber-500/20 hover:border-amber-500/40 text-[10px] font-mono font-bold uppercase rounded-lg py-2 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-45 transition-all active:scale-98"
-                        >
-                          {isOptimizing ? (
-                            <>
-                              <Loader2 className="animate-spin text-amber-500" size={12} />
-                              Trwa Optymalizacja & Grounding...
-                            </>
-                          ) : (
-                            <>
-                              <Wand2 size={12} />
-                              Ulepsz Prompt z AI & Grounding
-                            </>
-                          )}
-                        </button>
-
-                        {groundingCitations.length > 0 && activeTab === 'video' && (
-                          <div className="space-y-1.5 pt-1.5 border-t border-neutral-850">
-                            <span className="text-[9px] font-mono text-neutral-500 uppercase flex items-center gap-1">
-                              <Search size={10} className="text-blue-400" /> Najnowsze trendy z Google:
-                            </span>
-                            <div className="flex flex-wrap gap-1">
-                              {groundingCitations.map((cit, idx) => (
-                                <a
-                                  key={idx}
-                                  href={cit.uri}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[9.5px] font-mono bg-neutral-950/80 px-2 py-0.5 rounded border border-neutral-850 hover:border-blue-500/30 text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
-                                >
-                                  <Globe size={8} /> {cit.title.slice(0, 24)}...
-                                </a>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  ) : (
-                    <AdvancedPromptEditor
-                      generationType="video"
-                      currentPrompt={videoPrompt || "Epic slow-motion pullback 3D camera sweep revealing a {{colossal_concept}} swirling inside a deep nebula, cinematic lights"}
-                      onApplyPrompt={(compiled) => setVideoPrompt(compiled)}
-                    />
-                  )}
-
-                  {/* Proporcje klatek */}
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-mono font-bold text-neutral-450 uppercase tracking-widest">
-                      Format Wyjściowy Kinowy
-                    </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        onClick={() => setVideoAspect('16:9')}
-                        className={`py-3.5 px-4 rounded-xl border text-xs font-mono font-bold transition-all duration-250 flex items-center justify-center gap-1.5 cursor-pointer ${
-                          videoAspect === '16:9'
-                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.2)]'
-                            : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-white'
-                        }`}
-                      >
-                        <Film size={14} /> Panorama (16:9)
-                      </button>
-                      <button
-                        onClick={() => setVideoAspect('9:16')}
-                        className={`py-3.5 px-4 rounded-xl border text-xs font-mono font-bold transition-all duration-250 flex items-center justify-center gap-1.5 cursor-pointer ${
-                          videoAspect === '9:16'
-                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.2)]'
-                            : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-white'
-                        }`}
-                      >
-                        <Film size={14} className="rotate-90" /> Pionowy (9:16)
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* URUCHOMIENIE VEO */}
-                  <button
-                    onClick={handleGenerateVideo}
-                    disabled={isVideoLoading || (!videoPrompt.trim() && !videoSourceImage)}
-                    className="w-full mt-6 bg-gradient-to-r from-amber-600 to-amber-700 text-neutral-950 rounded-xl py-3.5 px-4 font-black text-xs font-mono tracking-[0.1em] uppercase shadow-[0_4px_20px_rgba(245,158,11,0.25)] hover:shadow-[0_4px_20px_rgba(245,158,11,0.4)] disabled:opacity-30 disabled:cursor-not-allowed hover:from-amber-400 hover:to-amber-500 flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
-                  >
-                    {isVideoLoading ? (
-                      <>
-                        <Loader2 className="animate-spin text-neutral-950" size={16} />
-                        Przetwarzanie w sferze Veo...
-                      </>
-                    ) : (
-                      <>
-                        <Play size={14} /> Generuj Wideo Veo 3 PRO
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Informacja o Modelu */}
-              <div className="border border-neutral-800/60 bg-neutral-900/10 rounded-2xl p-4 text-xs text-neutral-500 font-mono leading-relaxed flex gap-3">
-                <HelpCircle size={18} className="text-amber-400/80 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h4 className="text-white font-bold mb-0.5">Model Veo 3.1 Neural Generations</h4>
-                  Technologia klasy mistrzowskiej do dynamicznej syntezy wideo. Generowanie pełnej klatki o długości ~5 sekund trwa średnio 60-120 sekund.
-                </div>
-              </div>
+            <div className="lg:col-span-5">
+              <GeneratorForm
+                activeTab="video"
+                prompt={videoPrompt}
+                setPrompt={setVideoPrompt}
+                aspect={videoAspect}
+                setAspect={setVideoAspect}
+                editorMode={videoEditorMode}
+                setEditorMode={setVideoEditorMode}
+                sourceImage={videoSourceImage}
+                onImageUpload={(e) => handleImageUpload(e, 'video')}
+                onClearImage={() => clearImage('video')}
+                enableSearchGrounding={enableSearchGrounding}
+                setEnableSearchGrounding={setEnableSearchGrounding}
+                isOptimizing={isOptimizing}
+                onOptimize={() => handleOptimizePrompt('video')}
+                isGenerating={isVideoLoading}
+                onGenerate={handleGenerateVideo}
+                fileRef={videoFileRef}
+                groundingCitations={groundingCitations}
+              />
             </div>
 
             {/* Panel wizualizacji/efektu wideo */}

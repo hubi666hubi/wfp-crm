@@ -1,0 +1,180 @@
+# crm connector queries
+
+# 1. Get a single lead with all fields including related campaigns and events
+query GetLead($id: UUID!) @auth(level: USER) {
+  lead(id: $id) {
+    id
+    name
+    email
+    bio
+    companyName
+    industry
+    source
+    createdAt
+    lastContact
+    isHighTicket
+    score
+    status
+    rejectionReason
+    value
+    intentLevel
+    painSummary
+    yourOffer
+    aiEnrichment
+    dmSequence
+    chatHistory
+    pitchCard
+    tacticalBrief
+    publicCommentStrategy
+    videoPitchScript
+    qualificationScore
+    linkedinConnectPitch
+    coldEmailSubject
+    coldEmailBody
+    sentimentScore
+    sentimentLabel
+    priorityScore
+    priorityLabel
+    emotionalTriggers
+    sentimentExplanation
+    outreachPitch
+    # Relations
+    events_on_lead {
+      id
+      eventType
+      timestamp
+    }
+    campaigns_via_CampaignLead {
+      id
+      name
+      status
+    }
+  }
+}
+
+# 2. List leads with filtering, pagination and sorting
+query ListLeads(
+  $status: String
+  $source: String
+  $isHighTicket: Boolean
+  $limit: Int = 50
+  $offset: Int = 0
+) @auth(level: USER) {
+  leads(
+    where: {
+      status: { eq: $status }
+      source: { eq: $source }
+      isHighTicket: { eq: $isHighTicket }
+    }
+    orderBy: [{ createdAt: DESC }, { score: DESC }]
+    limit: $limit
+    offset: $offset
+  ) {
+    id
+    name
+    email
+    companyName
+    industry
+    source
+    createdAt
+    score
+    status
+    value
+  }
+}
+
+# 3. List dead leads for Necropolis resurrection sequence (inactive > 30 days)
+query ListDeadLeads($thirtyDaysAgo: Timestamp!) @auth(level: USER) {
+  leads(
+    where: {
+      status: { in: ["Rejected", "No Contact", "BabylonInactive"] }
+      lastContact: { lt: $thirtyDaysAgo }
+    }
+    orderBy: [{ lastContact: ASC }]
+  ) {
+    id
+    name
+    companyName
+    rejectionReason
+    lastContact
+    status
+  }
+}
+
+# 4. Get a campaign with all targeted leads (Many-to-Many relationship)
+query GetCampaign($id: UUID!) @auth(level: USER) {
+  campaign(id: $id) {
+    id
+    name
+    status
+    description
+    createdAt
+    competitorWeaknesses
+    webhookUrl
+    # Leads relation via join table
+    leads_via_CampaignLead {
+      id
+      name
+      email
+      status
+    }
+  }
+}
+
+# 5. List code evolution logs
+query ListEvolutionLogs(
+  $filePath: String
+  $isValid: Boolean
+  $isDeployed: Boolean
+  $limit: Int = 20
+  $offset: Int = 0
+) @auth(level: USER) {
+  evolutionLogs(
+    where: {
+      filePath: { eq: $filePath }
+      isValid: { eq: $isValid }
+      isDeployed: { eq: $isDeployed }
+    }
+    orderBy: [{ timestamp: DESC }]
+    limit: $limit
+    offset: $offset
+  ) {
+    id
+    timestamp
+    filePath
+    agentId
+    patchNotes
+    score
+    isValid
+    isDeployed
+    durationMs
+    tokenUsage
+  }
+}
+
+# 6. List system events, specifically filtering by eventType (e.g. ZAPALNIK_CLIP)
+query ListSystemEvents(
+  $eventType: String
+  $leadId: UUID
+  $limit: Int = 100
+  $offset: Int = 0
+) @auth(level: USER) {
+  events(
+    where: {
+      eventType: { eq: $eventType }
+      leadId: { eq: $leadId }
+    }
+    orderBy: [{ timestamp: DESC }]
+    limit: $limit
+    offset: $offset
+  ) {
+    id
+    timestamp
+    eventType
+    testRunId
+    payload
+    leadId
+    campaignId
+    evolutionLogId
+  }
+}

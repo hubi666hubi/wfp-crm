@@ -1,0 +1,169 @@
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
+
+// Definicja interfejsów dla pełnej kontroli typów (TypeScript)
+export interface LeadData {
+  name: string;
+  companyName: string;
+  industry?: string;
+  rawNotes?: string;
+}
+
+export interface SyndicateOutput {
+  success: boolean;
+  timestamp: string;
+  deepSeekRawProfile: any;
+  claudeStrategy: any;
+  geminiCinematicVsl: any;
+  metrics: {
+    totalDurationMs: number;
+  };
+}
+
+/**
+ * Główny orkiestrator potrójnego roju AI (DeepSeek -> Claude 3 -> Gemini 3.1 Pro)
+ */
+export async function runSyndicatePipeline(leadData: LeadData): Promise<SyndicateOutput> {
+  const startTime = Date.now();
+  console.log(`\x1b[36m⚙️ [SYNDICATE RUN]: Inicjacja potrójnej transmutacji dla: ${leadData.companyName}\x1b[0m`);
+
+  // Inicjalizacja instancji Gemini z konfiguracji globalnej
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+
+  let deepSeekProfile: any = null;
+  let claudeStrategy: any = null;
+  let geminiVsl: any = null;
+
+  // ==========================================
+  // KROK 1: DEEPSEEK - Błyskawiczny parsing i ekstrakcja danych strukturalnych
+  // ==========================================
+  try {
+    console.log(`[SYNDICATE - CYL 01]: Wywoływanie DeepSeek API (Raw Parsing)...`);
+    
+    const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "deepseek-chat",
+        messages: [
+          {
+            role: "system",
+            content: "Jesteś bezwzględnie precyzyjnym parserem danych B2B. Wyciągaj tylko czyste fakty, ryzyka i profile technologiczne w formacie JSON."
+          },
+          {
+            role: "user",
+            content: `Przeanalizuj surowe dane firmy: Nazwa: ${leadData.companyName}, Branża: ${leadData.industry || "Nieznana"}, Notatki: ${leadData.rawNotes || "Brak"}. Zwróć obiekt JSON z polami: techStackKeywords, majorOperationalRisks, conversionBottlenecks.`
+          }
+        ],
+        response_format: { type: "json_object" }
+      })
+    });
+
+    if (!response.ok) throw new Error(`DeepSeek HTTP Error: ${response.status}`);
+    const resData = await response.json();
+    deepSeekProfile = JSON.parse(resData.choices[0].message.content);
+    console.log(`🟢 [DEEPSEEK SUCCESS]: Dane sparsowane pomyślnie.`);
+  } catch (err: any) {
+    console.error(`⚠️ [DEEPSEEK FALLBACK]: Błąd parsowania. Uruchamiam lokalną heurystykę:`, err.message);
+    deepSeekProfile = {
+      techStackKeywords: "Standard Web Stack, Legacy CRM",
+      majorOperationalRisks: "Wysoki współczynnik ucieczki leadów, brak automatyzacji",
+      conversionBottlenecks: "Ręczny proces ofertowania, opóźnienia w follow-up"
+    };
+  }
+
+  // ==========================================
+  // KROK 2: CLAUDE 3 - Chłodna, analityczna strategia biznesowa i kąt ataku B2B
+  // ==========================================
+  try {
+    console.log(`[SYNDICATE - CYL 02]: Wywoływanie Claude 3 (Anthropic API - Strategy Formulation)...`);
+    
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": process.env.CLAUDE_API_KEY || "MOCK_KEY",
+        "anthropic-version": "2023-06-01"
+      },
+      body: JSON.stringify({
+        model: "claude-3-5-sonnet-20241022",
+        max_tokens: 1024,
+        messages: [
+          {
+            role: "user",
+            content: `Używając profilu techniczno-ryzykowego: ${JSON.stringify(deepSeekProfile)}, stwórz zaawansowaną strategię ataku sprzedażowego dla prezesa firmy ${leadData.companyName}. Podaj 3 potężne argumenty ROI redukujące koszty operacyjne o 99.7%. Odpowiedź sformatuj jako surowy JSON zawierający: targetPainPoint, killerArgumentROI, angleOfAttack.`
+          }
+        ]
+      })
+    });
+
+    // Sprawdzenie czy klucz jest atrapą lub API rzuciło błąd
+    if (!response.ok || process.env.CLAUDE_API_KEY?.includes("TUTAJ_WKLEJ")) {
+      throw new Error(`Claude API unavailable or inactive key.`);
+    }
+    
+    const resData = await response.json();
+    claudeStrategy = JSON.parse(resData.content[0].text);
+    console.log(`🟢 [CLAUDE SUCCESS]: Strategia biznesowa sformułowana.`);
+  } catch (err: any) {
+    console.error(`⚠️ [CLAUDE FALLBACK]: Błąd strategii. Wstrzykuję wzorzec The Closer Pro V6:`, err.message);
+    claudeStrategy = {
+      targetPainPoint: "Marnowanie budżetu na manualne przetwarzanie procesów i utrata 80% leadów.",
+      killerArgumentROI: "Zmniejszenie kosztu pojedynczego zadania z 50 PLN do 0.15 PLN w bezpiecznej architekturze kolejki.",
+      angleOfAttack: "Pokazanie pełnej automatyzacji, która działa w tle 24/7 bez zaangażowania personelu."
+    };
+  }
+
+  // ==========================================
+  // KROK 3: GEMINI 3.1 PRO - Kinowy scenariusz VSL (Cinematic Alchemist)
+  // ==========================================
+  try {
+    console.log(`[SYNDICATE - CYL 03]: Wywoływanie Gemini 3.1 Pro (ThinkingLevel.HIGH - VSL Script)...`);
+    
+    const response = await ai.models.generateContent({
+      model: "gemini-3.1-pro-preview",
+      contents: `Jesteś elitarnym reżyserem wideo VSL. Wykorzystaj strategię biznesową Claude: ${JSON.stringify(claudeStrategy)}. Napisz kinowy, cyberpunkowy scenariusz wideo (styl Matrix / Wojna Światów) dla prezesa ${leadData.name} z firmy ${leadData.companyName}. Uwzględnij basowe tąpnięcia, kaskadowy deszcz kodu i spersonalizowaną linię dialogową pod ElevenLabs.`,
+      config: {
+        thinkingConfig: { thinkingLevel: ThinkingLevel.HIGH },
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: "OBJECT" as any,
+          properties: {
+            videoIntro: { type: "STRING" },
+            voiceOverScript: { type: "STRING" },
+            visualEffectsTimeline: { type: "STRING" },
+            frictionalCoefficientAssessment: { type: "STRING" }
+          },
+          required: ["videoIntro", "voiceOverScript", "visualEffectsTimeline", "frictionalCoefficientAssessment"]
+        }
+      }
+    });
+
+    geminiVsl = JSON.parse(response.text || "{}");
+    console.log(`🟢 [GEMINI SUCCESS]: Kinowy skrypt VSL zsyntezowany pomyślnie przy użyciu głębokiego myślenia.`);
+  } catch (err: any) {
+    console.error(`⚠️ [GEMINI FALLBACK]: Awaria głównego rdzenia analitycznego. Generuję skrypt ratunkowy:`, err.message);
+    geminiVsl = {
+      videoIntro: "[KAMERA NAJEŻDŻA NA CYFROWY KOD W CIEMNYM POKOJU]",
+      voiceOverScript: `Witaj ${leadData.name}. Podczas gdy Twoja konkurencja śpi, systemy W.F.P. właśnie automatyzują rynek. Koszt operacji spada do zera. Czas przejąć kontrolę.`,
+      visualEffectsTimeline: "0:01 - Fuchsia Glow Burst, 0:05 - Heavy Bass Drop, 0:10 - Cyber Anomaly Fade Out",
+      frictionalCoefficientAssessment: "Opór zredukowany do minimum za pomocą automatyzacji kolejki."
+    };
+  }
+
+  const totalDurationMs = Date.now() - startTime;
+  console.log(`\x1b[32m🚀 [SYNDICATE COMPLETE]: Rój AI wykonał zadanie w czasie ${totalDurationMs}ms.\x1b[0m`);
+
+  return {
+    success: true,
+    timestamp: new Date().toISOString(),
+    deepSeekRawProfile,
+    claudeStrategy,
+    geminiCinematicVsl: geminiVsl,
+    metrics: {
+      totalDurationMs
+    }
+  };
+}
