@@ -11,6 +11,7 @@ import {
   Video, 
   BrainCircuit, 
   Eye,
+  BookOpen,
   LogOut,
   User as UserIcon,
   Menu,
@@ -72,6 +73,8 @@ const navigation = [
   { name: 'Notatki (Google Keep)', to: '/keep', icon: StickyNote },
   { name: 'Kalendarz (Google Calendar)', to: '/calendar', icon: Calendar },
   { name: 'Stitch Uplink', to: '/stitch', icon: Cpu },
+  { name: 'Docs Jules Platform', to: '/docs/jules-platform', icon: BookOpen },
+
   { name: 'Konfiguracja Agentów', to: '/settings', icon: SettingsIcon },
 ];
 
@@ -83,6 +86,10 @@ const mockSearchData = [
   { id: 't4', type: 'task', title: 'Aktualizacja archiwalnych grafik', path: '/dashboard', icon: CheckSquare },
   { id: 'l1', type: 'lead', title: 'Jan Kowalski - Porzucony koszyk', path: '/crm', icon: Flame },
   { id: 's1', type: 'script', title: 'Skrypt VSL: Zwiększenie Konwersji', path: '/vsl-generator', icon: Video },
+  { id: 'alias1', type: 'module', title: 'jules', path: '/docs/jules-platform', icon: BookOpen },
+  { id: 'alias2', type: 'module', title: 'dokumentacja jules', path: '/docs/jules-platform', icon: BookOpen },
+  { id: 'alias3', type: 'module', title: 'seo', path: '/docs/jules-platform', icon: BookOpen },
+
 ];
 
 import { MobileActionSheet } from './MobileActionSheet';
