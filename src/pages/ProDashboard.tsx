@@ -21,6 +21,7 @@ import {
   DollarSign,
   ArrowUpRight,
   Activity
+, Target
 } from "lucide-react";
 import { toast } from "sonner";
 import { 
@@ -60,7 +61,7 @@ export function ProDashboard() {
   // States
   const [trends, setTrends] = useState<TrendItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<"insights" | "hooks" | "radar" | "watchlist" | "stripe-finance">("insights");
+  const [activeTab, setActiveTab] = useState<"insights" | "hooks" | "radar" | "watchlist" | "stripe-finance" | "numerology">("insights");
   
   // Access state (Security Priority Access)
   const [isProAccessUnlocked, setIsProAccessUnlocked] = useState<boolean>(() => {
@@ -958,6 +959,17 @@ export function ProDashboard() {
               >
                 <CreditCard size={13} className="text-emerald-400" /> Finanse live Stripe 💳
               </button>
+          <button
+            onClick={() => setActiveTab("numerology")}
+            className={`px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all duration-300 flex items-center gap-2 ${
+              activeTab === "numerology"
+                ? "bg-purple-900/30 text-purple-400 border border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.3)]"
+                : "bg-neutral-900 text-neutral-500 border border-transparent hover:bg-neutral-800 hover:text-neutral-300"
+            }`}
+          >
+            <Activity size={14} /> Numerologia OMEGA
+          </button>
+
 
               <button
                 onClick={() => setActiveTab("watchlist")}
@@ -987,6 +999,58 @@ export function ProDashboard() {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
               
+
+              {/* TAB NUMEROLOGY */}
+              {activeTab === "numerology" && (
+                <div className="lg:col-span-12 bg-neutral-950 border border-neutral-900 rounded-3xl p-8 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-900/10 via-black to-black pointer-events-none" />
+
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-3 mb-8">
+                      <div className="w-12 h-12 bg-purple-950 border border-purple-500/30 rounded-xl flex items-center justify-center">
+                        <Target size={24} className="text-purple-400" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-black text-white uppercase tracking-wider">Architektura Numerologiczna</h2>
+                        <p className="text-neutral-400 font-mono text-xs">Moduł Zwiększający Parametry Systemu W.F.P OMEGA Engine™</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
+                      {[
+                        { num: "1111", title: "Nowy Początek", desc: "Idealna dla launchu nowego projektu lub startupu. Oznacza przebudzenie świadomości użytkownika.", color: "text-blue-400", border: "border-blue-500/30", bg: "bg-blue-500/10" },
+                        { num: "3333", title: "Kreatywność i Ekspresja", desc: "Świetna dla stron artystycznych i społecznościowych. Wspiera przepływ informacji i komunikację.", color: "text-rose-400", border: "border-rose-500/30", bg: "bg-rose-500/10" },
+                        { num: "4444", title: "Fundament i Ochrona", desc: "Liczba 'architekta'. Zapewnia stabilność kodu, bezpieczeństwo danych i solidną strukturę strony.", color: "text-emerald-400", border: "border-emerald-500/30", bg: "bg-emerald-500/10" },
+                        { num: "7777", title: "Boska Wiedza", desc: "Idealna dla portali edukacyjnych i ezoterycznych. Przyciąga 'oświeconych' użytkowników i głębokie zrozumienie.", color: "text-purple-400", border: "border-purple-500/30", bg: "bg-purple-500/10" },
+                        { num: "9999", title: "Dopełnienie i Misja", desc: "Oznacza realizację wyższego celu. Strona, która ma realnie zmienić świat lub zakończyć pewien etap.", color: "text-amber-400", border: "border-amber-500/30", bg: "bg-amber-500/10" }
+                      ].map((item) => (
+                        <div key={item.num} className={`p-5 rounded-2xl border ${item.border} ${item.bg} flex flex-col items-center text-center`}>
+                          <div className={`text-3xl font-black ${item.color} mb-2 tracking-widest`}>{item.num}</div>
+                          <h3 className="text-white font-bold text-sm uppercase mb-2">{item.title}</h3>
+                          <p className="text-neutral-400 text-xs font-mono">{item.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="bg-black border border-neutral-800 rounded-2xl p-6">
+                       <h3 className="text-white font-bold mb-4 uppercase tracking-wider text-sm flex items-center gap-2">
+                         <Activity size={16} className="text-purple-500" /> Wektor Inicjalizacji Administracji
+                       </h3>
+                       <div className="flex gap-4">
+                         <input
+                           type="text"
+                           placeholder="Wprowadź ID lead'a lub nazwę projektu..."
+                           className="flex-1 bg-neutral-900 border border-neutral-700 text-white px-4 py-3 rounded-xl font-mono text-sm focus:outline-none focus:border-purple-500 transition-colors"
+                         />
+                         <button className="bg-purple-600 hover:bg-purple-500 text-white px-6 py-3 rounded-xl font-bold uppercase tracking-wider text-sm transition-colors flex items-center gap-2">
+                           <Target size={16} /> Analizuj Wibrację
+                         </button>
+                       </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* TAB 1: ADVANCED ANALLITYCS & DECAY GRAPH */}
               {activeTab === "insights" && (
                 <>
