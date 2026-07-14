@@ -5,7 +5,7 @@ services:
     plan: free
     branch: main
     region: oregon
-    buildCommand: npm ci && npm run build
+    buildCommand: npm ci && npx esbuild server.ts --bundle --platform=node --format=cjs --packages=external --outfile=dist/server.cjs
     startCommand: node dist/server.cjs
     healthCheckPath: /health
     envVars:
@@ -13,6 +13,8 @@ services:
         value: production
       - key: PORT
         value: 3000
+      - key: BACKEND_ONLY
+        value: "true"
       - key: GEMINI_API_KEY
         sync: false
       - key: OPENAI_API_KEY
@@ -39,3 +41,4 @@ services:
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
+

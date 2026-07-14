@@ -96,6 +96,26 @@ async function main() {
   }
 
   const app = express();
+
+  // CORS — allow Firebase Hosting frontend to call this Render backend
+  const ALLOWED_ORIGINS = [
+    'https://gen-lang-client-0036518667.web.app',
+    'https://gen-lang-client-0036518667.firebaseapp.com',
+    'http://localhost:5173',
+    'http://localhost:3000',
+  ];
+  app.use((req, res, next) => {
+    const origin = req.headers.origin as string;
+    if (origin && ALLOWED_ORIGINS.includes(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    if (req.method === 'OPTIONS') return res.status(204).end();
+    next();
+  });
+
   app.use(express.json({
     verify: (req: any, res, buf) => {
       req.rawBody = buf.toString();
@@ -1031,16 +1051,19 @@ Return a raw JSON object matching this schema. Ensure you return ONLY the JSON w
 
   const port = Number(process.env.PORT || 3000);
   const isProd = process.env.NODE_ENV === 'production';
+  const backendOnly = process.env.BACKEND_ONLY === 'true';
 
-  if (isProd) {
-    // Production: serve pre-built Vite output
+  if (isProd && !backendOnly) {
+    // Production with frontend: serve pre-built Vite output
     const distPath = _dirname.endsWith('dist') ? _dirname : path.resolve(_dirname, 'dist');
-    app.use(express.static(distPath));
-    // SPA fallback: any non-API route serves index.html
-    app.get(/.*/, (_req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
-  } else {
+    if (fs.existsSync(path.join(distPath, 'index.html'))) {
+      app.use(express.static(distPath));
+      // SPA fallback: any non-API route serves index.html
+      app.get(/.*/, (_req, res) => {
+        res.sendFile(path.join(distPath, 'index.html'));
+      });
+    }
+  } else if (!isProd) {
     // Development: integrate Vite dev server as middleware (HMR + SPA)
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
