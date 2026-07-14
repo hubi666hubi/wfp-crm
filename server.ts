@@ -1,4 +1,4 @@
-import { stripeKombajnDistributor } from "./stripeKombajnDistributor.js";
+import { stripeKombajnDistributor } from "./server/stripeKombajnDistributor.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -1084,19 +1084,20 @@ Return a raw JSON object matching this schema. Ensure you return ONLY the JSON w
       console.error("⚠️ Błąd inicjalizacji demonów automatycznych podczas zapłonu:", bootErr);
     }
 
-    const pythonScriptPath = fs.existsSync(path.resolve(_dirname, 'nco_pa_start.py'))
-      ? path.resolve(_dirname, 'nco_pa_start.py')
-      : path.resolve(_dirname, '..', 'nco_pa_start.py');
+    // Python daemon — only run in local dev environment, not on cloud hosting
+    if (process.env.NODE_ENV !== 'production' && process.env.DISABLE_PYTHON !== 'true') {
+      const pythonScriptPath = fs.existsSync(path.resolve(_dirname, 'nco_pa_start.py'))
+        ? path.resolve(_dirname, 'nco_pa_start.py')
+        : path.resolve(_dirname, '..', 'nco_pa_start.py');
 
-    const pythonProcess = spawn('python', [pythonScriptPath]);
-    pythonProcess.stdout.on('data', (data) => {
-      if (process.env.NODE_ENV !== 'production') {
+      const pythonProcess = spawn('python', [pythonScriptPath]);
+      pythonProcess.stdout.on('data', (data) => {
         console.log(`[PYTHON CORE] ${data.toString().trim()}`);
-      }
-    });
-    pythonProcess.stderr.on('data', (data) => {
-      console.error(`[PYTHON CORE ERROR] ${data.toString().trim()}`);
-    });
+      });
+      pythonProcess.stderr.on('data', (data) => {
+        console.error(`[PYTHON CORE ERROR] ${data.toString().trim()}`);
+      });
+    }
   });
 }
 main().catch((err) => {
