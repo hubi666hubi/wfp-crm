@@ -1,17 +1,18 @@
 services:
   - type: web
     name: wfp-crm
-    runtime: docker
-    dockerfilePath: ./Dockerfile
+    runtime: node
     plan: free
     branch: main
+    region: oregon
+    buildCommand: npm ci && npm run build
+    startCommand: node dist/server.cjs
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 3000
-      # ↓ Te musisz wkleić ręcznie w panelu Render po podłączeniu repo
       - key: GEMINI_API_KEY
         sync: false
       - key: OPENAI_API_KEY
