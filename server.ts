@@ -73,6 +73,8 @@ async function canUseRedis(redisUrl?: string): Promise<boolean> {
       connectTimeout: 2000,
       maxRetriesPerRequest: 1,
     });
+    // Suppress unhandled 'error' events which would crash the process
+    client.on('error', () => {});
     await client.connect();
     await client.quit();
     return true;
