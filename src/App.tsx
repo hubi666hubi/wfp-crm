@@ -6,6 +6,7 @@ import type { User } from 'firebase/auth';
 import { initAuth, googleSignIn, signInAsDemoUser } from './lib/auth';
 import { AppLayout } from './components/layout/AppLayout';
 import { startAgentBrokerListener } from './services/AgentBroker';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
 const SocialMedia = lazy(() => import('./pages/SocialMedia').then(m => ({ default: m.SocialMedia })));
@@ -192,46 +193,48 @@ function App() {
 
   return (
     <AppLayout user={user}>
-      <Suspense fallback={
-        <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
-           <div className="w-12 h-12 bg-rose-600 rounded-xl flex items-center justify-center font-bold text-white shadow-[0_0_20px_rgba(225,29,72,0.5)] animate-pulse">
-             Ω
-           </div>
-           <span className="text-neutral-500 font-mono text-xs tracking-[0.2em] uppercase animate-pulse">Ładowanie modułu OMEGA...</span>
-        </div>
-      }>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/social-media" element={<SocialMedia />} />
-          <Route path="/distributor" element={<Distributor />} />
-          <Route path="/scouts" element={<Scouts />} />
-          <Route path="/podcast" element={<Podcast />} />
-          <Route path="/tachometer" element={<Tachometer />} />
-          <Route path="/crm" element={<Zapalnik />} />
-          <Route path="/shield" element={<ShieldPage />} />
-          <Route path="/vsl-generator" element={<VslGenerator />} />
-          <Route path="/automation" element={<AutomationHub />} />
-          <Route path="/gmail" element={<GmailIntegration />} />
-          <Route path="/chat" element={<GoogleChatPage />} />
-          <Route path="/tasks" element={<GoogleTasksPage />} />
-          <Route path="/keep" element={<GoogleKeepPage />} />
-          <Route path="/calendar" element={<GoogleCalendarPage />} />
-          <Route path="/dopamine-loops" element={<DopamineLoops />} />
-          <Route path="/z-pulse" element={<ZPulse />} />
-          <Route path="/pro-dashboard" element={<ProDashboard />} />
-          <Route path="/pricing" element={<PricingPage />} />
-          <Route path="/closer" element={<Closer />} />
-          <Route path="/scraper" element={<LeadScraper />} />
-          <Route path="/facebook-leads" element={<FacebookLeads />} />
-          <Route path="/pro-generators" element={<ProGenerators />} />
-          <Route path="/factory-registry" element={<FactoryRegistry />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/stitch" element={<Stitch />} />
-          <Route path="/nekropolis" element={<Nekropolis />} />
-          <Route path="/omega-console" element={<OmegaConsole />} />
-        </Routes>
-      </Suspense>
+      <ErrorBoundary>
+        <Suspense fallback={
+          <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
+             <div className="w-12 h-12 bg-rose-600 rounded-xl flex items-center justify-center font-bold text-white shadow-[0_0_20px_rgba(225,29,72,0.5)] animate-pulse">
+               Ω
+             </div>
+             <span className="text-neutral-500 font-mono text-xs tracking-[0.2em] uppercase animate-pulse">Ładowanie modułu OMEGA...</span>
+          </div>
+        }>
+          <Routes>
+            <Route path="/" element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
+            <Route path="/dashboard" element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
+            <Route path="/social-media" element={<ErrorBoundary><SocialMedia /></ErrorBoundary>} />
+            <Route path="/distributor" element={<ErrorBoundary><Distributor /></ErrorBoundary>} />
+            <Route path="/scouts" element={<ErrorBoundary><Scouts /></ErrorBoundary>} />
+            <Route path="/podcast" element={<ErrorBoundary><Podcast /></ErrorBoundary>} />
+            <Route path="/tachometer" element={<ErrorBoundary><Tachometer /></ErrorBoundary>} />
+            <Route path="/crm" element={<ErrorBoundary><Zapalnik /></ErrorBoundary>} />
+            <Route path="/shield" element={<ErrorBoundary><ShieldPage /></ErrorBoundary>} />
+            <Route path="/vsl-generator" element={<ErrorBoundary><VslGenerator /></ErrorBoundary>} />
+            <Route path="/automation" element={<ErrorBoundary><AutomationHub /></ErrorBoundary>} />
+            <Route path="/gmail" element={<ErrorBoundary><GmailIntegration /></ErrorBoundary>} />
+            <Route path="/chat" element={<ErrorBoundary><GoogleChatPage /></ErrorBoundary>} />
+            <Route path="/tasks" element={<ErrorBoundary><GoogleTasksPage /></ErrorBoundary>} />
+            <Route path="/keep" element={<ErrorBoundary><GoogleKeepPage /></ErrorBoundary>} />
+            <Route path="/calendar" element={<ErrorBoundary><GoogleCalendarPage /></ErrorBoundary>} />
+            <Route path="/dopamine-loops" element={<ErrorBoundary><DopamineLoops /></ErrorBoundary>} />
+            <Route path="/z-pulse" element={<ErrorBoundary><ZPulse /></ErrorBoundary>} />
+            <Route path="/pro-dashboard" element={<ErrorBoundary><ProDashboard /></ErrorBoundary>} />
+            <Route path="/pricing" element={<ErrorBoundary><PricingPage /></ErrorBoundary>} />
+            <Route path="/closer" element={<ErrorBoundary><Closer /></ErrorBoundary>} />
+            <Route path="/scraper" element={<ErrorBoundary><LeadScraper /></ErrorBoundary>} />
+            <Route path="/facebook-leads" element={<ErrorBoundary><FacebookLeads /></ErrorBoundary>} />
+            <Route path="/pro-generators" element={<ErrorBoundary><ProGenerators /></ErrorBoundary>} />
+            <Route path="/factory-registry" element={<ErrorBoundary><FactoryRegistry /></ErrorBoundary>} />
+            <Route path="/settings" element={<ErrorBoundary><Settings /></ErrorBoundary>} />
+            <Route path="/stitch" element={<ErrorBoundary><Stitch /></ErrorBoundary>} />
+            <Route path="/nekropolis" element={<ErrorBoundary><Nekropolis /></ErrorBoundary>} />
+            <Route path="/omega-console" element={<ErrorBoundary><OmegaConsole /></ErrorBoundary>} />
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
     </AppLayout>
   );
 }
