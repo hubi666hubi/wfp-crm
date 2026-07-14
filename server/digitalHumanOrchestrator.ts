@@ -16,7 +16,7 @@ export interface AvatarGenerationPayload {
  * Automatycznie generuje spersonalizowane wideo VSL z dopasowanym ruchem ust (Lip-Sync) 24/7.
  */
 export class DigitalHumanOrchestrator {
-  private projectRoot: string = process.env.PROJECT_ROOT || "C:\\Users\\brend\\Desktop\\XX2";
+  private projectRoot: string = process.env.PROJECT_ROOT || process.cwd();
   private ultralightEnv: string = process.env.ULTRALIGHT_CONDA_ENV || "dh";
   private fishSpeechEnv: string = process.env.FISH_SPEECH_CONDA_ENV || "fish-speech";
 

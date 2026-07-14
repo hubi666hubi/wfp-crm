@@ -17,7 +17,7 @@ export interface AgentTaskPayload {
  */
 export class WFPOmegaGenkitCore {
   private ai: GoogleGenAI;
-  private projectRoot: string = "C:\\Users\\brend\\Desktop\\XX2";
+  private projectRoot: string = process.env.PROJECT_ROOT || process.cwd();
 
   constructor() {
     this.ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
