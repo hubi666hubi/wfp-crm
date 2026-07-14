@@ -100,15 +100,7 @@ export async function runSeeding() {
   return { success: true, seeded: insertedCount, total: SEED_DOCUMENTS.length };
 }
 
-// Support running directly from CLI
-if (require.main === module) {
-  runSeeding()
-    .then(res => {
-      console.log("[RAG SEEDER] Done:", res);
-      process.exit(res.success ? 0 : 1);
-    })
-    .catch(err => {
-      console.error("[RAG SEEDER] Fatal error in execution:", err);
-      process.exit(1);
-    });
-}
+
+// NOTE: CLI runner removed — in esbuild CJS bundles, require.main === module is always true,
+// causing process.exit(1) to kill the server. Run this script standalone if needed:
+// npx tsx scripts/seed_rag.ts
