@@ -223,6 +223,7 @@ function App() {
             <Route path="/z-pulse" element={<ErrorBoundary><ZPulse /></ErrorBoundary>} />
             <Route path="/pro-dashboard" element={<ErrorBoundary><ProDashboard /></ErrorBoundary>} />
             <Route path="/pricing" element={<ErrorBoundary><PricingPage /></ErrorBoundary>} />
+            <Route path="/elite-vault" element={<ErrorBoundary><EliteVault /></ErrorBoundary>} />
             <Route path="/closer" element={<ErrorBoundary><Closer /></ErrorBoundary>} />
             <Route path="/scraper" element={<ErrorBoundary><LeadScraper /></ErrorBoundary>} />
             <Route path="/facebook-leads" element={<ErrorBoundary><FacebookLeads /></ErrorBoundary>} />
