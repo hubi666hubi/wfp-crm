@@ -6,6 +6,7 @@ import type { User } from 'firebase/auth';
 import { initAuth, googleSignIn, signInAsDemoUser } from './lib/auth';
 import { AppLayout } from './components/layout/AppLayout';
 import { startAgentBrokerListener } from './services/AgentBroker';
+
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));

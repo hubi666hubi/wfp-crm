@@ -13,6 +13,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { FinanceService } from '../services/FinanceService';
 import {
   Radar,
   RadarChart,
@@ -46,6 +47,7 @@ export function EliteVault() {
 
   const handleUnlock = () => {
     setIsLocked(false);
+    FinanceService.triggerJarvisVoiceConfirmation('Omega Protocol Initiated. Elite Vault unlocked.');
     toast.success('ELITE VAULT UNLOCKED. PROTOCOL OMEGA INITIATED.', {
       style: { background: 'rgba(0,0,0,0.9)', border: '1px solid #ef4444', color: '#ef4444' }
     });
