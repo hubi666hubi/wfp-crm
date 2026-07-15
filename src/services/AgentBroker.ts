@@ -30,7 +30,6 @@ export function startAgentBrokerListener(userId: string, onUpdate?: () => void) 
             
             // Filter to only match active completed stages not yet being processed by agent
             if (factoryData.status === "COMPLETED" && !factoryData.isProcessingBroker) {
-              console.log(`[AgentBroker] Intercepted COMPLETED factory item in '${colName}' collection with ID: ${factoryDoc.id}`);
               
               try {
                 // Instantly flag in client scope to block double-triggering
