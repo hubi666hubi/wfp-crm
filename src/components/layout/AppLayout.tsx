@@ -64,6 +64,7 @@ const navigation = [
   { name: 'Pętle Dopaminowe', to: '/dopamine-loops', icon: BrainCircuit },
   { name: 'Z-Pulse Trend Analyzer', to: '/z-pulse', icon: Radar },
   { name: 'OMEGA Pro Insights', to: '/pro-dashboard', icon: Award },
+  { name: 'Elite Vault (DNA)', to: '/elite-vault', icon: Eye },
   { name: 'Oko Opatrzności', to: '/pricing', icon: Eye },
   { name: 'Kokpit Automatyzacji', to: '/automation', icon: BrainCircuit },
   { name: 'Poczta (Gmail)', to: '/gmail', icon: Mail },
@@ -224,7 +225,17 @@ export function AppLayout({ children, user }: AppLayoutProps) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-black text-gray-100 flex overflow-hidden selection:bg-rose-500/30">
+    <div className="min-h-screen bg-black text-gray-100 flex overflow-hidden selection:bg-rose-500/30 relative">
+      {/* GLOBAL APOCALYPSE BACKGROUND */}
+      <div
+        className="absolute inset-0 z-0 pointer-events-none opacity-20 mix-blend-luminosity bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: 'url(/assets/eye_of_ra.jpg)' }}
+      />
+      <div className="absolute inset-0 z-0 pointer-events-none bg-gradient-to-b from-transparent via-black/80 to-black/95" />
+
+      {/* Content wrapper with z-index to stay above background */}
+      <div className="flex w-full z-10 relative">
+
       
       {/* Mobile sidebar overlay */}
       <AnimatePresence>
@@ -524,6 +535,7 @@ export function AppLayout({ children, user }: AppLayoutProps) {
       </AnimatePresence>
 
       <MobileActionSheet />
+      </div>
     </div>
   );
 }

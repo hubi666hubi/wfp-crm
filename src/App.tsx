@@ -6,6 +6,7 @@ import type { User } from 'firebase/auth';
 import { initAuth, googleSignIn, signInAsDemoUser } from './lib/auth';
 import { AppLayout } from './components/layout/AppLayout';
 import { startAgentBrokerListener } from './services/AgentBroker';
+
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
@@ -223,6 +224,7 @@ function App() {
             <Route path="/z-pulse" element={<ErrorBoundary><ZPulse /></ErrorBoundary>} />
             <Route path="/pro-dashboard" element={<ErrorBoundary><ProDashboard /></ErrorBoundary>} />
             <Route path="/pricing" element={<ErrorBoundary><PricingPage /></ErrorBoundary>} />
+            <Route path="/elite-vault" element={<ErrorBoundary><EliteVault /></ErrorBoundary>} />
             <Route path="/closer" element={<ErrorBoundary><Closer /></ErrorBoundary>} />
             <Route path="/scraper" element={<ErrorBoundary><LeadScraper /></ErrorBoundary>} />
             <Route path="/facebook-leads" element={<ErrorBoundary><FacebookLeads /></ErrorBoundary>} />
