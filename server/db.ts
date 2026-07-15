@@ -24,9 +24,33 @@ export function getDb(): admin.firestore.Firestore {
   const apps = firebaseAdmin?.apps || admin?.apps || [];
   if (!apps.length) {
     try {
-      const initOptions = {
-        projectId: process.env.FIREBASE_PROJECT_ID || process.env.GCLOUD_PROJECT || configProjectId || "demo-project"
+      // Build credential: prefer service account JSON (base64) → ADC → no credential (emulator/demo)
+      let credential: any = undefined;
+
+      if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+        try {
+          const decoded = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf8');
+          const serviceAccount = JSON.parse(decoded);
+          credential = admin.credential.cert(serviceAccount);
+          console.log('[DB] Firebase Admin: using service account from FIREBASE_SERVICE_ACCOUNT_BASE64');
+        } catch (e: any) {
+          console.warn('[DB] Failed to parse FIREBASE_SERVICE_ACCOUNT_BASE64:', e?.message);
+        }
+      } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+        // ADC via file path — will work locally with gcloud auth
+        credential = admin.credential.applicationDefault();
+        console.log('[DB] Firebase Admin: using GOOGLE_APPLICATION_CREDENTIALS');
+      } else {
+        console.warn('[DB] No Firebase credentials found. Firestore calls will fail. Set FIREBASE_SERVICE_ACCOUNT_BASE64 on Render.');
+      }
+
+      const initOptions: any = {
+        projectId: process.env.FIREBASE_PROJECT_ID || process.env.GCLOUD_PROJECT || configProjectId || "gen-lang-client-0036518667"
       };
+      if (credential) {
+        initOptions.credential = credential;
+      }
+
       if (firebaseAdmin && typeof firebaseAdmin.initializeApp === "function") {
         firebaseAdmin.initializeApp(initOptions);
       } else if (admin && typeof admin.initializeApp === "function") {
