@@ -6,7 +6,7 @@ class DemonMediaReactor {
   private isReactorActive: boolean = true;
 
   constructor() {
-    console.log("\x1b[32m[DEMON 03 - MEDIA REACTOR] Kombajn autonomicznej produkcji wideo VSL uruchomiony.\x1b[0m");
+    console.log("[DEMON 03 - MEDIA REACTOR] Kombajn autonomicznej produkcji wideo VSL uruchomiony.");
   }
 
   public async startContinuousGenerationLoop(): Promise<void> {
@@ -41,14 +41,14 @@ class DemonMediaReactor {
         if (!tasksSnapshot.empty) {
           const taskDoc = tasksSnapshot.docs[0];
           const taskData = taskDoc.data();
-          console.log([MEDIA REACTOR] Zadanie: );
+          console.log('[MEDIA REACTOR] Wykryto zadanie: ' + taskDoc.id);
           await wfpOmegaGenkitCore.processAgentWorkerTask({
             leadId: taskData.leadId || 'lead_test_uuid',
             companyName: taskData.companyName || 'Hubix Matrix Inc',
             detectedPain: taskData.detectedPain || 'Niska konwersja',
             userEmail: 'hubi666hubi@gmail.com'
           });
-          console.log([MEDIA REACTOR SUCCESS] Zadanie  zrealizowane.);
+          console.log('[MEDIA REACTOR SUCCESS] Zadanie ' + taskDoc.id + ' zrealizowane.');
         }
 
         await new Promise(resolve => setTimeout(resolve, 15000));
@@ -65,7 +65,7 @@ class DemonMediaReactor {
         }
 
         const backoffMs = Math.min(5000 * Math.pow(2, consecutiveErrors - 1), 60000);
-        console.error([MEDIA REACTOR ERROR] (x)  retry in s);
+        console.error('[MEDIA REACTOR ERROR] (' + consecutiveErrors + 'x) ' + err.message + ' retry in ' + (backoffMs / 1000) + 's');
         await new Promise(resolve => setTimeout(resolve, backoffMs));
       }
     }
