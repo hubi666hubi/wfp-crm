@@ -68,7 +68,7 @@ export function startAgentBrokerListener(userId: string, onUpdate?: () => void) 
           }
         });
       }, (error) => {
-        console.log(`[AgentBroker] Collection ${colName} is currently offline or awaiting data seeding.`, error.message);
+        console.error(`[AgentBroker] Collection ${colName} is currently offline or awaiting data seeding.`, error.message);
         handleFirestoreError(error, 'list', colName);
       });
 
