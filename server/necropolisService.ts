@@ -1,8 +1,8 @@
 // server/necropolisService.ts
 // [SYSTEM OVERRIDE: OMEGA PRO V2+ | NECROMANCY ACTIVE]
 
-import { getDb } from './db'; 
-import { generateAIContentWithFallback } from './aiService';
+import { getDb } from './db.js'; 
+import { generateAIContentWithFallback } from './aiService.js';
 
 export async function startNecropolisResurrectionSequence() {
     console.log(`[NECROPOLIS] Skan krypt...`);

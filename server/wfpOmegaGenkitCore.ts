@@ -102,14 +102,24 @@ export class WFPOmegaGenkitCore {
         font_color: aiScript.fontColor
       });
 
-      // 3. Asynchroniczne wywołanie zewnętrznego skryptu Pythona przez child_process do klonowania w tle
+      // 3. Asynchroniczne wywolanie zewnetrznego skryptu Pythona przez child_process
       const externalScriptPath = path.join(this.projectRoot, "backend", "app", "services", "unified_auto_worker.py");
       
-      const pyProcess = spawn("python", [externalScriptPath], { shell: true });
-      
-      pyProcess.stdout.on("data", (data) => {
-        console.log(`[AUTO WORKER EXECUTION]: ${data.toString().trim()}`);
-      });
+      // Only spawn if script actually exists (won't exist on production server)
+      if (fs.existsSync(externalScriptPath)) {
+        const pythonCmd = process.env.PYTHON_CMD || (process.platform === 'win32' ? 'python' : 'python3');
+        const pyProcess = spawn(pythonCmd, [externalScriptPath], { shell: false });
+        
+        // CRITICAL: prevent unhandled error event from crashing the server
+        pyProcess.on('error', (err) => {
+          console.warn(`[AUTO WORKER] Python spawn failed: ${err.message}`);
+        });
+        pyProcess.stdout.on("data", (data) => {
+          console.log(`[AUTO WORKER EXECUTION]: ${data.toString().trim()}`);
+        });
+      } else {
+        console.log('[AUTO WORKER] Python script not available in this environment — skipping.');
+      }
 
       // 4. Aktualizacja stanu w bazie po pomyślnym przekazaniu do kolejki RAM
       await db.collection("tasks").doc(taskId).update({

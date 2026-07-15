@@ -26,18 +26,22 @@ export class DigitalHumanOrchestrator {
   private generateVoiceAsset(text: string, outputWavPath: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const fishPath = path.join(this.projectRoot, "external_modules", "fish-speech");
-      console.log(`[FISH-SPEECH] Inicjalizacja generowania audio dla tekstu: "${text.substring(0, 30)}..."`);
+      console.log(`[FISH-SPEECH] Inicjalizacja generowania audio...`);
 
-      // Wywołanie potoku komend wewnątrz środowiska Conda fish-speech
       const args = ["run", "-n", this.fishSpeechEnv, "python", "tools/llama/generate.py", "--text", text, "--checkpoint-path", "checkpoints/fish-speech-1.4"];
       const pyProcess = spawn("conda", args, { cwd: fishPath, shell: true });
 
+      // CRITICAL: prevent ENOENT crash when conda is not installed
+      pyProcess.on('error', (err) => {
+        console.warn(`[FISH-SPEECH] conda not available: ${err.message}`);
+        reject(new Error(`conda not available: ${err.message}`));
+      });
       pyProcess.on("close", (code) => {
         if (code === 0) {
-          console.log("🟢 [FISH-SPEECH SUCCESS] Plik audio wygenerowany prawidłowo.");
-          resolve(true)
+          console.log("[FISH-SPEECH SUCCESS] Plik audio wygenerowany.");
+          resolve(true);
         } else {
-          reject(new Error(`Fish-Speech zakończył działanie z kodem błędu: ${code}`));
+          reject(new Error(`Fish-Speech zakończył z kodem: ${code}`));
         }
       });
     });
@@ -47,7 +51,12 @@ export class DigitalHumanOrchestrator {
    * CYLINDER RENDEROWANIA TRANSFORMATYWNEGO (ULTRALIGHT HOT-SWAP)
    */
   public async executeAvatarVideoGeneration(payload: AvatarGenerationPayload): Promise<string> {
-    console.log(`\x1b[34m🛸 [DIGITAL HUMAN rozruch]: Generowanie spersonalizowanego wideo dla leada: ${payload.leadId}\x1b[0m`);
+    // Guard: this feature requires conda + local ML models not available in cloud production
+    if (process.env.ENABLE_DIGITAL_HUMAN !== 'true') {
+      console.log('[DIGITAL HUMAN] Disabled in this environment. Set ENABLE_DIGITAL_HUMAN=true to activate (requires conda + GPU).');
+      return '';
+    }
+    console.log(`[DIGITAL HUMAN] Generowanie wideo dla leada: ${payload.leadId}`);
     const db = getDb();
 
     const tempAudioPath = path.join(this.projectRoot, "data", "temp_audio.wav");
@@ -72,7 +81,12 @@ export class DigitalHumanOrchestrator {
 
       await new Promise((resolve, reject) => {
         const renderProcess = spawn("conda", args, { cwd: ultralightPath, shell: true });
-        renderProcess.on("close", (code) => code === 0 ? resolve(true) : reject(new Error(`Ultralight błąd: ${code}`)));
+        // CRITICAL: prevent ENOENT crash when conda is not installed
+        renderProcess.on('error', (err) => {
+          console.warn(`[ULTRALIGHT] conda not available: ${err.message}`);
+          reject(new Error(`conda not available: ${err.message}`));
+        });
+        renderProcess.on("close", (code) => code === 0 ? resolve(true) : reject(new Error(`Ultralight blad: ${code}`)));
       });
 
       console.log(`\x1b[32m✅ [DIGITAL HUMAN SUCCESS]: Wideo VSL wyrenderowane pomyślnie. Ścieżka: ${outputVideoPath}\x1b[0m`);

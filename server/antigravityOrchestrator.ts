@@ -62,7 +62,7 @@ export class AntigravityOrchestrator {
         try {
           // Wykorzystanie kaskadowego silnika awaryjnego z jądra projektu
           const aiResponse = await this.ai.models.generateContent({
-            model: "gemini-3.1-flash-lite",
+            model: "gemini-2.5-flash",
             contents: prompt
           });
 
@@ -129,6 +129,16 @@ export class AntigravityOrchestrator {
    * PĘTLA NIEUSTANNEGO DZIAŁANIA 24/7/365
    */
   public async startContinuousThrustLoop(): Promise<void> {
+    // Guard: skip in production if Firestore/Gemini credentials are not configured
+    if (process.env.DISABLE_ANTIGRAVITY_LOOP === 'true') {
+      console.log('[ANTIGRAVITY] Loop disabled via DISABLE_ANTIGRAVITY_LOOP env. Skipping.');
+      return;
+    }
+    if (!process.env.GEMINI_API_KEY) {
+      console.warn('[ANTIGRAVITY] GEMINI_API_KEY not set — skipping continuous loop to preserve API quota.');
+      return;
+    }
+
     console.log("\x1b[32m====================================================\x1b[0m");
     console.log(" 🪐 JĄDRO SPINACZA ANTYGRAWITACYJNEGO UKOŃCZONE I AKTYWNE 24/7");
     console.log("====================================================\x1b[0m");

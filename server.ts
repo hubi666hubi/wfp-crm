@@ -584,7 +584,7 @@ Nie używaj znaczników markdown.`;
       const inputData = JSON.stringify(req.body);
 
       const criticScript = path.resolve(_dirname, 'server', 'critic_l2_bridge.py');
-      const py = spawn('python', [criticScript], { timeout: 15000 });
+      const py = spawn(process.platform === 'win32' ? 'python' : 'python3', [criticScript], { timeout: 15000 });
 
       let stdout = '';
       let stderr = '';
@@ -594,6 +594,10 @@ Nie używaj znaczników markdown.`;
       py.stdin.write(inputData);
       py.stdin.end();
 
+      py.on('error', (err: Error) => {
+        console.error('[PYTHON BRIDGE] Spawn failed:', err.message);
+        if (!res.headersSent) res.status(503).json({ success: false, error: 'Python not available: ' + err.message });
+      });
       py.on('close', (code: number) => {
         if (code !== 0) {
           console.error('[CRITIC L2] Process exited with code', code, stderr);
@@ -685,7 +689,7 @@ Return a raw JSON object matching this schema. Ensure you return ONLY the JSON w
       const patchData = JSON.stringify(req.body);
 
       const sandboxScript = path.resolve(_dirname, 'server', 'sandbox_l4_bridge.py');
-      const py = spawn('python', [sandboxScript], { timeout: 15000 });
+      const py = spawn(process.platform === 'win32' ? 'python' : 'python3', [sandboxScript], { timeout: 15000 });
 
       let stdout = '';
       let stderr = '';
@@ -695,6 +699,10 @@ Return a raw JSON object matching this schema. Ensure you return ONLY the JSON w
       py.stdin.write(patchData);
       py.stdin.end();
 
+      py.on('error', (err: Error) => {
+        console.error('[PYTHON BRIDGE] Spawn failed:', err.message);
+        if (!res.headersSent) res.status(503).json({ success: false, error: 'Python not available: ' + err.message });
+      });
       py.on('close', (code: number) => {
         if (code !== 0) {
           console.error('[SANDBOX L4] Process exited with code', code, stderr);
@@ -723,7 +731,7 @@ Return a raw JSON object matching this schema. Ensure you return ONLY the JSON w
       const inputData = JSON.stringify(req.body);
 
       const deployScript = path.resolve(_dirname, 'server', 'deployment_l5_bridge.py');
-      const py = spawn('python', [deployScript], { timeout: 15000 });
+      const py = spawn(process.platform === 'win32' ? 'python' : 'python3', [deployScript], { timeout: 15000 });
 
       let stdout = '';
       let stderr = '';
@@ -733,6 +741,10 @@ Return a raw JSON object matching this schema. Ensure you return ONLY the JSON w
       py.stdin.write(inputData);
       py.stdin.end();
 
+      py.on('error', (err: Error) => {
+        console.error('[PYTHON BRIDGE] Spawn failed:', err.message);
+        if (!res.headersSent) res.status(503).json({ success: false, error: 'Python not available: ' + err.message });
+      });
       py.on('close', (code: number) => {
         if (code !== 0) {
           console.error('[DEPLOYMENT L5] Process exited with code', code, stderr);
@@ -780,13 +792,16 @@ Return a raw JSON object matching this schema. Ensure you return ONLY the JSON w
       const criticScript = path.resolve(_dirname, 'server', 'critic_l2_bridge.py');
       
       const criticResult = await new Promise<any>((resolve, reject) => {
-        const py = spawn('python', [criticScript], { timeout: 15000 });
+        const py = spawn(process.platform === 'win32' ? 'python' : 'python3', [criticScript], { timeout: 15000 });
         let stdout = '';
         let stderr = '';
         py.stdout.on('data', (d) => { stdout += d.toString(); });
         py.stderr.on('data', (d) => { stderr += d.toString(); });
         py.stdin.write(JSON.stringify({ mode: "analyze", code, error, file_path }));
         py.stdin.end();
+        py.on('error', (err: Error) => {
+          reject(new Error('Python not available on this server: ' + err.message));
+        });
         py.on('close', (exitCode) => {
           if (exitCode !== 0) reject(new Error(stderr || `Critic process exited with code ${exitCode}`));
           try {
@@ -856,13 +871,16 @@ Return a raw JSON object matching this schema. Ensure you return ONLY the JSON w
       const sandboxScript = path.resolve(_dirname, 'server', 'sandbox_l4_bridge.py');
       
       const report = await new Promise<any>((resolve, reject) => {
-        const py = spawn('python', [sandboxScript], { timeout: 15000 });
+        const py = spawn(process.platform === 'win32' ? 'python' : 'python3', [sandboxScript], { timeout: 15000 });
         let stdout = '';
         let stderr = '';
         py.stdout.on('data', (d) => { stdout += d.toString(); });
         py.stderr.on('data', (d) => { stderr += d.toString(); });
         py.stdin.write(JSON.stringify(patch));
         py.stdin.end();
+        py.on('error', (err: Error) => {
+          reject(new Error('Python not available on this server: ' + err.message));
+        });
         py.on('close', (exitCode) => {
           if (exitCode !== 0) reject(new Error(stderr || `Sandbox process exited with code ${exitCode}`));
           try {
@@ -895,13 +913,16 @@ Return a raw JSON object matching this schema. Ensure you return ONLY the JSON w
       const deployScript = path.resolve(_dirname, 'server', 'deployment_l5_bridge.py');
       
       const deployResult = await new Promise<any>((resolve, reject) => {
-        const py = spawn('python', [deployScript], { timeout: 15000 });
+        const py = spawn(process.platform === 'win32' ? 'python' : 'python3', [deployScript], { timeout: 15000 });
         let stdout = '';
         let stderr = '';
         py.stdout.on('data', (d) => { stdout += d.toString(); });
         py.stderr.on('data', (d) => { stderr += d.toString(); });
         py.stdin.write(JSON.stringify({ patch, report }));
         py.stdin.end();
+        py.on('error', (err: Error) => {
+          reject(new Error('Python not available on this server: ' + err.message));
+        });
         py.on('close', (exitCode) => {
           if (exitCode !== 0) reject(new Error(stderr || `Deployment process exited with code ${exitCode}`));
           try {
@@ -1115,7 +1136,11 @@ Return a raw JSON object matching this schema. Ensure you return ONLY the JSON w
         ? path.resolve(_dirname, 'nco_pa_start.py')
         : path.resolve(_dirname, '..', 'nco_pa_start.py');
 
-      const pythonProcess = spawn('python', [pythonScriptPath]);
+      const pythonProcess = spawn(process.platform === 'win32' ? 'python' : 'python3', [pythonScriptPath]);
+      // CRITICAL: prevent ENOENT from crashing the server
+      pythonProcess.on('error', (err) => {
+        console.warn(`[PYTHON CORE] Spawn failed (dev only): ${err.message}`);
+      });
       pythonProcess.stdout.on('data', (data) => {
         console.log(`[PYTHON CORE] ${data.toString().trim()}`);
       });

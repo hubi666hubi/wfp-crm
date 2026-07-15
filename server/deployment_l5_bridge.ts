@@ -61,8 +61,20 @@ export class ResilientTaskRouter {
 
     public executePythonValidationBridge(patchPayload: any): Promise<any> {
         return new Promise((resolve, reject) => {
-            const pyProcess = spawn("python", [this.pythonEnginePath]);
+            const pythonCmd = process.env.PYTHON_CMD || (process.platform === 'win32' ? 'python' : 'python3');
+            // Check script exists before spawning
+            const fs = require('fs');
+            if (!fs.existsSync(this.pythonEnginePath)) {
+                console.warn('[PYTHON BRIDGE] Script not found, skipping:', this.pythonEnginePath);
+                return resolve({ is_valid: false, errors: ['Python bridge script not found on server'] });
+            }
+            const pyProcess = spawn(pythonCmd, [this.pythonEnginePath]);
             let outputData = "";
+            // CRITICAL: handle ENOENT/spawn errors without crashing the server
+            pyProcess.on('error', (err) => {
+                console.error(`[PYTHON BRIDGE] Spawn failed: ${err.message}`);
+                resolve({ is_valid: false, errors: [`Python bridge spawn failed: ${err.message}`] });
+            });
             pyProcess.stdout.on("data", (data) => { outputData += data.toString(); });
             pyProcess.stderr.on("data", (data) => { console.error(`[PYTHON BRIDGE ERROR]: ${data}`); });
             pyProcess.on("close", () => {

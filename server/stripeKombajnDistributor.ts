@@ -16,7 +16,7 @@ export interface ProfitCampaignPayload {
  */
 export class StripeKombajnDistributor {
   private ai: GoogleGenAI;
-  private MAKE_WEBHOOK_URL: string = 'https://make.com';
+  private MAKE_WEBHOOK_URL: string = process.env.MAKE_WEBHOOK_URL || '';
 
   constructor() {
     this.ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
@@ -98,30 +98,40 @@ export class StripeKombajnDistributor {
           html: `<h1>Cześć!</h1><p>${dopamineHooks.hook}</p><p><b>Problem:</b> ${dopamineHooks.problemAgitation}</p><p><b>Rozwiązanie:</b> ${dopamineHooks.grandSlamOffer}</p>`
         };
         
-        await transporter.sendMail(mailOptions);
-        console.log(`✉️ [OUTREACH SUCCESS]: Wiadomość wysłana bezpośrednio do: ${user.email}`);
+        // Only send email if SMTP is configured
+        if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+          await transporter.sendMail(mailOptions);
+          console.log(`[OUTREACH SUCCESS]: Wiadomosc wyslana do: ${user.email}`);
+        } else {
+          console.warn('[KOMBAJN] SMTP not configured — email skipped for:', user.email);
+        }
       }
 
-      // 4. Wypchnięcie pełnej paczki danych transakcyjnych do webhooka Make.com
-      const payload: ProfitCampaignPayload = {
-        campaign: "COMPETITIVE_SWOT_STRIPE_ATTACK",
-        timestamp: new Date().toISOString(),
-        competitorWeaknesses,
-        dopamineHooks,
-        highValueUsers
-      };
+      // 4. Wypchnięcie danych do webhooka Make.com (tylko jeśli skonfigurowany)
+      if (this.MAKE_WEBHOOK_URL) {
+        const payload: ProfitCampaignPayload = {
+          campaign: "COMPETITIVE_SWOT_STRIPE_ATTACK",
+          timestamp: new Date().toISOString(),
+          competitorWeaknesses,
+          dopamineHooks,
+          highValueUsers
+        };
 
-      const response = await fetch(this.MAKE_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+        const response = await fetch(this.MAKE_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
 
-      if (response.ok) {
-        console.log('✅ [KOMBAYN COMPLETE]: Wiadomości wysłane, a Make.com zsynchronizowane.');
+        if (response.ok) {
+          console.log('[KOMBAJN COMPLETE]: Make.com zsynchronizowane.');
+          return true;
+        }
+        return false;
+      } else {
+        console.log('[KOMBAJN] MAKE_WEBHOOK_URL not configured — skipping webhook. Set env var to activate.');
         return true;
       }
-      return false;
 
     } catch (error: any) {
       console.error(`🚨 [KOMBAYN ERROR]: Potok przychodów przerwany: ${error.message}`);

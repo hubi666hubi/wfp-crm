@@ -4,10 +4,9 @@ export async function generateAIContentWithFallback(prompt: string): Promise<str
   const apiKey = process.env.GEMINI_API_KEY || "";
   const ai = new GoogleGenAI({ apiKey });
   const models = [
-    "gemini-3.5-flash",
-    "gemini-3.1-flash-lite",
     "gemini-2.5-flash",
-    "gemini-1.5-flash"
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-8b"
   ];
 
   let lastError: any = null;
