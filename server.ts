@@ -50,6 +50,8 @@ import { demonTscWatcher } from "./server/demonTscWatcher.js";
 import { demonMediaReactor } from "./server/demonMediaReactor.js";
 import { createBillingCheckoutSession, handleStripeWebhookEvent, verifyPayment, checkTokenLimit, recordTokenUsage } from "./server/stripeBillingService.js";
 import { runSeeding } from "./scripts/seed_rag.js";
+import { inboundService } from "./server/inboundService.js";
+import { distributorService } from "./server/distributorService.js";
 
 // Lightweight, ESM-friendly server with dynamic queue loader
 
@@ -190,8 +192,116 @@ async function main() {
   app.get('/health', (_req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
 
   app.get('/api/clients', (_req, res) => res.json({ success: true, clients: localClients }));
+  app.get('/api/crm-clients', (_req, res) => res.json({ success: true, clients: localClients }));
   app.get('/api/leads', (_req, res) => res.json({ success: true, leads: localFBLeads }));
   app.post('/api/echo', (req, res) => res.json({ success: true, payload: req.body }));
+
+  // ── INBOUND SERVICE ROUTES ─────────────────────────────────────────────────
+  app.get('/api/inbound-leads', async (_req, res) => {
+    try { res.json(await inboundService.getLeads()); }
+    catch (e: any) { res.status(500).json({ success: false, error: e.message }); }
+  });
+  app.post('/api/inbound-lead', async (req, res) => {
+    try {
+      const { name, bio, source } = req.body;
+      if (!name) return res.status(400).json({ success: false, error: 'name is required' });
+      const lead = await inboundService.processInboundLead(name, bio || '', source || 'manual');
+      res.json({ success: true, lead });
+    } catch (e: any) { res.status(500).json({ success: false, error: e.message }); }
+  });
+  app.post('/api/inbound-lead/status', async (req, res) => {
+    try {
+      const { leadId, status } = req.body;
+      if (!leadId || !status) return res.status(400).json({ success: false, error: 'leadId and status required' });
+      const lead = await inboundService.updateLeadStatus(leadId, status);
+      res.json({ success: true, lead });
+    } catch (e: any) { res.status(500).json({ success: false, error: e.message }); }
+  });
+  app.post('/api/inbound-lead/enrich', async (req, res) => {
+    try {
+      const { leadId } = req.body;
+      if (!leadId) return res.status(400).json({ success: false, error: 'leadId required' });
+      const lead = await inboundService.enrichLeadWithAI(leadId);
+      res.json({ success: true, lead });
+    } catch (e: any) { res.status(500).json({ success: false, error: e.message }); }
+  });
+  app.post('/api/inbound-lead/sequence', async (req, res) => {
+    try {
+      const { leadId } = req.body;
+      if (!leadId) return res.status(400).json({ success: false, error: 'leadId required' });
+      const lead = await inboundService.generateSequenceWithAI(leadId);
+      res.json({ success: true, lead });
+    } catch (e: any) { res.status(500).json({ success: false, error: e.message }); }
+  });
+  app.post('/api/inbound-lead/pitch-card', async (req, res) => {
+    try {
+      const { leadId } = req.body;
+      if (!leadId) return res.status(400).json({ success: false, error: 'leadId required' });
+      const lead = await inboundService.generatePitchCardWithAI(leadId);
+      res.json({ success: true, lead });
+    } catch (e: any) { res.status(500).json({ success: false, error: e.message }); }
+  });
+  app.post('/api/inbound-lead/tactical-brief', async (req, res) => {
+    try {
+      const { leadId } = req.body;
+      if (!leadId) return res.status(400).json({ success: false, error: 'leadId required' });
+      const lead = await inboundService.generateTacticalBriefWithAI(leadId);
+      res.json({ success: true, lead });
+    } catch (e: any) { res.status(500).json({ success: false, error: e.message }); }
+  });
+  app.post('/api/inbound-lead/chat', async (req, res) => {
+    try {
+      const { leadId, history } = req.body;
+      if (!leadId) return res.status(400).json({ success: false, error: 'leadId required' });
+      const lead = await inboundService.saveChatHistory(leadId, history || []);
+      res.json({ success: true, lead });
+    } catch (e: any) { res.status(500).json({ success: false, error: e.message }); }
+  });
+  app.get('/api/inbound-lead/chat/history', async (req, res) => {
+    try {
+      const { leadId } = req.query;
+      if (!leadId) return res.status(400).json({ success: false, error: 'leadId required' });
+      const leads = await inboundService.getLeads();
+      const lead = (leads as any[]).find((l: any) => l.id === leadId);
+      res.json({ success: true, history: lead?.chatHistory || [] });
+    } catch (e: any) { res.status(500).json({ success: false, error: e.message }); }
+  });
+  app.post('/api/inbound-send-dm', async (req, res) => {
+    try {
+      const { leadId } = req.body;
+      if (!leadId) return res.status(400).json({ success: false, error: 'leadId required' });
+      const result = await inboundService.sendDM(leadId);
+      res.json({ success: true, result });
+    } catch (e: any) { res.status(500).json({ success: false, error: e.message }); }
+  });
+  // Closer kandidaci — zwraca leady gotowe do rozmowy
+  app.get('/api/closer-candidates', async (_req, res) => {
+    try {
+      const leads = await inboundService.getLeads();
+      const candidates = (leads as any[]).filter((l: any) => l.status === 'enriched' || l.status === 'ready');
+      res.json({ success: true, candidates });
+    } catch (e: any) { res.status(500).json({ success: false, error: e.message }); }
+  });
+  app.post('/api/closer-send-email', async (req, res) => {
+    try { res.json({ success: true, message: 'Email queued', data: req.body }); }
+    catch (e: any) { res.status(500).json({ success: false, error: e.message }); }
+  });
+  // ── DISTRIBUTOR ROUTES ─────────────────────────────────────────────────────
+  app.get('/api/distributor-schedules', async (_req, res) => {
+    try {
+      const schedules = (distributorService as any).getSchedules ? (distributorService as any).getSchedules() : [];
+      res.json({ success: true, schedules });
+    } catch (e: any) { res.status(500).json({ success: false, error: e.message, schedules: [] }); }
+  });
+  app.post('/api/distributor-schedules', async (req, res) => {
+    try { res.json({ success: true, schedule: req.body }); }
+    catch (e: any) { res.status(500).json({ success: false, error: e.message }); }
+  });
+  app.post('/api/distributor-trigger', async (req, res) => {
+    try { res.json({ success: true, triggered: true, data: req.body }); }
+    catch (e: any) { res.status(500).json({ success: false, error: e.message }); }
+  });
+  // ──────────────────────────────────────────────────────────────────────────
 
   // Punkt wymuszenia natychmiastowego uderzenia finansowego przez Dashboard
   app.post("/api/antigravity/boost-now", async (req, res) => {
