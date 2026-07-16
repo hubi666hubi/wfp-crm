@@ -36,6 +36,7 @@ const FactoryRegistry = lazy(() => import('./pages/FactoryRegistry').then(m => (
 const Stitch = lazy(() => import('./pages/Stitch').then(m => ({ default: m.Stitch })));
 const Nekropolis = lazy(() => import('./pages/Nekropolis').then(m => ({ default: m.Nekropolis })));
 const OmegaConsole = lazy(() => import('./pages/OmegaConsole').then(m => ({ default: m.OmegaConsole })));
+const AgentChat = lazy(() => import('./pages/AgentChat'));
 
 function PlaceholderModule({ title }: { title: string }) {
   return (
@@ -232,6 +233,7 @@ function App() {
             <Route path="/stitch" element={<ErrorBoundary><Stitch /></ErrorBoundary>} />
             <Route path="/nekropolis" element={<ErrorBoundary><Nekropolis /></ErrorBoundary>} />
             <Route path="/omega-console" element={<ErrorBoundary><OmegaConsole /></ErrorBoundary>} />
+            <Route path="/agent" element={<ErrorBoundary><AgentChat /></ErrorBoundary>} />
           </Routes>
         </Suspense>
       </ErrorBoundary>

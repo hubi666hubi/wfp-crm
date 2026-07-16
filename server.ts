@@ -300,6 +300,175 @@ async function main() {
     try { res.json({ success: true, triggered: true, data: req.body }); }
     catch (e: any) { res.status(500).json({ success: false, error: e.message }); }
   });
+
+  // ── AUTONOMICZNY AI AGENT LEADÓW (Zenek) ───────────────────────────────────
+  // Gemini function calling — agent zarządza leadami przez narzędzia CRM
+  const AGENT_TOOLS = [
+    {
+      functionDeclarations: [
+        {
+          name: 'get_leads',
+          description: 'Pobiera wszystkie leady z bazy CRM. Zwraca listę leadów z ich statusami i danymi.',
+          parameters: { type: 'OBJECT', properties: { status: { type: 'STRING', description: 'Filtruj po statusie: new, enriched, ready, contacted. Puste = wszystkie.' } }, required: [] }
+        },
+        {
+          name: 'add_lead',
+          description: 'Dodaje nowego leada do bazy CRM.',
+          parameters: { type: 'OBJECT', properties: { name: { type: 'STRING', description: 'Imię i nazwisko lub nazwa firmy' }, bio: { type: 'STRING', description: 'Opis, stanowisko, branża' }, source: { type: 'STRING', description: 'Źródło leada: LinkedIn, Facebook, manual, referral' } }, required: ['name'] }
+        },
+        {
+          name: 'enrich_lead',
+          description: 'Wzbogaca profil leada AI — generuje potencjał zakupowy, bóle operacyjne, rekomendacje.',
+          parameters: { type: 'OBJECT', properties: { leadId: { type: 'STRING', description: 'ID leada do wzbogacenia' } }, required: ['leadId'] }
+        },
+        {
+          name: 'generate_sequence',
+          description: 'Generuje 5-krokową sekwencję outreach dla leada (email, LinkedIn, call).',
+          parameters: { type: 'OBJECT', properties: { leadId: { type: 'STRING', description: 'ID leada' } }, required: ['leadId'] }
+        },
+        {
+          name: 'update_lead_status',
+          description: 'Aktualizuje status leada w lejku sprzedażowym.',
+          parameters: { type: 'OBJECT', properties: { leadId: { type: 'STRING', description: 'ID leada' }, status: { type: 'STRING', description: 'Nowy status: new, enriched, ready, contacted, closed, lost' } }, required: ['leadId', 'status'] }
+        },
+        {
+          name: 'get_stats',
+          description: 'Zwraca statystyki bazy leadów: liczba per status, średni potencjał, najgorętsze leady.',
+          parameters: { type: 'OBJECT', properties: {}, required: [] }
+        }
+      ]
+    }
+  ];
+
+  const AGENT_SYSTEM = `Jesteś Zenek — autonomiczny asystent sprzedażowy WFP CRM.
+Masz dostęp do bazy leadów i możesz zarządzać nimi przez narzędzia.
+Zawsze odpowiadasz po polsku. Jesteś konkretny, biznesowy, skupiony na wynikach.
+Kiedy użytkownik pyta o leady — najpierw sprawdź bazę narzędziem get_leads.
+Kiedy widzisz szansę — sugeruj enrich lub generate_sequence.
+Podajesz liczby, analizy, konkretne rekomendacje. Bez lania wody.`;
+
+  // Conversation history store (in-memory, per session)
+  const agentSessions: Record<string, any[]> = {};
+
+  async function executeAgentTool(toolName: string, args: any): Promise<string> {
+    try {
+      switch (toolName) {
+        case 'get_leads': {
+          const filtered = args.status ? inboundLeads.filter((l: any) => l.status === args.status) : inboundLeads;
+          if (filtered.length === 0) return 'Baza leadów jest pusta. Dodaj pierwszego leada przez add_lead.';
+          return JSON.stringify(filtered.map((l: any) => ({ id: l.id, name: l.name, status: l.status, source: l.source, bio: l.bio?.substring(0, 100) })));
+        }
+        case 'add_lead': {
+          const lead = { id: 'lead_' + (leadCounter++), name: args.name, bio: args.bio || '', source: args.source || 'manual', status: 'new', createdAt: new Date().toISOString() };
+          inboundLeads.push(lead);
+          return `Lead dodany: ${lead.name} (ID: ${lead.id})`;
+        }
+        case 'enrich_lead': {
+          const lead = inboundLeads.find((l: any) => l.id === args.leadId);
+          if (!lead) return `Lead ${args.leadId} nie istnieje. Użyj get_leads żeby zobaczyć dostępne ID.`;
+          const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+          const r = await generateAIContentWithFallback(ai, { contents: [{ role: 'user', parts: [{ text: `Wzbogać profil B2B lead: ${lead.name}. Bio: ${lead.bio || 'brak'}. Podaj: 1) Potencjał zakupowy (1-10) 2) Główne bóle operacyjne 3) Rekomendacje jak podejść. Krótko, konkretnie.` }] }] });
+          lead.enrichment = r?.candidates?.[0]?.content?.parts?.[0]?.text || 'Brak';
+          lead.status = 'enriched';
+          return `Lead ${lead.name} wzbogacony:\n${lead.enrichment}`;
+        }
+        case 'generate_sequence': {
+          const lead = inboundLeads.find((l: any) => l.id === args.leadId);
+          if (!lead) return `Lead ${args.leadId} nie istnieje.`;
+          const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+          const r = await generateAIContentWithFallback(ai, { contents: [{ role: 'user', parts: [{ text: `Wygeneruj 5-krokową sekwencję outreach dla: ${lead.name}. Bio: ${lead.bio || ''}. Enrichment: ${lead.enrichment || 'brak'}. Format: krok 1, krok 2... Realistyczne, konkretne.` }] }] });
+          lead.sequence = r?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          lead.status = 'ready';
+          return `Sekwencja dla ${lead.name}:\n${lead.sequence}`;
+        }
+        case 'update_lead_status': {
+          const lead = inboundLeads.find((l: any) => l.id === args.leadId);
+          if (!lead) return `Lead ${args.leadId} nie istnieje.`;
+          const old = lead.status;
+          lead.status = args.status;
+          return `Status ${lead.name}: ${old} → ${args.status}`;
+        }
+        case 'get_stats': {
+          const stats: Record<string, number> = {};
+          inboundLeads.forEach((l: any) => { stats[l.status] = (stats[l.status] || 0) + 1; });
+          const total = inboundLeads.length;
+          const enriched = inboundLeads.filter((l: any) => l.enrichment).length;
+          return JSON.stringify({ total, byStatus: stats, enrichedCount: enriched, readyCount: stats['ready'] || 0, hotLeads: inboundLeads.filter((l: any) => l.status === 'ready' || l.status === 'enriched').map((l: any) => l.name) });
+        }
+        default: return `Nieznane narzędzie: ${toolName}`;
+      }
+    } catch (e: any) {
+      return `Błąd narzędzia ${toolName}: ${e.message}`;
+    }
+  }
+
+  app.post('/api/agent/chat', async (req, res) => {
+    try {
+      const { message, sessionId = 'default', reset = false } = req.body;
+      if (!message) return res.status(400).json({ success: false, error: 'message wymagany' });
+      if (reset) { agentSessions[sessionId] = []; }
+      if (!agentSessions[sessionId]) agentSessions[sessionId] = [];
+
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+      const history = agentSessions[sessionId];
+      history.push({ role: 'user', parts: [{ text: message }] });
+
+      const toolCalls: any[] = [];
+      let finalText = '';
+      let iterations = 0;
+      const MAX_ITER = 5;
+
+      while (iterations < MAX_ITER) {
+        iterations++;
+        const response = await generateAIContentWithFallback(ai, {
+          systemInstruction: AGENT_SYSTEM,
+          contents: history,
+          tools: AGENT_TOOLS,
+          generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+        } as any);
+
+        const candidate = response?.candidates?.[0];
+        if (!candidate) { finalText = 'Agent nie odpowiedział.'; break; }
+
+        const parts = candidate.content?.parts || [];
+        const fnCalls = parts.filter((p: any) => p.functionCall);
+        const textParts = parts.filter((p: any) => p.text);
+
+        if (fnCalls.length === 0) {
+          finalText = textParts.map((p: any) => p.text).join('');
+          history.push({ role: 'model', parts });
+          break;
+        }
+
+        // Execute tool calls
+        history.push({ role: 'model', parts });
+        const toolResults = [];
+        for (const part of fnCalls) {
+          const { name, args } = part.functionCall;
+          const result = await executeAgentTool(name, args || {});
+          toolCalls.push({ tool: name, args, result });
+          toolResults.push({ functionResponse: { name, response: { result } } });
+        }
+        history.push({ role: 'user', parts: toolResults.map(r => ({ functionResponse: r.functionResponse })) });
+      }
+
+      // Trim history to last 20 turns
+      if (history.length > 40) agentSessions[sessionId] = history.slice(-40);
+
+      res.json({ success: true, response: finalText, toolCalls, sessionId });
+    } catch (e: any) {
+      res.status(500).json({ success: false, error: e.message });
+    }
+  });
+
+  app.delete('/api/agent/session/:sessionId', (req, res) => {
+    delete agentSessions[req.params.sessionId];
+    res.json({ success: true, message: 'Sesja wyczyszczona' });
+  });
+
+  app.get('/api/agent/sessions', (_req, res) => {
+    res.json({ success: true, sessions: Object.keys(agentSessions), counts: Object.fromEntries(Object.entries(agentSessions).map(([k, v]) => [k, v.length])) });
+  });
   // ──────────────────────────────────────────────────────────────────────────
   // -- EXTRA ROUTES: generate-tweet, facebook-leads, factory-registry, research, keep, gmail
   app.post('/api/generate-tweet', async (req, res) => {
