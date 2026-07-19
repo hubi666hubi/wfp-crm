@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 20% 10%;
+    --foreground: 120 100% 50%; /* Matrix Green */
+    --card: 220 25% 15%;
+    --card-foreground: 120 100% 60%;
+    --popover: 220 25% 15%;
+    --popover-foreground: 120 100% 60%;
+    --primary: 120 100% 40%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 220 30% 20%;
+    --secondary-foreground: 120 100% 60%;
+    --muted: 220 20% 20%;
+    --muted-foreground: 120 50% 50%;
+    --accent: 120 80% 30%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 20% 25%;
+    --input: 220 20% 25%;
+    --ring: 120 100% 50%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 220 20% 8%;
+    --foreground: 120 100% 50%;
+    --card: 220 25% 12%;
+    --card-foreground: 120 100% 60%;
+    --popover: 220 25% 12%;
+    --popover-foreground: 120 100% 60%;
+    --primary: 120 100% 40%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 220 30% 15%;
+    --secondary-foreground: 120 100% 60%;
+    --muted: 220 20% 15%;
+    --muted-foreground: 120 50% 50%;
+    --accent: 120 80% 30%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 20% 20%;
+    --input: 220 20% 20%;
+    --ring: 120 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+/* Glassmorphism utilities */
+.glass {
+  background: rgba(10, 15, 20, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 255, 0, 0.1);
+}

@@ -1,0 +1,8 @@
+{
+  "entries": [
+    { "path": "skills/huggingface-skills/skills" },
+    { "path": "skills/tech-leads-skills-v3/packages/skills/(cloud)" },
+    { "path": "skills/tech-leads-skills-v3/packages/skills/(system)" },
+    { "path": "skills/tech-leads-skills-v3/packages/skills" }
+  ]
+}
