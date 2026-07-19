@@ -64,13 +64,31 @@ export async function runSeeding() {
   for (const doc of SEED_DOCUMENTS) {
     try {
       console.log(`[RAG SEEDER] Generating embedding for: "${doc.topic}"...`);
-      const embeddingRes = await ai.models.embedContent({
-        model: 'text-embedding-004',
-        contents: doc.content,
-      });
+      let embedding: number[] | null = null;
+      try {
+        const embeddingRes = await ai.models.embedContent({
+          model: 'text-embedding-004',
+          contents: doc.content,
+        });
+        if (embeddingRes?.embedding?.values) {
+          embedding = embeddingRes.embedding.values;
+        }
+      } catch (err: any) {
+        console.log(`[RAG SEEDER] text-embedding-004 failed, falling back to gemini-embedding-2: ${err.message || err}`);
+        const embeddingRes = await ai.models.embedContent({
+          model: 'gemini-embedding-2',
+          contents: doc.content,
+          config: { outputDimensionality: 768 }
+        });
+        if (embeddingRes?.embeddings?.[0]?.values) {
+          embedding = embeddingRes.embeddings[0].values;
+        } else if (embeddingRes?.embedding?.values) {
+          embedding = embeddingRes.embedding.values;
+        }
+      }
 
-      if (embeddingRes?.embedding?.values) {
-        const embedding = embeddingRes.embedding.values;
+      if (embedding) {
+
         
         const { error } = await supabase.from('documents').insert({
           content: doc.content,

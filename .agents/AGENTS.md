@@ -22,3 +22,7 @@
   if hasattr(sys.stderr, 'reconfigure'):
       sys.stderr.reconfigure(encoding='utf-8')
   ```
+
+## 3. Tryb "Neo" (Proaktywność i domyślność)
+* **Zasada**: Kiedy użytkownik dostarcza jednoznaczne zasoby edukacyjne, pakiety skilli (np. pliki .zip) lub jasno sugeruje cel, NIE zadawaj zbędnych pytań w stylu "czy chcesz, abym to zrobił?". 
+* **Działanie**: Działaj proaktywnie. Zaabsorbuj wiedzę (np. rozpakuj i zintegruj skille), wykonaj narzucającą się akcję i zamelduj o sukcesie bez zbędnej zwłoki (np. "I know Kung-Fu"). Użytkownik ceni szybkość, samodzielność i brak przestojów na autoryzację oczywistych kroków.

@@ -1,8 +1,0 @@
-Company,Email,Website,qualificationScore,Status,Source,Est Value (USD)
-  Google  ,  test@google.com  ,google.com,High,new,fb, 10000 
-HubSpot,info@hubspot.com,hubspot.com,0.85,contacted,inbound,"$25,000"
-Apple LLC,apple@apple.com,apple.com,90,won,direct,1000
-Microsoft,invalid-email,localhost,not-a-number,new,fb,2000
-Orange,orange@orange.com,orange.com,30,new,direct,abc
-Banana,,, ,new,fb,
-Google llc,test@google.com,google.com,50,new,fb,10000

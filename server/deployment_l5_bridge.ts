@@ -61,7 +61,14 @@ export class ResilientTaskRouter {
 
     public executePythonValidationBridge(patchPayload: any): Promise<any> {
         return new Promise((resolve, reject) => {
-            const pythonCmd = process.env.PYTHON_CMD || (process.platform === 'win32' ? 'python' : 'python3');
+            let pythonCmd = process.env.PYTHON_CMD || (process.platform === 'win32' ? 'python' : 'python3');
+            const path = require('path');
+            const venvPythonPath = process.platform === 'win32'
+                ? path.resolve(process.cwd(), '.venv', 'Scripts', 'python.exe')
+                : path.resolve(process.cwd(), '.venv', 'bin', 'python');
+            if (!process.env.PYTHON_CMD && fs.existsSync(venvPythonPath)) {
+                pythonCmd = venvPythonPath;
+            }
             // Check script exists before spawning
             const fs = require('fs');
             if (!fs.existsSync(this.pythonEnginePath)) {

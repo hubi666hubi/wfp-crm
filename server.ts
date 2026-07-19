@@ -134,6 +134,29 @@ async function main() {
       req.rawBody = buf.toString();
     }
   }));
+
+  // ==========================================
+  // OMEGA SAAS COPILOT (B2B Endpoint)
+  // ==========================================
+  app.post("/api/saas/copilot-query", async (req, res) => {
+    try {
+      const { apiKey, query } = req.body;
+      if (!apiKey || !query) {
+        return res.status(400).json({ error: "Missing API Key lub Query." });
+      }
+      
+      // W produkcji weryfikacja w Stripe/Supabase czy klient opłacił abonament
+      console.log(`[SaaS Copilot] Otrzymano zapytanie B2B dla klucza: ${apiKey}`);
+      
+      // Odpowiedź RAG (Symulacja na potrzeby OVERPOWERED DEV)
+      const mockRagResponse = `OMEGA AI: Na podstawie Twojej bazy wiedzy sugeruję następujące argumenty dla: ${query}`;
+      
+      res.json({ success: true, response: mockRagResponse });
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
 // ==========================================
   // NEKROPOLIA: ZMARTWYCHWSTANIE LEADÓW
   // ==========================================
@@ -199,6 +222,49 @@ async function main() {
   }
 
   app.get('/health', (_req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
+
+  app.get('/api/firebase-health', async (_req, res) => {
+    try {
+      const geminiKeyConfigured = !!process.env.GEMINI_API_KEY;
+      const stripeKeyConfigured = !!process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY !== 'sk_test_placeholder';
+      const makeWebhookConfigured = !!process.env.STRIPE_WEBHOOK_SECRET;
+      const deepseekKeyConfigured = !!process.env.DEEPSEEK_API_KEY;
+      
+      let firestoreAdmin = "disconnected";
+      let firestoreDetails = "No database connection established";
+      try {
+        const db = getDb();
+        if (db) {
+          firestoreAdmin = "connected";
+          firestoreDetails = `Connected to Firebase project: ${process.env.FIREBASE_PROJECT_ID || 'gen-lang-client-0036518667'}`;
+        }
+      } catch (dbErr: any) {
+        firestoreDetails = `Database error: ${dbErr.message || String(dbErr)}`;
+      }
+
+      res.json({
+        status: firestoreAdmin === "connected" ? "healthy" : "unhealthy",
+        firestoreAdmin,
+        firestoreDetails,
+        geminiKeyConfigured,
+        stripeKeyConfigured,
+        makeWebhookConfigured,
+        deepseekKeyConfigured,
+        error: null
+      });
+    } catch (err: any) {
+      res.status(500).json({
+        status: "unhealthy",
+        firestoreAdmin: "disconnected",
+        firestoreDetails: "Fatal error",
+        geminiKeyConfigured: false,
+        stripeKeyConfigured: false,
+        makeWebhookConfigured: false,
+        deepseekKeyConfigured: false,
+        error: err.message || String(err)
+      });
+    }
+  });
 
   app.get('/api/clients', (_req, res) => res.json({ success: true, clients: localClients }));
   app.get('/api/crm-clients', (_req, res) => res.json({ success: true, clients: localClients }));
@@ -833,24 +899,38 @@ Nie używaj znaczników markdown.`;
       // 3. Try to call real Gemini API to embed content
       try {
         const ai = new GoogleGenAI({ apiKey: geminiApiKey });
-        const embeddingRes = await ai.models.embedContent({
-          model: 'text-embedding-004',
-          contents: query,
-        });
-        if (embeddingRes?.embedding?.values) {
-          embedding = embeddingRes.embedding.values;
+        try {
+          const embeddingRes = await ai.models.embedContent({
+            model: 'text-embedding-004',
+            contents: query,
+          });
+          if (embeddingRes?.embedding?.values) {
+            embedding = embeddingRes.embedding.values;
+          }
+        } catch (err: any) {
+          console.warn("[handle-aistudio-call] text-embedding-004 failed, falling back to gemini-embedding-2:", err.message || err);
+          const embeddingRes = await ai.models.embedContent({
+            model: 'gemini-embedding-2',
+            contents: query,
+            config: { outputDimensionality: 768 }
+          });
+          if (embeddingRes?.embeddings?.[0]?.values) {
+            embedding = embeddingRes.embeddings[0].values;
+          } else if (embeddingRes?.embedding?.values) {
+            embedding = embeddingRes.embedding.values;
+          }
         }
       } catch (embErr) {
         console.warn("[handle-aistudio-call] Embedding generation failed, using mock embedding:", embErr);
       }
 
-      // 4. Try to query Supabase RPC match_documents
+      // 4. Try to query Supabase RPC hybrid_search (RRF)
       if (embedding) {
         try {
           const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
-          const { data, error } = await supabase.rpc('match_documents', {
+          const { data, error } = await supabase.rpc('hybrid_search', {
+            query_text: query,
             query_embedding: embedding,
-            match_threshold: matchThreshold || 0.7,
             match_count: limit || 3
           });
           if (!error && Array.isArray(data)) {
@@ -860,7 +940,7 @@ Nie używaj znaczników markdown.`;
               similarity: doc.similarity || 0.9,
             }));
           } else if (error) {
-            console.warn("[handle-aistudio-call] Supabase RPC match_documents returned error:", error);
+            console.warn("[handle-aistudio-call] Supabase RPC hybrid_search returned error:", error);
           }
         } catch (dbErr) {
           console.warn("[handle-aistudio-call] Supabase query failed:", dbErr);
@@ -1490,8 +1570,15 @@ Return a raw JSON object matching this schema. Ensure you return ONLY the JSON w
       const pythonScriptPath = fs.existsSync(path.resolve(_dirname, 'nco_pa_start.py'))
         ? path.resolve(_dirname, 'nco_pa_start.py')
         : path.resolve(_dirname, '..', 'nco_pa_start.py');
+      let pythonCmd = process.env.PYTHON_CMD || (process.platform === 'win32' ? 'python' : 'python3');
+      const venvPythonPath = process.platform === 'win32'
+        ? path.resolve(process.cwd(), '.venv', 'Scripts', 'python.exe')
+        : path.resolve(process.cwd(), '.venv', 'bin', 'python');
+      if (!process.env.PYTHON_CMD && fs.existsSync(venvPythonPath)) {
+        pythonCmd = venvPythonPath;
+      }
 
-      const pythonProcess = spawn(process.platform === 'win32' ? 'python' : 'python3', [pythonScriptPath]);
+      const pythonProcess = spawn(pythonCmd, [pythonScriptPath]);
       // CRITICAL: prevent ENOENT from crashing the server
       pythonProcess.on('error', (err) => {
         console.warn(`[PYTHON CORE] Spawn failed (dev only): ${err.message}`);

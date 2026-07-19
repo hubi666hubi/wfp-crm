@@ -317,6 +317,7 @@ export function Settings() {
   const [stripeKey, setStripeKey] = useState(settingsStore.stripeKey);
   const [makeWebhook, setMakeWebhook] = useState(settingsStore.makeWebhook);
   const [openAiKey, setOpenAiKey] = useState(settingsStore.openAiKey);
+  const [deepseekKey, setDeepseekKeyLocal] = useState(settingsStore.deepseekKey || "");
   const [supabaseUrl, setSupabaseUrlLocal] = useState(settingsStore.supabaseUrl || "");
   const [supabaseServiceRoleKey, setSupabaseServiceRoleKeyLocal] = useState(settingsStore.supabaseServiceRoleKey || "");
 
@@ -333,11 +334,12 @@ export function Settings() {
       setStripeKey(settingsStore.stripeKey);
       setMakeWebhook(settingsStore.makeWebhook);
       setOpenAiKey(settingsStore.openAiKey);
+      setDeepseekKeyLocal(settingsStore.deepseekKey || "");
       setSupabaseUrlLocal(settingsStore.supabaseUrl || "");
       setSupabaseServiceRoleKeyLocal(settingsStore.supabaseServiceRoleKey || "");
     }, 0);
     return () => clearTimeout(timer);
-  }, [settingsStore.stripeKey, settingsStore.makeWebhook, settingsStore.openAiKey, settingsStore.supabaseUrl, settingsStore.supabaseServiceRoleKey]);
+  }, [settingsStore.stripeKey, settingsStore.makeWebhook, settingsStore.openAiKey, settingsStore.deepseekKey, settingsStore.supabaseUrl, settingsStore.supabaseServiceRoleKey]);
 
   const handleSave = () => {
     setSaving(true);
@@ -346,6 +348,7 @@ export function Settings() {
     settingsStore.setStripeKey(stripeKey);
     settingsStore.setMakeWebhook(makeWebhook);
     settingsStore.setOpenAiKey(openAiKey);
+    settingsStore.setDeepseekKey(deepseekKey);
     settingsStore.setSupabaseUrl(supabaseUrl);
     settingsStore.setSupabaseServiceRoleKey(supabaseServiceRoleKey);
 
@@ -797,7 +800,7 @@ export function Settings() {
               </div>
             </div>
 
-            {/* 3. OpenAI / Gemini APIs */}
+            {/* 3. OpenAI / Gemini / DeepSeek APIs */}
             <div className="bg-black/50 border border-neutral-800 rounded-lg p-5">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
                 <div>
@@ -805,14 +808,14 @@ export function Settings() {
                     <span className="bg-amber-500/20 text-amber-400 p-1.5 rounded">
                       3
                     </span>
-                    Modele AI (OpenAI / Gemini)
+                    Modele AI (OpenAI / Gemini / DeepSeek)
                   </h3>
                   <p className="text-sm text-neutral-400 mt-1">
                     Daje systemowi pełen dostęp do generowania tekstu, kodu i
                     obrazów dla Twoich klientów.
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <a
                     href="https://platform.openai.com/api-keys"
                     target="_blank"
@@ -829,19 +832,41 @@ export function Settings() {
                   >
                     Gemini API &rarr;
                   </a>
+                  <a
+                    href="https://platform.deepseek.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/20 rounded text-xs font-medium transition-colors"
+                  >
+                    DeepSeek API &rarr;
+                  </a>
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-neutral-500 mb-1">
-                  Klucz API OpenAI lub Gemini (sk-...)
-                </label>
-                <input
-                  type="password"
-                  value={openAiKey}
-                  onChange={(e) => setOpenAiKey(e.target.value)}
-                  placeholder="Wklej swój klucz API tutaj..."
-                  className="w-full bg-black border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition-colors"
-                />
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-neutral-500 mb-1">
+                    Klucz API OpenAI lub Gemini (sk-...)
+                  </label>
+                  <input
+                    type="password"
+                    value={openAiKey}
+                    onChange={(e) => setOpenAiKey(e.target.value)}
+                    placeholder="Wklej swój klucz API tutaj..."
+                    className="w-full bg-black border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500 transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-neutral-500 mb-1">
+                    Klucz API DeepSeek (sk-...)
+                  </label>
+                  <input
+                    type="password"
+                    value={deepseekKey}
+                    onChange={(e) => setDeepseekKeyLocal(e.target.value)}
+                    placeholder="Wklej swój klucz DeepSeek API tutaj..."
+                    className="w-full bg-black border border-neutral-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500 transition-colors"
+                  />
+                </div>
               </div>
             </div>
 

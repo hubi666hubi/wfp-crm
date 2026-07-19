@@ -7,6 +7,7 @@ import { initAuth, googleSignIn, signInAsDemoUser } from './lib/auth';
 import { AppLayout } from './components/layout/AppLayout';
 import { startAgentBrokerListener } from './services/AgentBroker';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { OmegaLanding } from './pages/OmegaLanding';
 
 const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
 const SocialMedia = lazy(() => import('./pages/SocialMedia').then(m => ({ default: m.SocialMedia })));
@@ -139,57 +140,7 @@ function App() {
   }
 
   if (!user) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-rose-900/20 via-black to-black" />
-        <div className="relative z-10 w-full max-w-md p-8 border border-neutral-800 bg-neutral-950/80 backdrop-blur-md rounded-2xl text-center">
-           <div className="w-16 h-16 bg-rose-600 rounded-xl flex items-center justify-center font-bold text-white shadow-[0_0_30px_rgba(225,29,72,0.6)] mx-auto mb-6 text-2xl">
-              Ω
-           </div>
-           <h1 className="text-xl font-bold tracking-widest text-white mb-2 flex items-center justify-center gap-2">
-             W.F.P. <Bot size={24} className="text-rose-400" />
-           </h1>
-           <p className="text-neutral-500 text-sm mb-8 font-mono">AUTORYZACJA WYMAGANA DO UZYSKANIA DOSTĘPU DO MODUŁÓW</p>
-           
-           <button 
-             onClick={login} 
-             className="w-full px-4 py-3 bg-white text-black text-sm font-semibold rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 cursor-pointer"
-           >
-             <svg width="18" height="18" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
-              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
-              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
-              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
-              <path fill="none" d="M0 0h48v48H0z"></path>
-            </svg>
-             Inicjuj Autoryzację Google z Gmail
-           </button>
-
-           <div className="relative my-6 flex items-center justify-center">
-             <div className="absolute inset-0 flex items-center">
-               <span className="w-full border-t border-neutral-800" />
-             </div>
-             <span className="relative z-10 px-3 bg-neutral-950 text-[10px] uppercase font-mono text-neutral-500 tracking-widest">Lub tryb piaskownicy</span>
-           </div>
-
-           <button 
-             onClick={loginAsDemo} 
-             className="w-full px-4 py-3 border border-dashed border-rose-500 hover:border-rose-400 hover:bg-rose-500/10 text-rose-400 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
-           >
-             <Bot size={16} />
-             Uruchom Tycoon Sandbox (Bypass Popups)
-           </button>
-           
-           <p className="mt-4 text-[10px] text-neutral-500 font-mono leading-relaxed px-2">
-             * Jeśli logowanie Google nie działa (np. zablokowane wyskakujące okienka w ramce podglądu), użyj przycisku Bypass Popups lub otwórz aplikację w Nowej Karcie.
-           </p>
-           
-           {dbStatus === 'Offline' && (
-             <p className="mt-6 text-xs text-red-500 font-mono">WARNING: Baza wektorowa (Firebase) offline.</p>
-           )}
-        </div>
-      </div>
-    );
+    return <OmegaLanding onLogin={login} onDemo={loginAsDemo} dbStatus={dbStatus} />;
   }
 
   return (

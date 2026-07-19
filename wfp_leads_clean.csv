@@ -1,7 +1,0 @@
-Company,Email,Website,qualificationScore,Status,Source,Est Value (USD)
-Google,test@google.com,https://google.com,90,Do kontaktu,fb,10000
-HubSpot,info@hubspot.com,https://hubspot.com,85,Wysłana wiadomość,inbound,"$25,000"
-Apple LLC,apple@apple.com,https://apple.com,90,Zamknięte / Sukces,direct,1000
-Microsoft,,,75,Do kontaktu,fb,2000
-Orange,orange@orange.com,https://orange.com,30,Inbound (Wtyczka),direct,abc
-Banana,,,75,Do kontaktu,fb,
