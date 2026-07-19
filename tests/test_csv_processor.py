@@ -4,6 +4,8 @@ import json
 import csv
 import tempfile
 import shutil
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../scripts/python')))
 
 from csv_processor import (
     parse_score,

@@ -90,7 +90,8 @@ def generate_csv():
 def run_processor():
     # Run the processor
     print("Running csv_processor.py...")
-    cmd = [sys.executable, "csv_processor.py", INPUT_CSV, OUTPUT_CSV, REPORT_JSON]
+    csv_processor_path = os.path.join(os.path.dirname(__file__), '../scripts/python/csv_processor.py')
+    cmd = [sys.executable, csv_processor_path, INPUT_CSV, OUTPUT_CSV, REPORT_JSON]
     res = subprocess.run(cmd, capture_output=True, text=True)
     if res.returncode != 0:
         print("csv_processor.py failed to execute!")

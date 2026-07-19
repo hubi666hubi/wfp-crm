@@ -23,8 +23,8 @@ WFP CRM is a client-server application built on React (Vite) on the frontend and
 | M1 | E2E Testing Track | Define test infra, write Tier 1-4 tests, write `TEST_READY.md` | None | IN_PROGRESS (Conv: 43232522-c4c5-4e90-b2f6-946d764f11d5) |
 | M2 | Component Extraction | Modularize Zapalnik, FacebookLeads, VslGenerator page files | None | IN_PROGRESS (Conv: 31800add-1441-4827-98dd-cc901044d991) |
 | M3 | API Stabilization & Gemini Rotation | Fix Express server, Vite dev proxy, implement `/api/handle-aistudio-call` with key rotation | None | IN_PROGRESS (Conv: 31800add-1441-4827-98dd-cc901044d991) |
-| M4 | Integration & E2E Verification | Pass all E2E tests, resolve regressions, verify build/TSC health | M1, M2, M3 | PLANNED |
-| M5 | Adversarial Hardening | Tier 5 white-box gap analysis, generate and pass adversarial tests | M4 | PLANNED |
+| M4 | Integration & E2E Verification | Pass all E2E tests, resolve regressions, verify build/TSC health | M1, M2, M3 | DONE |
+| M5 | Adversarial Hardening | Tier 5 white-box gap analysis, generate and pass adversarial tests | M4 | DONE |
 
 ## Interface Contracts
 

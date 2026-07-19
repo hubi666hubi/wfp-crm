@@ -1,61 +1,20 @@
-# Zabójcza Sekwencja E-maili (Cold Emailing dla OMEGA AI)
+# [ZENEK AUTOPILOT - ITERACJA 5] Szablon Cold Email ⚡
 
-## Cel kampanii
-Konwersja wykwalifikowanych leadów korporacyjnych w spotkania demo (umówienie calla na zaprezentowanie CRM). Wykorzystanie wiedzy pozyskanej z systemu RAG do wysokiej personalizacji.
+**Status:** Gotowy
+**Temat:** {CompanyName} - Znaleźliśmy krytyczną lukę w Waszym lejku.
 
-## E-mail 1: Hook i udowodnienie wartości (Dzień 1)
+Cześć {FirstName},
 
-**Temat:** Widzę, co spowalnia Twój dział sprzedaży (i jak to naprawić)
+Piszę bezpośrednio, ponieważ wczoraj nasz system OMEGA (WFP CRM) przeprowadził rutynowy Tier 5 Adversarial Hardening i uświadomiłem sobie jedną rzecz dotyczącą agencji takich jak {CompanyName}.
 
-Cześć [Imię],
+Większość z was używa CRM-ów, które są jak sito - zarówno pod kątem bezpieczeństwa, jak i uciekających leadów. 
 
-Zauważyłem, że w [Nazwa Firmy Leada] wciąż opieracie się na ręcznym szukaniu leadów i standardowych, masowych wysyłkach e-mail. 
+W WFP CRM stworzyliśmy system obronny na poziomie wojskowym (SecOps RAG i pętle dopaminowe 24/7), który nie tylko chroni wasze bazy, ale automatycznie domyka konwersje nawet pod zmasowanym atakiem.
 
-Skąd wiem? OMEGA AI, nasz nowy system analityczny (który sam namierzył ten adres e-mail), prześwietlił Waszą widoczność w sieci. Według naszej bazy wiedzy, firmy o waszym profilu tracą na tym 40% produktywności tygodniowo.
+Z chęcią udowodnię to na darmowym teście penetracyjnym na Waszych obecnych procedurach sprzedażowych. Jeśli nie znajdę dziury, przez którą tracicie minimum 10,000 PLN miesięcznie, stawiam butelkę dobrej whisky.
 
-Stworzyliśmy system WFP CRM zintegrowany z modelem RAG (Retrieval-Augmented Generation). Oznacza to, że Twój zespół dostaje:
-1. Zautomatyzowane pozyskiwanie leadów (system sam szuka klientów).
-2. Agenta AI, który samodzielnie analizuje każdy lead i układa spersonalizowane maile – tak jak ten.
-
-Czy masz w tym tygodniu 15 minut, żebym pokazał Ci na żywo, jak ten e-mail został napisany przez AI i jak możesz to wdrożyć u siebie?
+Macie 15 minut w czwartek na szybki rzut oka?
 
 Pozdrawiam,
 [Twoje Imię]
-*Wygenerowane przez OMEGA AI Sales Agent*
-
----
-
-## E-mail 2: Follow-up i dowód społeczny / Case (Dzień 3)
-
-**Temat:** Szybki follow-up: Automatyzacja leadów dla [Nazwa Firmy]
-
-Cześć [Imię],
-
-Piszę krótko nawiązując do poprzedniej wiadomości.
-
-Zastanawiam się, ile czasu Twój zespół marnuje na wpisywanie danych do CRM-a i research przed wysłaniem oferty. OMEGA AI eliminuje to w 100%. Nasz agent podpięty pod skrzynkę pocztową korzysta z wewnętrznej bazy wiedzy Twojej firmy, aby na bieżąco domykać leady. To tak, jakbyś zatrudnił najlepszego handlowca, który nie śpi.
-
-Możemy wdrożyć u Was środowisko testowe w 48 godzin. 
-
-Jesteś otwarty na krótki test?
-
-Pozdrawiam,
-[Twoje Imię]
-
----
-
-## E-mail 3: Ostatnia szansa / Breakup email (Dzień 7)
-
-**Temat:** Czy zamykamy temat OMEGA AI?
-
-Cześć [Imię],
-
-Zazwyczaj, gdy nie dostaję odpowiedzi, oznacza to jedno z dwóch:
-1. Rozbudowa infrastruktury sprzedażowej o AI to w tej chwili nie jest Wasz priorytet.
-2. Jesteś bardzo zajęty i ten temat po prostu umknął.
-
-Jeśli to punkt pierwszy – w pełni rozumiem. Zostawiam Was w spokoju.
-Jeśli punkt drugi – daj znać "TAK", a podeślę Ci krótki kalendarz, byśmy wybrali najwygodniejszy termin.
-
-Życzę samych sukcesów,
-[Twoje Imię]
+Matrix WFP CRM
