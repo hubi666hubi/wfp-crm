@@ -52,13 +52,12 @@ def main():
     
     # 3. Pytest integration tests
     print("  -> Running Python integration tests...")
-    pytest_path = os.path.join(".venv", "Scripts", "python")
+    pytest_path = os.path.join(".venv", "bin", "python")
     results["python_integration"] = run_command(f'"{pytest_path}" -m pytest tests/')
     
     # 4. Production build typecheck & bundling
     print("  -> Running npm run build (Vite + esbuild)...")
-    npm_cli = r"C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js"
-    results["npm_build"] = run_command(f'node "{npm_cli}" run build')
+    results["npm_build"] = run_command(f'npm run build')
     
     # Check overall success
     all_success = True

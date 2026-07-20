@@ -285,7 +285,7 @@ export function Settings() {
       clearTimeout(timer);
       unsubscribe();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    //
   }, []);
 
 

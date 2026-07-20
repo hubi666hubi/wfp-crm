@@ -101,7 +101,7 @@ export function GoogleTasksPage() {
 
   useEffect(() => {
     if (selectedListId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      //
       setSelectedTaskIds(new Set());
       fetchTasks(selectedListId);
     }

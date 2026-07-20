@@ -802,6 +802,41 @@ Nie używaj znaczników markdown.`;
     }
   });
 
+
+  // [PRO AUTO-CLI] Integruje narzędzie terminala Gemini CLI (MUTANT PROTOCOL)
+  app.post('/api/pro/auto-cli', async (req, res) => {
+    try {
+      const email = (req.headers['x-user-email'] as string) || "anonymous@wfp-platform.io";
+      const isAllowed = await checkTokenLimit(email, 100);
+      if (!isAllowed) {
+        res.status(402).json({ success: false, error: "Przekroczono limit tokenów FinOps." });
+        return;
+      }
+      const { command } = req.body;
+      if (!command) {
+        return res.status(400).json({ error: 'Brak komendy' });
+      }
+
+      console.log(`[AUTO-CLI] Wykonanie komendy: ${command}`);
+
+      const { execFile } = require('child_process');
+      // Podziel komendę na argumenty (bardzo proste bindowanie na spacje dla CLI)
+      const args = command.split(' ').filter((arg: string) => arg.trim() !== '');
+
+      execFile('gemini', args, (error: any, stdout: string, stderr: string) => {
+         recordTokenUsage(email, 100);
+         if (error) {
+             res.json({ success: false, output: stderr || error.message });
+             return;
+         }
+         res.json({ success: true, output: stdout || 'Zadanie wykonane w tle.' });
+      });
+    } catch (err: any) {
+       console.error("[AUTO-CLI] Error:", err.message);
+       res.status(500).json({ success: false, error: err.message });
+    }
+  });
+
   app.post('/api/handle-aistudio-call', async (req, res) => {
     try {
       const email = (req.headers['x-user-email'] as string) || "anonymous@wfp-platform.io";
