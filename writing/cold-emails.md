@@ -1,22 +1,21 @@
-# [ZENEK AUTOPILOT - ITERACJA 21] Szablon Cold Email ⚡
+# Cold Email Template: WFP CRM for Agencies
 
-**Status:** Gotowy
-**Temat:** [Automatyzacja] Wasz zespół traci czas u [Nazwa Agencji] 📉
+**Subject:** Scaling [Agency Name] without adding headcount
 
-# WFP CRM - Cold Email Templates (Iteration 21)
+Hi [First Name],
 
-## OMEGA Headless Autonomous Pitch
+I was looking at [Agency Name]'s recent growth—impressive work on your latest campaigns.
 
-**Temat:** Bezgłowy Agent Sprzedaży SDR dla [Nazwa Agencji] ⚡
+I speak with agency founders every day, and the #1 bottleneck they face is scaling operations without their margins shrinking due to overhead and manual CRM work.
 
-**Cześć [Imię],**
+That’s why we built **WFP CRM**. It's designed specifically for agencies to replace the duct-tape stack. WFP CRM automates your lead generation with AI-driven scrapers, handles Stripe checkouts natively, and uses RAG to give you instant insights into your client data.
 
-Oglądałem Wasze ostatnie kampanie outboundowe. Macie świetny produkt, ale widzę, w jakim tempie operujecie. Większość Waszych wygrzanych leadów zastyga, gdy SDR musi poświęcić 20 minut na manualne przejrzenie wiedzy przed wysłaniem riposty cenowej.
+In short: It lets your team focus on strategy and creative, while the CRM does the heavy lifting.
 
-Przeszliśmy właśnie z poziomu "narzędzia" do poziomu "wirtualnego pracownika". Nasz najnowszy W.F.P CRM to **Headless Autonomous Sales Engine**, który podpina się pod prawdziwe skrzynki (SMTP/IMAP) Waszych handlowców. Kiedy klient rzuci obiekcję na mailu, OMEGA Engine samodzielnie przeszukuje firmowego RAG'a, ładuje najsilniejszą odpowiedź i automatycznie odpisuje leadowi. Wszystko w tle, 24/7.
+Are you open to a quick 10-minute chat next Tuesday to see if WFP CRM could streamline [Agency Name]'s workflow?
 
-Mogę podesłać szybki zrzut logów pokazujący taką autonomiczną konwersację? To kompletny gamechanger dla skali.
+Best regards,
 
-Pozdrawiam,
-[Twoje Imię]
-W.F.P CRM – Automatyczne domykanie B2B
+[Your Name]
+[Your Title]
+WFP CRM
