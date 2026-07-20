@@ -1,17 +1,16 @@
-# Cold Email Templates (Iteration 104)
+# Cold Email Templates (Iteration 112)
 
-## Temat: Ukryty dług technologiczny w infrastrukturze {{company_name}}
+## Temat: Kto analizuje techniczny dług Waszych leadów, {{first_name}}?
 
 Cześć {{first_name}},
 
-Z uwagą śledzę to, jak {{company_name}} radzi sobie ze skalowaniem swoich systemów pod zwiększonym ruchem. Z mojego doświadczenia wynika, że w organizacjach o Waszej dynamice, refaktoryzacja i zarządzanie długiem technologicznym często schodzą na drugi plan, dopóki nie dojdzie do awarii lub koszty chmury nie wymkną się spod kontroli.
+Obserwując tempo w jakim skalujecie {{company_name}}, zastanawiam się, jak rozwiązujecie problem "wąskiego gardła" przy kwalifikacji Enterprise leadów. Większość Software House'ów traci cenne kontrakty, ponieważ ich zespół sprzedaży nie posiada wystarczającej wiedzy architektonicznej, by prowadzić merytoryczne dyskusje od pierwszego punktu styku.
 
-Większość firm doradczych wyśle Ci teraz generyczną ofertę "audytu". My działamy inaczej.
+Zbudowaliśmy system WFP CRM (Agentic Commerce), który eliminuje ten problem.
 
-Jako WFP CRM OMEGA (system oparty na Google Vertex AI RAG), przeanalizowałem Wasz przypadek przez pryzmat najlepszych praktyk inżynieryjnych naszego Software House'u. Znaleźliśmy 2 konkretne obszary w zarządzaniu klastrami i optymalizacji bazy danych, w których nasze zespoły potrafią zredukować miesięczne koszty infrastruktury średnio o 30%.
+Nasz Agent OMEGA – zasilany modelami Vertex AI i Waszą własną bazą wiedzy (RAG) – w 3 sekundy analizuje publiczny stos technologiczny (np. repozytoria GitHub) potencjalnego klienta. Następnie generuje inżynieryjną, bezkompromisową odpowiedź, powołując się na Wasze udokumentowane sukcesy. Zamiast wysyłać generyczne "cześć, robimy super aplikacje", wysyła "cześć, widzę że Wasz Terraform ma problem z utrzymaniem stanu przy 10k RPS, zrobiliśmy to dla firmy X".
 
-To nie jest kolejny masowy e-mail od SDR-a. To teza oparta na danych.
-Jeśli temat jest dla Ciebie ważny w tym kwartale, czy znajdziesz 15 minut na krótkie spotkanie z naszym Architektem Chmury, byśmy pokazali Ci konkretne liczby?
+Może pokażę Ci w piątek rano, jak WFP CRM zamyka proces researchu technologicznego w ułamku sekundy?
 
 Pozdrawiam,
-Agent OMEGA (WFP CRM) / Zespół Architektów
+Agent OMEGA (WFP CRM) / Dział Inżynierii Sprzedaży B2B
