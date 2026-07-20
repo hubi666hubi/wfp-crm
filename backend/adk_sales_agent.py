@@ -34,8 +34,10 @@ except ImportError:
 try:
     from google.genai import types
     from google.adk.agents import Agent
+    from google.adk.agents.llm_agent import LlmAgent
     from google.adk.runners import Runner, InMemoryRunner
     from google.adk.sessions import InMemorySessionService
+    from backend.firestore_session_service import FirestoreSessionService
     from google.adk.apps import App
     from google.adk.tools.tool_context import ToolContext
     from google.adk.tools.base_tool import BaseTool
@@ -44,17 +46,28 @@ try:
     from google.adk.models.llm_response import LlmResponse
     from google.adk.tools.mcp_tool import McpToolset
     from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams, StreamableHTTPConnectionParams
+    from google.adk.tools import VertexAiSearchTool
+    from google.adk.tools.retrieval.vertex_ai_rag_retrieval import VertexAiRagRetrieval
+    from google.adk.agents.readonly_context import ReadonlyContext
+    from google.adk.integrations.agent_registry import AgentRegistry
+    from google.genai import types
+    from vertexai.preview import rag
     from mcp import StdioServerParameters
     from pydantic import BaseModel, Field
+    import httpx
+    import google.auth
+    from google.auth.transport.requests import Request
+    import stripe
     ADK_AVAILABLE = True
     
     class PitchOutput(BaseModel):
         subject: str = Field(description="Agresywny biznesowo temat e-maila w języku polskim")
         body: str = Field(description="Główna treść e-maila ukierunkowana wyłącznie na umówienie spotkania")
         pain_point_used: str = Field(description="Krótki opis, w jaki punkt bólu uderzono")
-except ImportError:
+except ImportError as e:
+    import logging
+    logging.warning(f"ADK package (google.adk) not found. Uruchamiam mock agenta ADK. Details: {e}")
     ADK_AVAILABLE = False
-    logging.warning("ADK package (google.adk) not found. Uruchamiam mock agenta ADK.")
 
 # --- Callbacks / Guardrails ---
 
@@ -166,6 +179,36 @@ def create_sales_team():
     
     # Inicjalizacja Google Developer Knowledge (MCP)
     DEVELOPER_KNOWLEDGE_API_KEY = os.getenv("DEVELOPER_KNOWLEDGE_API_KEY", "dummy_key_if_not_set")
+    
+    # Inicjalizacja Vertex AI Search (Enterprise Search) ze wsparciem dla filtrów user_id
+    class MyVertexAISearchTool(VertexAiSearchTool):
+        def _build_vertex_ai_search_config(
+            self, readonly_context: ReadonlyContext
+        ) -> types.VertexAISearch:
+            """Builds the VertexAISearch configuration, adding a user-specific filter."""
+            config = super()._build_vertex_ai_search_config(readonly_context)
+            if "user_id" in readonly_context.state:
+                user_id = readonly_context.state["user_id"]
+                config.filter = f'user_id: ANY("{user_id}")'
+            return config
+
+    VERTEX_DATASTORE_PATH = os.getenv("VERTEX_DATASTORE_PATH", "")
+    vertex_search_tools = []
+    if VERTEX_DATASTORE_PATH:
+        vertex_search_tools.append(MyVertexAISearchTool(data_store_id=VERTEX_DATASTORE_PATH))
+        
+    RAG_CORPUS = os.getenv("RAG_CORPUS", "")
+    if RAG_CORPUS:
+        ask_vertex_retrieval = VertexAiRagRetrieval(
+            name="retrieve_rag_documentation",
+            description=(
+                "Use this tool to retrieve documentation and reference materials for the question from the RAG corpus,"
+            ),
+            rag_resources=[rag.RagResource(rag_corpus=RAG_CORPUS)],
+            similarity_top_k=10,
+            vector_distance_threshold=0.6,
+        )
+        vertex_search_tools.append(ask_vertex_retrieval)
 
     # Sub-Agent: Profiler
     lead_qualifier = Agent(
@@ -182,9 +225,9 @@ def create_sales_team():
         name="knowledge_researcher_agent",
         model="gemini-2.5-flash",
         mode="single_turn",
-        description="Użyj tego agenta aby wyszukać pasujące argumenty z bazy wiedzy RAG oraz przeszukać sieć.",
-        instruction="Twoim zadaniem jest przeszukanie bazy wiedzy narzędziem 'search_sales_knowledge' oraz, w razie potrzeby, najnowszych informacji w internecie przez 'szukaj_w_sieci'.",
-        tools=[search_sales_knowledge, szukaj_w_sieci]
+        description="Użyj tego agenta aby wyszukać pasujące argumenty z bazy wiedzy RAG, przeszukać sieć oraz firmowy Vertex AI Datastore.",
+        instruction="Twoim zadaniem jest przeszukanie bazy wiedzy narzędziem 'search_sales_knowledge' oraz 'szukaj_w_sieci'. Jeśli masz dostęp do Vertex Search, użyj go również w pierwszej kolejności do odpowiedzi na pytania bazujące na oficjalnych dokumentach.",
+        tools=[search_sales_knowledge, szukaj_w_sieci] + vertex_search_tools
     )
 
     # Sub-Agent: Pitch Generator
@@ -197,14 +240,46 @@ def create_sales_team():
         output_schema=PitchOutput
     )
 
+    STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "dummy_stripe_key_if_not_set")
+    stripe.api_key = STRIPE_SECRET_KEY
+
+    def czy_uzytkownik_ma_dostep(user_id: str):
+        """Sprawdza w bazie danych, czy użytkownik opłacił usługę."""
+        # Tu docelowo zapytanie do BigQuery lub Firestore
+        return True # Placeholder
+
+    def zainicjuj_platnosc(kwota_usd: float, opis: str, user_id: str):
+        """Narzędzie do tworzenia sesji płatności dla użytkownika w Stripe."""
+        try:
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[{
+                    'price_data': {
+                        'currency': 'usd',
+                        'product_data': {'name': opis},
+                        'unit_amount': int(kwota_usd * 100),
+                    },
+                    'quantity': 1,
+                }],
+                mode='payment',
+                success_url='https://wfp-crm.local/success',
+                cancel_url='https://wfp-crm.local/cancel',
+                metadata={'user_id': user_id}
+            )
+            return {"status": "success", "url": session.url}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+
     # Sub-Agent: Stripe (Billing / Payments)
     stripe_agent = Agent(
         model="gemini-2.5-flash",
         name="stripe_agent",
-        mode="single_turn",
-        description="Użyj tego agenta aby sprawdzić status konta Stripe, zarządzać fakturami lub weryfikować płatności klientów.",
-        instruction="Help users manage their Stripe account, check invoices, and verify payments.",
+        mode="chat",
+        description="Tworzy sesje checkout, linki do płatności i zarządza billingiem.",
+        instruction="Pomagasz w zarządzaniu kontem Stripe i pobieraniu opłat. Użyj narzędzia zainicjuj_platnosc lub zewnętrznego MCP aby wygenerować link.",
         tools=[
+            czy_uzytkownik_ma_dostep,
+            zainicjuj_platnosc,
             McpToolset(
                 connection_params=StdioConnectionParams(
                     server_params=StdioServerParameters(
@@ -216,13 +291,12 @@ def create_sales_team():
                         ],
                         env={
                             "STRIPE_SECRET_KEY": STRIPE_SECRET_KEY,
-                            "PATH": os.getenv("PATH", "")
                         }
                     ),
-                    timeout=30,
-                ),
+                    timeout=30
+                )
             )
-        ],
+        ]
     )
 
     # Sub-Agent: Google Developer Knowledge (MCP)
@@ -253,11 +327,58 @@ def create_sales_team():
     3. Na podstawie tych danych przekaż zlecenie do 'pitch_generator_agent', aby wygenerował ustrukturyzowaną wiadomość (schema PitchOutput). Krótko, do bólu pragmatycznie. Call-To-Action to ZAWSZE pytanie o 15 minut w kalendarzu.
     """
     
+    class ZenekState:
+        def __init__(self):
+            self.historia_akcji = []
+
+    zenek_state = ZenekState()
+
+    def zapamietaj_akcje(akcja: str):
+        """Użyj tego narzędzia, aby zapisać w pamięci (ZenekState) ważną akcję, którą właśnie wykonałeś."""
+        zenek_state.historia_akcji.append(akcja)
+        return "Zapamiętano."
+    
+    # Inicjalizacja Agent Registry (Remote A2A i zdalne MCP)
+    google_cloud_project = os.getenv("GOOGLE_CLOUD_PROJECT")
+    google_cloud_location = os.getenv("GOOGLE_CLOUD_LOCATION", "global")
+    remote_tools = []
+    remote_sub_agents = []
+    
+    if google_cloud_project:
+        try:
+            def google_auth_header_provider(context):
+                creds, _ = google.auth.default()
+                if not creds.valid:
+                    creds.refresh(Request())
+                return {"Authorization": f"Bearer {creds.token}"}
+
+            registry = AgentRegistry(
+                project_id=google_cloud_project, 
+                location=google_cloud_location,
+                header_provider=google_auth_header_provider
+            )
+            
+            remote_mcp_id = os.getenv("REMOTE_MCP_SERVER_ID")
+            if remote_mcp_id:
+                mcp_server_name = f"projects/{google_cloud_project}/locations/{google_cloud_location}/mcpServers/{remote_mcp_id}"
+                remote_tools.append(registry.get_mcp_toolset(mcp_server_name=mcp_server_name))
+                
+            remote_agent_id = os.getenv("REMOTE_AGENT_ID")
+            if remote_agent_id:
+                agent_name = f"projects/{google_cloud_project}/locations/{google_cloud_location}/agents/{remote_agent_id}"
+                remote_sub_agents.append(registry.get_remote_a2a_agent(agent_name=agent_name))
+        except Exception as e:
+            print(f"[AgentRegistry] Błąd wczytywania remote zasobów: {e}")
+
+    # Główny Orchestrator Zespołu
     root_agent = Agent(
-        name="omega_sales_orchestrator",
         model="gemini-2.5-flash",
+        name="omega_sales_orchestrator",
+        mode="chat",
+        description="Główny agent koordynujący proces sprzedaży outbound w WFP CRM.",
         instruction=instruction,
-        sub_agents=[lead_qualifier, knowledge_researcher, pitch_generator, stripe_agent, google_knowledge_agent],
+        tools=[zapamietaj_akcje] + remote_tools,
+        sub_agents=[lead_qualifier, knowledge_researcher, pitch_generator, stripe_agent, google_knowledge_agent] + remote_sub_agents,
         before_model_callback=bouncer_guardrail,
         before_tool_callback=quality_check_tool_guardrail
     )
@@ -275,7 +396,12 @@ async def run_adk_agent(prompt: str) -> str:
     if not ADK_AVAILABLE:
         return agent.run(prompt).text
         
-    session_service = InMemorySessionService()
+    try:
+        session_service = FirestoreSessionService(collection_name="wfp_crm_sessions")
+    except Exception as e:
+        print(f"Błąd inicjalizacji FirestoreSessionService: {e}. Używam InMemorySessionService.", file=sys.stderr)
+        session_service = InMemorySessionService()
+
     runner = Runner(agent=agent, app_name="wfp_crm_adk", session_service=session_service)
     
     # Inicjalizacja Sesji

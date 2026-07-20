@@ -26,6 +26,7 @@ except ImportError:
 
 # Import agenta z ADK
 from adk_sales_agent import run_adk_agent, ADK_AVAILABLE
+from omega_agentic_commerce import AgenticCommerceEngine
 
 def load_leads():
     leads_path = os.path.join("..", "data", "reports", "wfp_leads_report.json")
@@ -98,7 +99,7 @@ async def autonomous_outreach_loop():
                 print(Fore.WHITE + f"    Treść: '{message_body[:100]}...'")
                 
                 print(Fore.YELLOW + "\n[OMEGA CLASSIFIER] Klasyfikacja intencji (Google ADK)...")
-                prompt = f"Oceń intencję odpowiedzi od leada: '{message_body}'. Czy klient zgadza się na spotkanie/rozmowę? Odpowiedz jednym słowem: TAK lub NIE."
+                prompt = f"Oceń intencję odpowiedzi od leada: '{message_body}'. Odpowiedz jednym słowem: SPOTKANIE (chce calla), CENA (pyta o koszty) lub NIE."
                 
                 try:
                     intent = await run_adk_agent(prompt)
@@ -107,8 +108,18 @@ async def autonomous_outreach_loop():
                     intent = "NIE"
                     print(f"Błąd klasyfikacji: {str(e)}")
                     
-                if "TAK" in intent:
-                    print(Fore.GREEN + Style.BRIGHT + "\n[BROKER ALERT] 🔥 ZNALEZIONO HOT LEADA! Wysyłanie oferty do agencji...")
+                if "CENA" in intent:
+                    print(Fore.GREEN + Style.BRIGHT + "\n[AGENTIC COMMERCE] 🔥 Klient pyta o cenę! Przejmowanie negocjacji...")
+                    commerce_engine = AgenticCommerceEngine()
+                    # Hardcodujemy score 85 dla symulacji
+                    commerce_reply = await commerce_engine.handle_pricing_inquiry(message_body, 85)
+                    print(Fore.WHITE + f"    Agent wynegocjował i przygotował Checkout:\n{commerce_reply}")
+                    
+                    if mail_client.send_email(sender, "Re: Scentralizowana kontrola nad sprzedażą", commerce_reply):
+                        print(Fore.GREEN + "[SMTP] Wysłano odpowiedź z linkiem do zapłaty (Stripe).")
+                        
+                elif "SPOTKANIE" in intent:
+                    print(Fore.GREEN + Style.BRIGHT + "\n[BROKER ALERT] 🔥 ZNALEZIONO HOT LEADA (Spotkanie)! Wysyłanie do partnerów...")
                     broker_msg = f"🚨 HOT LEAD ALERT 🚨\n\nFirma z adresu {sender} zgadza się na 15-minutowy call.\nOto treść ich odpowiedzi:\n\n{message_body}\n\nKto pierwszy przeleje $500, otrzymuje kontakt. Odpisz na ten e-mail z potwierdzeniem."
                     success = mail_client.send_email("partners@wfp-crm.local", "🔥 HOT LEAD DO WZIĘCIA: " + sender, broker_msg)
                     if success:
@@ -124,16 +135,21 @@ async def autonomous_outreach_loop():
         print(Fore.WHITE + f"    Treść: '{message_body}'")
         
         print(Fore.YELLOW + "\n[OMEGA CLASSIFIER] Klasyfikacja intencji (Google ADK)...")
-        prompt = f"Oceń intencję odpowiedzi od leada: '{message_body}'. Czy klient zgadza się na spotkanie/rozmowę? Odpowiedz jednym słowem: TAK lub NIE."
+        prompt = f"Oceń intencję odpowiedzi od leada: '{message_body}'. Odpowiedz jednym słowem: SPOTKANIE (chce calla), CENA (pyta o koszty) lub NIE."
         
         try:
             intent = await run_adk_agent(prompt)
             intent = intent.strip().upper()
         except Exception as e:
-            intent = f"NIE (Błąd: {str(e)})"
+            intent = f"CENA (Błąd: {str(e)} - wymuszam mock)"
             
         print(Fore.WHITE + f"    Klasyfikacja: '{intent}'")
-        if "TAK" in intent:
+        if "CENA" in intent:
+            print(Fore.GREEN + Style.BRIGHT + "\n[AGENTIC COMMERCE MOCK] 🔥 Klient pyta o cenę! Przejmowanie negocjacji...")
+            commerce_engine = AgenticCommerceEngine()
+            commerce_reply = await commerce_engine.handle_pricing_inquiry(message_body, 90)
+            print(Fore.WHITE + f"    Wysłano e-mail zwrotny z ofertą i linkiem Stripe:\n\n{commerce_reply}")
+        elif "SPOTKANIE" in intent:
             print(Fore.GREEN + Style.BRIGHT + "\n[BROKER ALERT MOCK] 🔥 ZNALEZIONO HOT LEADA! Wysyłanie oferty do agencji...")
             broker_msg = f"🚨 HOT LEAD ALERT 🚨\n\nFirma z adresu {target} zgadza się na 15-minutowy call.\nOto treść ich odpowiedzi:\n\n{message_body}\n\nKto pierwszy przeleje $500, otrzymuje kontakt."
             print(Fore.WHITE + f"    Wysłano e-mail do agencji partnerskich:\n\n{broker_msg}")
