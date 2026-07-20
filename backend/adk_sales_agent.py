@@ -37,10 +37,11 @@ try:
     from google.adk.agents.llm_agent import LlmAgent
     from google.adk.runners import Runner, InMemoryRunner
     from google.adk.sessions import InMemorySessionService
-    from backend.firestore_session_service import FirestoreSessionService
+    from firestore_session_service import FirestoreSessionService
     from google.adk.apps import App
     from google.adk.tools.tool_context import ToolContext
     from google.adk.tools.base_tool import BaseTool
+    from google.adk.models.google_llm import Gemini
     from google.adk.agents.callback_context import CallbackContext
     from google.adk.models.llm_request import LlmRequest
     from google.adk.models.llm_response import LlmResponse
@@ -210,10 +211,18 @@ def create_sales_team():
         )
         vertex_search_tools.append(ask_vertex_retrieval)
 
+    google_cloud_project = os.getenv("GOOGLE_CLOUD_PROJECT")
+    google_cloud_location = os.getenv("GOOGLE_CLOUD_LOCATION", "global")
+    
+    gemini_model = Gemini(
+        model="gemini-2.5-flash", 
+        client_kwargs={"vertexai": True, "project": google_cloud_project, "location": google_cloud_location}
+    )
+
     # Sub-Agent: Profiler
     lead_qualifier = Agent(
         name="lead_qualifier_agent",
-        model="gemini-2.5-flash",
+        model=gemini_model,
         mode="single_turn",
         description="Użyj tego agenta aby zbadać leada i pobrać jego profil (lead_score).",
         instruction="Twoim jedynym zadaniem jest użycie narzędzia 'check_lead_score' by pobrać profil firmy. Zwróć profil w odpowiedzi.",
@@ -223,7 +232,7 @@ def create_sales_team():
     # Sub-Agent: Researcher
     knowledge_researcher = Agent(
         name="knowledge_researcher_agent",
-        model="gemini-2.5-flash",
+        model=gemini_model,
         mode="single_turn",
         description="Użyj tego agenta aby wyszukać pasujące argumenty z bazy wiedzy RAG, przeszukać sieć oraz firmowy Vertex AI Datastore.",
         instruction="Twoim zadaniem jest przeszukanie bazy wiedzy narzędziem 'search_sales_knowledge' oraz 'szukaj_w_sieci'. Jeśli masz dostęp do Vertex Search, użyj go również w pierwszej kolejności do odpowiedzi na pytania bazujące na oficjalnych dokumentach.",
@@ -233,7 +242,7 @@ def create_sales_team():
     # Sub-Agent: Pitch Generator
     pitch_generator = Agent(
         name="pitch_generator_agent",
-        model="gemini-2.5-flash",
+        model=gemini_model,
         mode="task",
         description="Użyj tego agenta aby wygenerować ostateczny ustrukturyzowany pitch sprzedażowy (JSON) i zakończyć zadanie.",
         instruction="Twoim zadaniem jest wygenerowanie struktury PitchOutput na podstawie zebranych danych. Zakończ zadanie wywołując narzędzie finish_task.",
@@ -272,7 +281,7 @@ def create_sales_team():
 
     # Sub-Agent: Stripe (Billing / Payments)
     stripe_agent = Agent(
-        model="gemini-2.5-flash",
+        model=gemini_model,
         name="stripe_agent",
         mode="chat",
         description="Tworzy sesje checkout, linki do płatności i zarządza billingiem.",
@@ -301,7 +310,7 @@ def create_sales_team():
 
     # Sub-Agent: Google Developer Knowledge (MCP)
     google_knowledge_agent = Agent(
-        model="gemini-2.5-flash",
+        model=gemini_model,
         name="google_knowledge_agent",
         mode="single_turn",
         description="Search Google developer documentation for implementation guidance and APIs.",
@@ -339,8 +348,6 @@ def create_sales_team():
         return "Zapamiętano."
     
     # Inicjalizacja Agent Registry (Remote A2A i zdalne MCP)
-    google_cloud_project = os.getenv("GOOGLE_CLOUD_PROJECT")
-    google_cloud_location = os.getenv("GOOGLE_CLOUD_LOCATION", "global")
     remote_tools = []
     remote_sub_agents = []
     
@@ -372,7 +379,7 @@ def create_sales_team():
 
     # Główny Orchestrator Zespołu
     root_agent = Agent(
-        model="gemini-2.5-flash",
+        model=gemini_model,
         name="omega_sales_orchestrator",
         mode="chat",
         description="Główny agent koordynujący proces sprzedaży outbound w WFP CRM.",

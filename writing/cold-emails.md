@@ -1,16 +1,16 @@
-# Szablony Cold Email (Content Autopilot - Iteration 81)
+# Szablony Cold Email (Content Autopilot - Iteration 84)
 
-## Szablon 1: Orkiestracja w służbie zysków (Monetyzacja)
+## Szablon 1: Perfekcyjna Pamięć Twojej Sprzedaży
 
-**Temat:** Twoi ludzie od sprzedaży tracą czas na copy-paste?
+**Temat:** Re: Nasza ostatnia rozmowa (której nie pamiętasz)
 
 Cześć {{first_name}},
 
-Codzienne wysyłanie tych samych ofert, linków do kalendarza i manualne sprawdzanie "czy klient X zapłacił", drenuje energię Twoich najlepszych pracowników z {{company_name}}.
+Codziennie w {{company_name}} tracicie setki tysięcy dolarów na deale, które po prostu "rozmyły się w czasie". Ktoś odpisał "nie teraz", a Twój handlowiec zapomniał przypomnieć się w odpowiednim momencie. 
 
-Rozwiązaliśmy ten problem u jego źródła budując system WFP OMEGA. Nasz cyfrowy pracownik posiada permanentną pamięć rozmów (zasilaną systemami NoSQL), dzięki czemu przy każdym kolejnym follow-upie nawiązuje do specyficznych potrzeb danego leada i w odpowiednim momencie samodzielnie generuje fakturę.
+WFP OMEGA eliminuje zjawisko "zapomnianego leada". Wdrożyliśmy Firestore Session Service – nasza sztuczna inteligencja posiada fotograficzną pamięć każdej interakcji z klientem. Niezależnie czy lead odpisze jutro o 3 w nocy, czy za pół roku – OMEGA błyskawicznie wczytuje pełen kontekst negocjacji i kontynuuje domykanie sprzedaży, serwując linki płatności Stripe.
 
-Jeżeli chcesz, aby Twoi najlepsi handlowcy skupili się na zamykaniu dealów rzędu $100k, a całą mniejszą drobnicę B2B zamknęła maszyna - pozwól mi na 15 min rozmowy w przyszłym tygodniu.
+Wyeliminuj straty wynikające z ludzkiej pamięci. Kiedy masz 15 minut, abym mógł pokazać Ci ten proces na żywo?
 
 Pozdrawiam,
 {{sender_name}}
@@ -18,17 +18,17 @@ W.F.P CRM
 
 ---
 
-## Szablon 2: Koniec Resetowania Sesji
+## Szablon 2: Kontekst to Król B2B
 
-**Temat:** Pamięć słonia w Twoim procesie sprzedaży.
+**Temat:** Twoje CRM to tylko baza kontaktów. Moje CRM to Twój najlepszy handlowiec.
 
 Cześć {{first_name}},
 
-Zwykłe chatboty gubią wątek po odświeżeniu okna przeglądarki. Wyobraź sobie handlowca, który z każdą nową odpowiedzią klienta rozpoczyna relację od zera. Bez sensu, prawda?
+Większość CRMów wymaga, by ktoś ręcznie przeklikiwał się przez historię. Zanim Twój zespół sprzedażowy ustali, o czym rozmawiał z klientem w zeszłym miesiącu – u nas OMEGA już wysłała odpowiedź. 
 
-Nasza architektura OMEGA CRM opiera się na ciągłości. Cyfrowi negocjatorzy pamiętają profil każdego leada z {{company_name}} od momentu wejścia na lejek aż do podpisania kontraktu i przesłania linku z bramki Stripe. 
+Zbudowaliśmy system z wykorzystaniem Google ADK i Vertex AI, w którym agent sprzedaży posiada asynchroniczną pamięć trzymaną bezpośrednio na chmurze Google. W momencie wpłynięcia maila od klienta, system samodzielnie łączy kropki i rezerwuje czas w kalendarzu.
 
-Chętnie zaprezentuję na żywo, jak asynchroniczna pamięć OMEGA skaluje domykanie projektów IT. 
+Chcesz zobaczyć asynchroniczną przewagę technologiczną w akcji? Złapmy się na 15 minutowy call.
 
-Dobrego dnia,
+Z wyrazami szacunku,
 {{sender_name}}

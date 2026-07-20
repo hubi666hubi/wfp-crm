@@ -6,6 +6,9 @@ import re
 
 # Upewniamy się, że skrypt z backend/ widzi inne moduły
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Wymuszenie Vertex AI: usunięcie klucza AI Studio
+if "GEMINI_API_KEY" in os.environ:
+    del os.environ["GEMINI_API_KEY"]
 from backend.adk_sales_agent import run_adk_agent, ADK_AVAILABLE
 
 ARTIFACT_DIR = r"C:\Users\brend\.gemini\antigravity-ide\brain\28021aa3-9570-4028-87e3-53dab0f6d8fa"

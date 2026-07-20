@@ -24,6 +24,9 @@ except ImportError:
     class Style:
         BRIGHT = ""
 
+if "GEMINI_API_KEY" in os.environ:
+    del os.environ["GEMINI_API_KEY"]
+
 # Import agenta z ADK
 from adk_sales_agent import run_adk_agent, ADK_AVAILABLE
 from omega_agentic_commerce import AgenticCommerceEngine
