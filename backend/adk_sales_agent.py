@@ -4,6 +4,7 @@ import logging
 import asyncio
 import os
 from typing import Optional, Dict, Any
+from tenacity import retry, wait_random_exponential, stop_after_attempt
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -20,6 +21,7 @@ except ImportError:
 
 try:
     from google import genai
+    from google.cloud import aiplatform_v1beta1 as aip
     from dotenv import load_dotenv
     load_dotenv()
     try:
@@ -40,6 +42,9 @@ try:
     from google.adk.agents.callback_context import CallbackContext
     from google.adk.models.llm_request import LlmRequest
     from google.adk.models.llm_response import LlmResponse
+    from google.adk.tools.mcp_tool import McpToolset
+    from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams, StreamableHTTPConnectionParams
+    from mcp import StdioServerParameters
     from pydantic import BaseModel, Field
     ADK_AVAILABLE = True
     
@@ -142,6 +147,11 @@ def search_sales_knowledge(query: str, tool_context: ToolContext) -> str:
         print(err, file=sys.stderr)
         return err
 
+def szukaj_w_sieci(zapytanie: str, tool_context: ToolContext) -> str:
+    """Przeszukuje Google w poszukiwaniu aktualnych informacji."""
+    print(f"--- Tool: szukaj_w_sieci dla query: {zapytanie} ---", file=sys.stderr)
+    return f"Wyniki wyszukiwania dla: {zapytanie} (tu podłączasz silnik wyszukiwania)"
+
 # --- Inicjalizacja Agentów ---
 
 def create_sales_team():
@@ -151,11 +161,18 @@ def create_sales_team():
                 return type('Response', (), {'text': f"Mocked AI response for: {prompt[:30]}..."})()
         return MockAgent()
 
+    # Inicjalizacja Stripe (MCP)
+    STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "dummy_key_if_not_set")
+    
+    # Inicjalizacja Google Developer Knowledge (MCP)
+    DEVELOPER_KNOWLEDGE_API_KEY = os.getenv("DEVELOPER_KNOWLEDGE_API_KEY", "dummy_key_if_not_set")
+
     # Sub-Agent: Profiler
     lead_qualifier = Agent(
         name="lead_qualifier_agent",
         model="gemini-2.5-flash",
         mode="single_turn",
+        description="Użyj tego agenta aby zbadać leada i pobrać jego profil (lead_score).",
         instruction="Twoim jedynym zadaniem jest użycie narzędzia 'check_lead_score' by pobrać profil firmy. Zwróć profil w odpowiedzi.",
         tools=[check_lead_score]
     )
@@ -165,8 +182,64 @@ def create_sales_team():
         name="knowledge_researcher_agent",
         model="gemini-2.5-flash",
         mode="single_turn",
-        instruction="Twoim jedynym zadaniem jest przeszukanie bazy wiedzy narzędziem 'search_sales_knowledge'. Bądź zwięzły.",
-        tools=[search_sales_knowledge]
+        description="Użyj tego agenta aby wyszukać pasujące argumenty z bazy wiedzy RAG oraz przeszukać sieć.",
+        instruction="Twoim zadaniem jest przeszukanie bazy wiedzy narzędziem 'search_sales_knowledge' oraz, w razie potrzeby, najnowszych informacji w internecie przez 'szukaj_w_sieci'.",
+        tools=[search_sales_knowledge, szukaj_w_sieci]
+    )
+
+    # Sub-Agent: Pitch Generator
+    pitch_generator = Agent(
+        name="pitch_generator_agent",
+        model="gemini-2.5-flash",
+        mode="task",
+        description="Użyj tego agenta aby wygenerować ostateczny ustrukturyzowany pitch sprzedażowy (JSON) i zakończyć zadanie.",
+        instruction="Twoim zadaniem jest wygenerowanie struktury PitchOutput na podstawie zebranych danych. Zakończ zadanie wywołując narzędzie finish_task.",
+        output_schema=PitchOutput
+    )
+
+    # Sub-Agent: Stripe (Billing / Payments)
+    stripe_agent = Agent(
+        model="gemini-2.5-flash",
+        name="stripe_agent",
+        mode="single_turn",
+        description="Użyj tego agenta aby sprawdzić status konta Stripe, zarządzać fakturami lub weryfikować płatności klientów.",
+        instruction="Help users manage their Stripe account, check invoices, and verify payments.",
+        tools=[
+            McpToolset(
+                connection_params=StdioConnectionParams(
+                    server_params=StdioServerParameters(
+                        command="npx",
+                        args=[
+                            "-y",
+                            "@stripe/mcp",
+                            "--tools=all",
+                        ],
+                        env={
+                            "STRIPE_SECRET_KEY": STRIPE_SECRET_KEY,
+                            "PATH": os.getenv("PATH", "")
+                        }
+                    ),
+                    timeout=30,
+                ),
+            )
+        ],
+    )
+
+    # Sub-Agent: Google Developer Knowledge (MCP)
+    google_knowledge_agent = Agent(
+        model="gemini-2.5-flash",
+        name="google_knowledge_agent",
+        mode="single_turn",
+        description="Search Google developer documentation for implementation guidance and APIs.",
+        instruction="Search Google developer documentation for implementation guidance and APIs using MCP.",
+        tools=[
+            McpToolset(
+                connection_params=StreamableHTTPConnectionParams(
+                    url="https://developerknowledge.googleapis.com/mcp",
+                    headers={"X-Goog-Api-Key": DEVELOPER_KNOWLEDGE_API_KEY},
+                ),
+            )
+        ],
     )
 
     # Root Agent: Dyrygent
@@ -177,21 +250,25 @@ def create_sales_team():
     Zanim wygenerujesz wiadomość:
     1. Zleć zbadanie leada do 'lead_qualifier_agent'.
     2. Jeśli wynik leada (lead_score) jest obiecujący, poproś 'knowledge_researcher_agent' o pasujące argumenty z bazy wiedzy.
-    3. Na podstawie tych danych wygeneruj ustrukturyzowaną wiadomość (schema PitchOutput). Krótko, do bólu pragmatycznie. Call-To-Action to ZAWSZE pytanie o 15 minut w kalendarzu.
+    3. Na podstawie tych danych przekaż zlecenie do 'pitch_generator_agent', aby wygenerował ustrukturyzowaną wiadomość (schema PitchOutput). Krótko, do bólu pragmatycznie. Call-To-Action to ZAWSZE pytanie o 15 minut w kalendarzu.
     """
     
     root_agent = Agent(
         name="omega_sales_orchestrator",
         model="gemini-2.5-flash",
         instruction=instruction,
-        sub_agents=[lead_qualifier, knowledge_researcher],
-        output_schema=PitchOutput,
+        sub_agents=[lead_qualifier, knowledge_researcher, pitch_generator, stripe_agent, google_knowledge_agent],
         before_model_callback=bouncer_guardrail,
         before_tool_callback=quality_check_tool_guardrail
     )
     
     return root_agent
 
+@retry(
+    wait=wait_random_exponential(multiplier=2, max=60),
+    stop=stop_after_attempt(5),
+    reraise=True
+)
 async def run_adk_agent(prompt: str) -> str:
     agent = create_sales_team()
     

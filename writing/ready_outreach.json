@@ -26,5 +26,12 @@
     "industry": "B2B Marketing Agency",
     "pitch": "{\"subject\": \"Krótkie pytanie dotyczące rozwoju klienta w VMLY&R Commerce\", \"body\": \"Wiele agencji B2B zauważa, że utrzymanie pełnego obrazu wszystkich interakcji i kampanii klienta staje się wyzwaniem, co może prowadzić do przeoczenia kluczowych szans na zwiększenie przychodów. Czy widzą Państwo podobne wyzwania w skutecznym identyfikowaniu i maksymalizowaniu potencjału w portfolio VMLY&R Commerce? Chętnie podzieliłbym się perspektywą, która pomogła innym w branży. Czy mają Państwo 15 minut na krótką rozmowę w kalendarzu w przyszłym tygodniu?\", \"pain_point_used\": \"Przeoczone szanse na rozwój klienta z powodu braku jednolitego widoku interakcji.\"}",
     "status": "ready_for_review"
+  },
+  {
+    "company": "VMLY&R Commerce (VML)",
+    "score": 9,
+    "industry": "B2B Marketing Agency",
+    "pitch": "Przepraszam, ale wystąpił błąd podczas próby zbadania leada (VMLY&R Commerce) przez agenta kwalifikującego. Nie mogę kontynuować generowania wiadomości bez pomyślnego zakończenia tego kroku.",
+    "status": "ready_for_review"
   }
 ]

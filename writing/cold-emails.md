@@ -1,16 +1,12 @@
-# Cold Email: Ile przepalacie na nieskuteczne leady?
+# Temat: Widziałem Wasze nowości, jak to skalujecie?
 
-**Subject:** Optymalizacja budżetu na sprzedaż B2B
+Cześć {{Imię}},
 
-Cześć {{first_name}},
+Gratulacje z okazji ostatnich sukcesów i nowości w {{Nazwa_Agencji}} (śledzę na bieżąco Wasz profil). Wiem, że przy takim tempie rozwoju łatwo utracić kontrolę nad lejkiem sprzedażowym, a handlowcy toną w manualnym researchu.
 
-Patrzę na ekspansję {{company_name}} i zastanawiam się, ile obecnie wydajecie miesięcznie na systemy CRM i opłacanie handlowców, którzy robią zimny outreach?
+W WFP CRM stworzyliśmy **OMEGA Engine** - autonomicznego agenta, który sam robi za Ciebie wywiad w Google na temat prospektu, odszukuje punkty bólu z naszej bazy wiedzy i wysyła 100% celne cold maile. Wy odzywacie się tylko do tych, którzy odpowiedzieli pozytywnie na zapytanie o kalendarz.
 
-Zrobiliśmy coś odwrotnego. WFP CRM (OMEGA Engine) nie sprzedaje licencji SaaS. My sprzedajemy gotowe, potwierdzone spotkania.
-Nasz zautomatyzowany broker skanuje sieć, sam wchodzi w interakcje z dyrektorami operacyjnymi, a gdy ci zgodzą się na spotkanie – wysyłamy to bezpośrednio do kalendarzy naszych agencji partnerskich.
-
-Płacisz tylko za zrealizowane spotkanie. Zero kosztów stałych.
-Został nam ostatni kalendarz na ten tydzień w Waszej branży. Masz 15 minut we czwartek, żeby omówić szczegóły?
+Chętnie pokażę Ci w 15 minut, jak zdejmujemy 40% pracy operacyjnej z Twojego zespołu. Masz czas w czwartek o 10:00?
 
 Pozdrawiam,
-Zespół OMEGA Engine
+Zespół WFP CRM
