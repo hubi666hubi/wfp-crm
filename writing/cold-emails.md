@@ -1,21 +1,25 @@
-# Cold Email Template: WFP CRM for Agencies
+# Cold Email Framework: WFP CRM (Challenger Sale)
 
-**Subject:** Scaling [Agency Name] without adding headcount
+**Subject 1:** Dlaczego wasz zespół SDR przepala 40% leadów?
+**Subject 2:** {{company_name}} - automatyzacja prospectingu
+**Subject 3:** Znalazłem lukę w waszym lejku B2B
 
-Hi [First Name],
+---
 
-I was looking at [Agency Name]'s recent growth—impressive work on your latest campaigns.
+Cześć {{first_name}},
 
-I speak with agency founders every day, and the #1 bottleneck they face is scaling operations without their margins shrinking due to overhead and manual CRM work.
+Zauważyłem, że {{company_name}} dynamicznie rośnie, ale patrząc na wasz obecny model pozyskiwania klientów - wciąż opieracie się na ręcznym prospectingu i weryfikacji leadów.
 
-That’s why we built **WFP CRM**. It's designed specifically for agencies to replace the duct-tape stack. WFP CRM automates your lead generation with AI-driven scrapers, handles Stripe checkouts natively, and uses RAG to give you instant insights into your client data.
+To oznacza, że wasz zespół SDR traci od 15 do 20 godzin w tygodniu na sam research, zamiast zamykać deale. 
 
-In short: It lets your team focus on strategy and creative, while the CRM does the heavy lifting.
+W WFP CRM rozwiązaliśmy ten problem. Nasz **OMEGA Engine** (oparty na architekturze Multi-Agent AI):
+1. Automatycznie profiluje każdego leada i nadaje mu Score.
+2. Przeszukuje wektorową bazę wiedzy, dopasowując argumenty z waszych Case Studies.
+3. Generuje gotowy, hyper-spersonalizowany pitch.
 
-Are you open to a quick 10-minute chat next Tuesday to see if WFP CRM could streamline [Agency Name]'s workflow?
+System posiada wbudowane *Guardrails* – jeśli wyczuje konkurencję lub "pustego" leada, blokuje wysyłkę. Pełna kontrola, zerowe ryzyko.
 
-Best regards,
+Czy masz w tym tygodniu 10 minut, abym pokazał Ci na żywo, jak OMEGA skwalifikuje Wasze najtrudniejsze leady?
 
-[Your Name]
-[Your Title]
-WFP CRM
+Pozdrawiam,
+Zespół WFP CRM
