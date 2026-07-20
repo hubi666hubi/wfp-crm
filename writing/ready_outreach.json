@@ -1,0 +1,23 @@
+[
+  {
+    "company": "VMLY&R Commerce (VML)",
+    "score": 9,
+    "industry": "B2B Marketing Agency",
+    "pitch": "Zacznijmy od początku. Aby stworzyć krótki, agresywny B2B pitch e-mailowy (Challenger Sale) dla firmy VMLY&R Commerce (VML), potrzebuję najpierw ocenić potencjalnego klienta. Proszę o przeprowadzenie badania leada przez `lead_qualifier_agent`.",
+    "status": "ready_for_review"
+  },
+  {
+    "company": "VMLY&R Commerce (VML)",
+    "score": 9,
+    "industry": "B2B Marketing Agency",
+    "pitch": "Subject: Szansa na zminimalizowanie wycieku leadów w VMLY&R Commerce\n\nCześć,\n\nWiele agencji marketingowych, takich jak VMLY&R Commerce, zmaga się z niskimi konwersjami i wyciekiem leadów z powodu rozproszonych narzędzi. Zauważyliśmy, że firmy o podobnym profilu często nie wykorzystują pełni swojego potencjału sprzedażowego. Chętnie pokażę, jak w zaledwie 15 minut możemy zidentyfikować obszary, w których VMLY&R Commerce może znacząco poprawić swoje wyniki. Czy byłbyś dostępny na krótkie spotkanie w tym tygodniu?",
+    "status": "ready_for_review"
+  },
+  {
+    "company": "Salestube (Group One)",
+    "score": 8,
+    "industry": "E-commerce Performance Agency",
+    "pitch": "Cześć [Imię odbiorcy],\n\nCzy zdarza się, że pomimo intensywnych działań marketingowych, Wasze konwersje nie rosną, a cenne leady gdzieś umykają? Wiele agencji e-commerce performance boryka się z problemem rozproszonych narzędzi, które utrudniają pełen obraz ścieżki klienta. Pokażę, jak usprawnić ten proces i znacząco zwiększyć efektywność Waszych kampanii w zaledwie 15 minut. Zarezerwuj krótką rozmowę, abyśmy mogli zbadać konkretne możliwości dla Salestube.",
+    "status": "ready_for_review"
+  }
+]

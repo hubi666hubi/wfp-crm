@@ -83,58 +83,60 @@ async def autonomous_outreach_loop():
             time.sleep(1)
             print(Fore.GREEN + f"[MOCK] Wiadomość doręczona pomyślnie do {target}.")
             
-    print(Fore.YELLOW + "\n>>> Przejście w tryb nasłuchu IMAP (Inbound Listener)...")
-    
-    # KROK 2: NASŁUCH INBOUND (Pętla nieskończona)
-    while True:
-        if LIVE_MODE:
-            print(Fore.CYAN + "[IMAP] Sprawdzanie nowych odpowiedzi od klientów...")
-            replies = mail_client.fetch_unread_replies()
-            if not replies:
-                time.sleep(15)
-                continue
-                
+    # KROK 2: NASŁUCH INBOUND (Broker Skrzynki)
+    print(Fore.YELLOW + "\n>>> Przejście w tryb Inbox Broker (Nasłuch IMAP raz na cykl)...")
+    if LIVE_MODE:
+        print(Fore.CYAN + "[IMAP] Sprawdzanie nowych odpowiedzi od klientów...")
+        replies = mail_client.fetch_unread_replies()
+        if not replies:
+            print(Fore.WHITE + "[IMAP] Brak nowych odpowiedzi.")
+        else:
             for reply in replies:
                 sender = reply['from']
-                objection = reply['body']
+                message_body = reply['body']
                 print(Fore.RED + f"\n[INBOUND] NOWA WIADOMOŚĆ od {sender}!")
-                print(Fore.WHITE + f"    Treść: '{objection[:100]}...'")
+                print(Fore.WHITE + f"    Treść: '{message_body[:100]}...'")
                 
-                print(Fore.YELLOW + "\n[OMEGA ENGINE] Rozpoznano Obiekcję. Przekazano do wirtualnego asystenta (Google ADK + RAG).")
-                prompt = f"Klient {sender} napisał: '{objection}'. Odpisz krótko, agresywnie i konkretnie zbij tę obiekcję powołując się na naszą przewagę jako W.F.P CRM."
+                print(Fore.YELLOW + "\n[OMEGA CLASSIFIER] Klasyfikacja intencji (Google ADK)...")
+                prompt = f"Oceń intencję odpowiedzi od leada: '{message_body}'. Czy klient zgadza się na spotkanie/rozmowę? Odpowiedz jednym słowem: TAK lub NIE."
                 
-                print(Fore.BLUE + ">>> Generowanie kontry z użyciem wiedzy RAG...")
                 try:
-                    riposta = await run_adk_agent(prompt)
+                    intent = await run_adk_agent(prompt)
+                    intent = intent.strip().upper()
                 except Exception as e:
-                    riposta = f"Wystąpił błąd silnika: {str(e)}"
+                    intent = "NIE"
+                    print(f"Błąd klasyfikacji: {str(e)}")
                     
-                print(Fore.GREEN + Style.BRIGHT + "\n[OUTBOUND] AUTONOMICZNA ODPOWIEDŹ WYSYŁANA PRZEZ SMTP...")
-                success = mail_client.send_email(sender, "Re: " + reply['subject'], riposta)
-                if success:
-                    print(Fore.GREEN + "[SMTP] Odpowiedź wysłana!")
+                if "TAK" in intent:
+                    print(Fore.GREEN + Style.BRIGHT + "\n[BROKER ALERT] 🔥 ZNALEZIONO HOT LEADA! Wysyłanie oferty do agencji...")
+                    broker_msg = f"🚨 HOT LEAD ALERT 🚨\n\nFirma z adresu {sender} zgadza się na 15-minutowy call.\nOto treść ich odpowiedzi:\n\n{message_body}\n\nKto pierwszy przeleje $500, otrzymuje kontakt. Odpisz na ten e-mail z potwierdzeniem."
+                    success = mail_client.send_email("partners@wfp-crm.local", "🔥 HOT LEAD DO WZIĘCIA: " + sender, broker_msg)
+                    if success:
+                        print(Fore.GREEN + "[SMTP] Powiadomienie do partnerów wysłane pomyślnie!")
                 else:
-                    print(Fore.RED + "[SMTP] Błąd wysyłania odpowiedzi.")
-            time.sleep(15)
-        else:
-            # Tryb MOCK INBOUND
-            time.sleep(3)
-            target = "cto@techstartup.com"
-            print(Fore.RED + f"\n[INBOUND MOCK] NOWA WIADOMOŚĆ od {target}!")
-            objection = "Cześć. Brzmi ciekawie, ale mamy już wdrożonego HubSpot'a i szczerze mówiąc, Wasze rozwiązanie wydaje się być sporo droższe i skomplikowane we wdrożeniu. Dlaczego mielibyśmy migrować?"
-            print(Fore.WHITE + f"    Treść: '{objection}'")
+                    print(Fore.WHITE + "\n[BROKER] Odpowiedź negatywna lub neutralna. Ignorowanie leada.")
+    else:
+        # Tryb MOCK INBOUND
+        time.sleep(3)
+        target = "ceo@netguru.com"
+        print(Fore.RED + f"\n[INBOUND MOCK] NOWA WIADOMOŚĆ od {target}!")
+        message_body = "Brzmi to ciekawie, faktycznie mamy problem z wyciekiem leadów. Zdzwońmy się w czwartek o 14:00."
+        print(Fore.WHITE + f"    Treść: '{message_body}'")
+        
+        print(Fore.YELLOW + "\n[OMEGA CLASSIFIER] Klasyfikacja intencji (Google ADK)...")
+        prompt = f"Oceń intencję odpowiedzi od leada: '{message_body}'. Czy klient zgadza się na spotkanie/rozmowę? Odpowiedz jednym słowem: TAK lub NIE."
+        
+        try:
+            intent = await run_adk_agent(prompt)
+            intent = intent.strip().upper()
+        except Exception as e:
+            intent = f"NIE (Błąd: {str(e)})"
             
-            print(Fore.YELLOW + "\n[OMEGA ENGINE] Przekazano do wirtualnego asystenta (Google ADK + RAG).")
-            prompt = f"Klient napisał: '{objection}'. Odpisz krótko, zbij obiekcję powołując się na przewagę OMEGA Command Center nad HubSpot."
-            
-            try:
-                riposta = await run_adk_agent(prompt)
-            except Exception as e:
-                riposta = f"Wystąpił błąd silnika: {str(e)}"
-                
-            print(Fore.GREEN + Style.BRIGHT + "\n[OUTBOUND MOCK] AUTONOMICZNA ODPOWIEDŹ WYSŁANA!")
-            print(Fore.WHITE + f"    Treść riposty:\n    {riposta.strip()}")
-            break # W trybie mock kończymy po jednym przebiegu
+        print(Fore.WHITE + f"    Klasyfikacja: '{intent}'")
+        if "TAK" in intent:
+            print(Fore.GREEN + Style.BRIGHT + "\n[BROKER ALERT MOCK] 🔥 ZNALEZIONO HOT LEADA! Wysyłanie oferty do agencji...")
+            broker_msg = f"🚨 HOT LEAD ALERT 🚨\n\nFirma z adresu {target} zgadza się na 15-minutowy call.\nOto treść ich odpowiedzi:\n\n{message_body}\n\nKto pierwszy przeleje $500, otrzymuje kontakt."
+            print(Fore.WHITE + f"    Wysłano e-mail do agencji partnerskich:\n\n{broker_msg}")
 
     if not LIVE_MODE:
         print(Fore.CYAN + Style.BRIGHT + "\n===============================================")

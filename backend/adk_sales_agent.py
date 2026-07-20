@@ -40,7 +40,13 @@ try:
     from google.adk.agents.callback_context import CallbackContext
     from google.adk.models.llm_request import LlmRequest
     from google.adk.models.llm_response import LlmResponse
+    from pydantic import BaseModel, Field
     ADK_AVAILABLE = True
+    
+    class PitchOutput(BaseModel):
+        subject: str = Field(description="Agresywny biznesowo temat e-maila w języku polskim")
+        body: str = Field(description="Główna treść e-maila ukierunkowana wyłącznie na umówienie spotkania")
+        pain_point_used: str = Field(description="Krótki opis, w jaki punkt bólu uderzono")
 except ImportError:
     ADK_AVAILABLE = False
     logging.warning("ADK package (google.adk) not found. Uruchamiam mock agenta ADK.")
@@ -149,6 +155,7 @@ def create_sales_team():
     lead_qualifier = Agent(
         name="lead_qualifier_agent",
         model="gemini-2.5-flash",
+        mode="single_turn",
         instruction="Twoim jedynym zadaniem jest użycie narzędzia 'check_lead_score' by pobrać profil firmy. Zwróć profil w odpowiedzi.",
         tools=[check_lead_score]
     )
@@ -157,18 +164,20 @@ def create_sales_team():
     knowledge_researcher = Agent(
         name="knowledge_researcher_agent",
         model="gemini-2.5-flash",
+        mode="single_turn",
         instruction="Twoim jedynym zadaniem jest przeszukanie bazy wiedzy narzędziem 'search_sales_knowledge'. Bądź zwięzły.",
         tools=[search_sales_knowledge]
     )
 
     # Root Agent: Dyrygent
     instruction = """
-    Jesteś głównym sprzedawcą B2B dla WFP CRM (OMEGA Engine).
-    Zanim wygenerujesz wiadomość typu 'Challenger Sale', ZAWSZE:
+    Jesteś elitarnym łowcą spotkań B2B dla WFP CRM (OMEGA Engine).
+    ZABRANIA SIĘ BEZPOŚREDNIEJ SPRZEDAŻY OPROGRAMOWANIA.
+    Twoim JEDYNYM celem jest zaciekawienie odbiorcy na tyle mocno (używając zebranych przez RAG punktów bólu), by wyciągnąć od niego zgodę na 15-minutowe spotkanie z naszym konsultantem.
+    Zanim wygenerujesz wiadomość:
     1. Zleć zbadanie leada do 'lead_qualifier_agent'.
     2. Jeśli wynik leada (lead_score) jest obiecujący, poproś 'knowledge_researcher_agent' o pasujące argumenty z bazy wiedzy.
-    3. Na podstawie tych danych wygeneruj agresywny biznesowo, zwięzły pitch e-mailowy.
-    Jeśli narzędzia zwrócą błąd, przeproś i poinformuj, że nie możesz kontynuować.
+    3. Na podstawie tych danych wygeneruj ustrukturyzowaną wiadomość (schema PitchOutput). Krótko, do bólu pragmatycznie. Call-To-Action to ZAWSZE pytanie o 15 minut w kalendarzu.
     """
     
     root_agent = Agent(
@@ -176,7 +185,7 @@ def create_sales_team():
         model="gemini-2.5-flash",
         instruction=instruction,
         sub_agents=[lead_qualifier, knowledge_researcher],
-        output_key="final_pitch_output",
+        output_schema=PitchOutput,
         before_model_callback=bouncer_guardrail,
         before_tool_callback=quality_check_tool_guardrail
     )
