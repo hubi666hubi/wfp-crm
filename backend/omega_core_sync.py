@@ -54,8 +54,9 @@ async def main():
     
     outreach_data = []
     
-    # Free Tier API limit throttle: bierzemy max 2 na cykl, by zmieścić się w 15 RPM
-    for lead in high_priority_leads[:2]:
+    # Free Tier API limit throttle: 5 RPM max. 1 lead = 3 requesty (Orchestrator + Profiler + Researcher)
+    # Zmieniamy limit na 1 lead na cykl, by uniknąć błędów 429
+    for lead in high_priority_leads[:1]:
         company_name = lead["name"]
         print(f"[SYNC] Przetwarzanie leada: {company_name}...", file=sys.stderr)
         

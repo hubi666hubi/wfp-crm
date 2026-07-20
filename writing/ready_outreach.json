@@ -19,5 +19,12 @@
     "industry": "E-commerce Performance Agency",
     "pitch": "Cześć [Imię odbiorcy],\n\nCzy zdarza się, że pomimo intensywnych działań marketingowych, Wasze konwersje nie rosną, a cenne leady gdzieś umykają? Wiele agencji e-commerce performance boryka się z problemem rozproszonych narzędzi, które utrudniają pełen obraz ścieżki klienta. Pokażę, jak usprawnić ten proces i znacząco zwiększyć efektywność Waszych kampanii w zaledwie 15 minut. Zarezerwuj krótką rozmowę, abyśmy mogli zbadać konkretne możliwości dla Salestube.",
     "status": "ready_for_review"
+  },
+  {
+    "company": "VMLY&R Commerce (VML)",
+    "score": 9,
+    "industry": "B2B Marketing Agency",
+    "pitch": "{\"subject\": \"Krótkie pytanie dotyczące rozwoju klienta w VMLY&R Commerce\", \"body\": \"Wiele agencji B2B zauważa, że utrzymanie pełnego obrazu wszystkich interakcji i kampanii klienta staje się wyzwaniem, co może prowadzić do przeoczenia kluczowych szans na zwiększenie przychodów. Czy widzą Państwo podobne wyzwania w skutecznym identyfikowaniu i maksymalizowaniu potencjału w portfolio VMLY&R Commerce? Chętnie podzieliłbym się perspektywą, która pomogła innym w branży. Czy mają Państwo 15 minut na krótką rozmowę w kalendarzu w przyszłym tygodniu?\", \"pain_point_used\": \"Przeoczone szanse na rozwój klienta z powodu braku jednolitego widoku interakcji.\"}",
+    "status": "ready_for_review"
   }
 ]
