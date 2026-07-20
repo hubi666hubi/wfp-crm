@@ -75,5 +75,19 @@
     "industry": "B2B/Software",
     "pitch": "[MOCK] Pitch dla Brainhub",
     "status": "ready_for_review"
+  },
+  {
+    "company": "builtwith.comProductsTechnology",
+    "score": 10,
+    "industry": "B2B/Software",
+    "pitch": "[MOCK] Pitch dla builtwith.comProductsTechnology",
+    "status": "ready_for_review"
+  },
+  {
+    "company": "builtwith.comProductsTechnology",
+    "score": 10,
+    "industry": "B2B/Software",
+    "pitch": "[MOCK] Pitch dla builtwith.comProductsTechnology",
+    "status": "ready_for_review"
   }
 ]
