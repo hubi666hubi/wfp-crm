@@ -6,13 +6,13 @@ import re
 
 # Upewniamy się, że skrypt z backend/ widzi inne moduły
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-# Wymuszenie Vertex AI: usunięcie klucza AI Studio
-if "GEMINI_API_KEY" in os.environ:
-    del os.environ["GEMINI_API_KEY"]
+# Używamy Google AI Studio (fallback) - zostawiamy GEMINI_API_KEY
+# if "GEMINI_API_KEY" in os.environ:
+#     del os.environ["GEMINI_API_KEY"]
 from backend.adk_sales_agent import run_adk_agent, ADK_AVAILABLE
 
 ARTIFACT_DIR = r"C:\Users\brend\.gemini\antigravity-ide\brain\28021aa3-9570-4028-87e3-53dab0f6d8fa"
-LEADS_FILE = os.path.join(ARTIFACT_DIR, "lead_research_results.md")
+LEADS_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "reports", "wfp_leads_report.json")
 OUTPUT_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "writing", "ready_outreach.json")
 
 def parse_leads(file_path):
@@ -21,31 +21,18 @@ def parse_leads(file_path):
         return []
     
     with open(file_path, "r", encoding="utf-8") as f:
-        content = f.read()
-    
+        try:
+            data = json.load(f)
+        except json.JSONDecodeError:
+            return []
+            
     leads = []
-    # Split by '## Lead'
-    blocks = content.split("## Lead")
-    for block in blocks[1:]:
-        lines = block.strip().split("\n")
-        title_line = lines[0].strip()
-        # Parse name e.g. "1: VMLY&R Commerce (VML)" -> "VMLY&R Commerce (VML)"
-        match = re.search(r'\d+:\s*(.*)', title_line)
-        if not match:
-            continue
-        name = match.group(1).strip()
-        
-        score = 0
-        industry = ""
-        for line in lines:
-            if "Priority Score" in line:
-                s_match = re.search(r'(\d+)/10', line)
-                if s_match:
-                    score = int(s_match.group(1))
-            if "Industry" in line:
-                industry = line.split(":", 1)[1].strip()
-        
-        leads.append({"name": name, "score": score, "industry": industry})
+    for item in data:
+        # Przykładowe parsowanie z JSON
+        email = item.get("email", "")
+        # Dummy name z emaila jeśli brak company
+        name = item.get("company", email.split('@')[-1] if '@' in email else "Unknown")
+        leads.append({"name": name, "score": 10, "industry": "B2B/Software"})
     return leads
 
 async def main():
@@ -59,7 +46,7 @@ async def main():
     
     # Free Tier API limit throttle: 5 RPM max. 1 lead = 3 requesty (Orchestrator + Profiler + Researcher)
     # Zmieniamy limit na 1 lead na cykl, by uniknąć błędów 429
-    for lead in high_priority_leads[:1]:
+    for lead in high_priority_leads:
         company_name = lead["name"]
         print(f"[SYNC] Przetwarzanie leada: {company_name}...", file=sys.stderr)
         

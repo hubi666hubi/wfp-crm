@@ -32,7 +32,7 @@ from adk_sales_agent import run_adk_agent, ADK_AVAILABLE
 from omega_agentic_commerce import AgenticCommerceEngine
 
 def load_leads():
-    leads_path = os.path.join("..", "data", "reports", "wfp_leads_report.json")
+    leads_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "reports", "wfp_leads_report.json")
     if os.path.exists(leads_path):
         with open(leads_path, "r", encoding="utf-8") as f:
             try:

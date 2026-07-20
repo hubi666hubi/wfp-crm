@@ -70,6 +70,9 @@ except ImportError as e:
     logging.warning(f"ADK package (google.adk) not found. Uruchamiam mock agenta ADK. Details: {e}")
     ADK_AVAILABLE = False
 
+# Wymuszenie trybu MOCK z powodu wyczerpania darmowego limitu 20 zapytań/dzień
+ADK_AVAILABLE = False
+
 # --- Callbacks / Guardrails ---
 
 def bouncer_guardrail(callback_context: CallbackContext, llm_request: LlmRequest) -> Optional[LlmResponse]:
@@ -216,7 +219,7 @@ def create_sales_team():
     
     gemini_model = Gemini(
         model="gemini-2.5-flash", 
-        client_kwargs={"vertexai": True, "project": google_cloud_project, "location": google_cloud_location}
+        # client_kwargs={"vertexai": True, "project": google_cloud_project, "location": google_cloud_location}
     )
 
     # Sub-Agent: Profiler

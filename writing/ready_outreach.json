@@ -33,5 +33,47 @@
     "industry": "B2B Marketing Agency",
     "pitch": "Przepraszam, ale wystąpił błąd podczas próby zbadania leada (VMLY&R Commerce) przez agenta kwalifikującego. Nie mogę kontynuować generowania wiadomości bez pomyślnego zakończenia tego kroku.",
     "status": "ready_for_review"
+  },
+  {
+    "company": "builtwith.comProductsTechnology",
+    "score": 10,
+    "industry": "B2B/Software",
+    "pitch": "[MOCK] Pitch dla builtwith.comProductsTechnology",
+    "status": "ready_for_review"
+  },
+  {
+    "company": "Merixstudio",
+    "score": 10,
+    "industry": "B2B/Software",
+    "pitch": "[MOCK] Pitch dla Merixstudio",
+    "status": "ready_for_review"
+  },
+  {
+    "company": "10Clouds",
+    "score": 10,
+    "industry": "B2B/Software",
+    "pitch": "[MOCK] Pitch dla 10Clouds",
+    "status": "ready_for_review"
+  },
+  {
+    "company": "Delante",
+    "score": 10,
+    "industry": "B2B/Software",
+    "pitch": "[MOCK] Pitch dla Delante",
+    "status": "ready_for_review"
+  },
+  {
+    "company": "VMLY&R Commerce",
+    "score": 10,
+    "industry": "B2B/Software",
+    "pitch": "[MOCK] Pitch dla VMLY&R Commerce",
+    "status": "ready_for_review"
+  },
+  {
+    "company": "Brainhub",
+    "score": 10,
+    "industry": "B2B/Software",
+    "pitch": "[MOCK] Pitch dla Brainhub",
+    "status": "ready_for_review"
   }
 ]
