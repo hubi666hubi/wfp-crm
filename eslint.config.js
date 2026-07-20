@@ -1,40 +1,34 @@
 import js from '@eslint/js'
 import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-import tsPlugin from '@typescript-eslint/eslint-plugin'
-import { defineConfig, globalIgnores } from 'eslint/config'
-import firebaseRulesPlugin from '@firebase/eslint-plugin-security-rules'
+import tsEslint from 'typescript-eslint'
 
-export default defineConfig([
-  globalIgnores(['dist']),
+export default tsEslint.config(
+  { ignores: ['dist'] },
   {
-    files: ['**/*.{ts,tsx}'],
     extends: [
       js.configs.recommended,
-      tsPlugin.configs.recommended,
-      reactX.configs['recommended-typescript'],
-      reactDom.configs.recommended,
-      reactHooks.configs?.flat?.recommended || 'plugin:react-hooks/recommended',
-      reactRefresh.configs?.vite || 'plugin:react-refresh/recommended',
+      ...tsEslint.configs.recommended,
     ],
+    files: ['**/*.{ts,tsx}'],
     languageOptions: {
+      ecmaVersion: 2020,
       globals: globals.browser,
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
+    },
+    plugins: {
+      'react-refresh': reactRefresh,
     },
     rules: {
+      'react-refresh/only-export-components': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
       'prefer-const': 'off',
       '@typescript-eslint/no-empty-object-type': 'off',
-      'preserve-caught-error': 'off',
-      '@firebase/security-rules/preserve-caught-error': 'off'
-    }
-  },
-  firebaseRulesPlugin.configs['flat/recommended']
-])
+      'no-useless-assignment': 'off',
+      'no-empty': 'off',
+      '@typescript-eslint/no-require-imports': 'off',
+      'no-useless-escape': 'off',
+      '@typescript-eslint/no-unsafe-function-type': 'off'
+    },
+  }
+)

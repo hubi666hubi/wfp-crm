@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   TrendingUp, 
@@ -44,6 +44,37 @@ interface TrendItem {
 }
 
 export function ProDashboard() {
+
+  // State for AUTO AUTO AUTO terminal
+  const [cliCommand, setCliCommand] = useState("");
+  const [cliOutput, setCliOutput] = useState<string[]>([]);
+  const [isCliLoading, setIsCliLoading] = useState(false);
+  const cliOutputEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    cliOutputEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [cliOutput]);
+
+  const executeCliCommand = async (cmd: string) => {
+    if (!cmd.trim()) return;
+    setIsCliLoading(true);
+    setCliOutput(prev => [...prev, `> gemini ${cmd}`]);
+    setCliCommand("");
+
+    try {
+      const res = await fetch("/api/pro/auto-cli", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ command: cmd })
+      });
+      const data = await res.json();
+      setCliOutput(prev => [...prev, data.output]);
+    } catch (err: any) {
+      setCliOutput(prev => [...prev, `[ERROR] ${err.message}`]);
+    } finally {
+      setIsCliLoading(false);
+    }
+  };
   const navigate = useNavigate();
   
   // States
@@ -348,7 +379,7 @@ export function ProDashboard() {
     const params = new URLSearchParams(window.location.search);
     const status = params.get("status");
     if (status === "success") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      //
       setIsUserPremium(true);
       localStorage.setItem("omega_user_premium", "true");
       toast.success("Wspaniale! Twoja subskrypcja Premium została pomyślnie opłacona przez Stripe.");
@@ -1434,6 +1465,54 @@ export function ProDashboard() {
             </div>
           )}
 
+
+          {/* AUTO AUTO AUTO TERMINAL */}
+          <div className="bg-neutral-950 border border-neutral-900 rounded-3xl p-5 mt-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Terminal size={14} className="text-red-500 animate-pulse" />
+              <span className="text-xs font-mono font-bold text-neutral-300 uppercase tracking-widest text-red-500">
+                TRYB: AUTO AUTO AUTO (GEMINI CLI)
+              </span>
+            </div>
+
+            <div className="bg-black/80 border border-red-900/50 rounded-2xl p-4 h-[200px] overflow-y-auto font-mono text-xs leading-relaxed text-red-400/90 custom-scrollbar mb-3">
+              {cliOutput.length === 0 ? (
+                <span className="text-neutral-600 italic block">&gt; System gotowy na rozkazy KOD-MUTANT...</span>
+              ) : (
+                cliOutput.map((log, index) => (
+                  <div key={index} className="whitespace-pre-wrap font-mono mb-2 border-b border-red-900/20 pb-1">
+                    {log}
+                  </div>
+                ))
+              )}
+              <div ref={cliOutputEndRef} />
+            </div>
+
+            <div className="flex gap-2 mb-3">
+              <input
+                type="text"
+                value={cliCommand}
+                onChange={(e) => setCliCommand(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') executeCliCommand(cliCommand); }}
+                placeholder="Wprowadź komendę do Gemini CLI..."
+                className="flex-1 bg-black border border-red-900/40 rounded-xl px-4 py-2 text-xs font-mono text-red-400 focus:outline-none focus:border-red-500/50"
+                disabled={isCliLoading}
+              />
+              <button
+                onClick={() => executeCliCommand(cliCommand)}
+                disabled={isCliLoading}
+                className="bg-red-950/40 hover:bg-red-900/60 border border-red-500/30 text-red-400 px-4 py-2 rounded-xl text-xs font-bold font-mono tracking-wide uppercase transition-all disabled:opacity-50"
+              >
+                {isCliLoading ? "Wykonuję..." : "Uderz"}
+              </button>
+            </div>
+
+            <div className="flex gap-2 flex-wrap">
+               <button onClick={() => executeCliCommand("Mass Lead Analysis")} className="text-[10px] bg-neutral-900 hover:bg-red-900/40 border border-neutral-800 text-neutral-400 px-2 py-1 rounded-md font-mono">Mass Lead Analysis</button>
+               <button onClick={() => executeCliCommand("Zapalnik VSL Generation")} className="text-[10px] bg-neutral-900 hover:bg-red-900/40 border border-neutral-800 text-neutral-400 px-2 py-1 rounded-md font-mono">Zapalnik VSL Generation</button>
+               <button onClick={() => executeCliCommand("Code Audit")} className="text-[10px] bg-neutral-900 hover:bg-red-900/40 border border-neutral-800 text-neutral-400 px-2 py-1 rounded-md font-mono">Code Audit</button>
+            </div>
+          </div>
           {/* REALTIME SYSTEM HEALTH MINI RADAR LOGS TERMINAL CO-OPS */}
           <div className="bg-neutral-950 border border-neutral-900 rounded-3xl p-5">
             <div className="flex items-center gap-2 mb-3">

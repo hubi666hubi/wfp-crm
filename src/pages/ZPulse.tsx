@@ -146,7 +146,7 @@ export function ZPulse() {
       clearTimeout(timer);
       clearInterval(logsInterval);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    //
   }, []);
 
   // Poll trends dynamically in backgrounds every 5s if polling is enabled
