@@ -38,6 +38,7 @@ const Stitch = lazy(() => import('./pages/Stitch').then(m => ({ default: m.Stitc
 const Nekropolis = lazy(() => import('./pages/Nekropolis').then(m => ({ default: m.Nekropolis })));
 const OmegaConsole = lazy(() => import('./pages/OmegaConsole').then(m => ({ default: m.OmegaConsole })));
 const OmegaABM = lazy(() => import('./pages/OmegaABM').then(m => ({ default: m.OmegaABM })));
+const ChronoLedger = lazy(() => import('./pages/ChronoLedger').then(m => ({ default: m.ChronoLedger })));
 const AgentChat = lazy(() => import('./pages/AgentChat'));
 
 function PlaceholderModule({ title }: { title: string }) {
@@ -186,6 +187,7 @@ function App() {
             <Route path="/nekropolis" element={<ErrorBoundary><Nekropolis /></ErrorBoundary>} />
             <Route path="/omega-console" element={<ErrorBoundary><OmegaConsole /></ErrorBoundary>} />
             <Route path="/omega-abm" element={<ErrorBoundary><OmegaABM /></ErrorBoundary>} />
+            <Route path="/chrono-ledger" element={<ErrorBoundary><ChronoLedger /></ErrorBoundary>} />
             <Route path="/agent" element={<ErrorBoundary><AgentChat /></ErrorBoundary>} />
           </Routes>
         </Suspense>
