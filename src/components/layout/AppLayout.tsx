@@ -74,6 +74,8 @@ const navigation = [
   { name: 'Stitch Uplink', to: '/stitch', icon: Cpu },
   { name: 'Nekropolis Agharta', to: '/nekropolis', icon: Target },
   { name: 'Zwierciadło Omega', to: '/omega-console', icon: Eye },
+  { name: 'OMEGA ABM Predictor', to: '/omega-abm', icon: Crosshair },
+  { name: 'Chrono Ledger (Finanse)', to: '/chrono-ledger', icon: Database },
   { name: '🤖 Zenek — AI Agent', to: '/agent', icon: Bot },
   { name: 'Konfiguracja Agentów', to: '/settings', icon: SettingsIcon },
 ];
