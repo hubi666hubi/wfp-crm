@@ -8,6 +8,8 @@ import { getAccessToken } from '../lib/auth';
 import { CrmMeetingSummarizer } from './CrmMeetingSummarizer';
 import { toast } from 'sonner';
 import { useSystemLogsStore } from '../store/systemLogsStore';
+import { useSettingsStore } from '../store/settingsStore';
+import { financeService } from '../services/FinanceService';
 
 // Import extracted subcomponents
 import { PipelineKanban } from '../components/zapalnik/PipelineKanban';
@@ -27,6 +29,7 @@ export type { AIEnrichment, DMStep, ChatMessage, PitchCardData, TacticalBriefDat
 
 export function Zapalnik() {
   const logAction = useSystemLogsStore((state) => state.logAction);
+  const makeWebhook = useSettingsStore((state) => state.makeWebhook);
   
   // Page tabs state
   const [activeTab, setActiveTab] = useState<'pipeline' | 'magnet' | 'inbox' | 'clients'>('pipeline');
@@ -258,6 +261,14 @@ export function Zapalnik() {
     if (nextIndex === currentIndex) return;
     const nextStatus = PIPELINE_COLUMNS[nextIndex].key;
 
+    const leadToUpdate = leads.find(l => l.id === leadId);
+    if (leadToUpdate && nextStatus === "Zamknięte / Sukces" && leadToUpdate.status !== "Zamknięte / Sukces") {
+      const amount = Math.floor(Math.random() * (24000 - 12500) + 12500);
+      financeService.triggerJarvisVoice(amount);
+      financeService.triggerStripeWebhook(leadToUpdate.name, makeWebhook, amount);
+      logAction("Zero-Human-Accounting", "Sukces przychodowy", `Faktura wygenerowana dla leada ${leadToUpdate.name} na kwotę ${amount} PLN.`);
+    }
+
     // Optimistic update
     setLeads(prevLeads => 
       prevLeads.map(l => l.id === leadId ? { ...l, status: nextStatus } : l)
@@ -290,6 +301,14 @@ export function Zapalnik() {
 
   // useCallback for direct status selection
   const selectStatus = useCallback(async (leadId: string, status: string) => {
+    const leadToUpdate = leads.find(l => l.id === leadId);
+    if (leadToUpdate && status === "Zamknięte / Sukces" && leadToUpdate.status !== "Zamknięte / Sukces") {
+      const amount = Math.floor(Math.random() * (24000 - 12500) + 12500);
+      financeService.triggerJarvisVoice(amount);
+      financeService.triggerStripeWebhook(leadToUpdate.name, makeWebhook, amount);
+      logAction("Zero-Human-Accounting", "Sukces przychodowy", `Faktura wygenerowana dla leada ${leadToUpdate.name} na kwotę ${amount} PLN.`);
+    }
+
     setLeads(prevLeads => 
       prevLeads.map(l => l.id === leadId ? { ...l, status } : l)
     );
