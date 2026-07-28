@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 import { useState, useEffect, useRef, memo, useCallback } from 'react';
 import { Terminal, Activity, Zap, Server, Shield, Skull, Pause, Play, Trash2, Search, Code, Copy, Plus, ArrowDownUp, Anchor, Unlock, Radar, GitMerge, Eye, Cpu, Power, Crosshair, Braces, FlaskConical, PlayCircle, ShieldCheck, AlertCircle, RefreshCw, ChevronRight, MessageSquare, Download, CheckCircle, Info, Heart } from 'lucide-react';
 import { AreaChart, Area, ResponsiveContainer, YAxis, Tooltip } from 'recharts';

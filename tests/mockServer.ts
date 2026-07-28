@@ -1,5 +1,5 @@
 export class MockServer {
-  public routes = new Map<string, Function>();
+  public routes = new Map<string, (...args: any[]) => any>();
   public callCount = new Map<string, number>();
   
   // Storage for mock data that might persist/change during a test

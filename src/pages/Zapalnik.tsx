@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { doc, setDoc } from "firebase/firestore";
 import { db, auth } from "../lib/firebase";

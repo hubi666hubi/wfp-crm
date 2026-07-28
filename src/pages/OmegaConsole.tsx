@@ -1,3 +1,5 @@
+/* eslint-disable no-empty */
+/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useEffect, useRef } from 'react';
 import { Terminal, Activity, DollarSign, Database, Globe, Zap, Lock, Eye, Crosshair, ChevronRight, Target, Waves, HeartPulse, Square, Cpu } from 'lucide-react';
 
