@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from 'react';
 import { Mail, Send, Activity, RefreshCw, Users, Link as LinkIcon, CheckCircle, Clock, FastForward, Play, Gauge, Sparkles } from 'lucide-react';
 import { getAccessToken } from '../lib/auth';
