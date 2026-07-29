@@ -9,6 +9,7 @@ import { startAgentBrokerListener } from './services/AgentBroker';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { OmegaLanding } from './pages/OmegaLanding';
 
+const GumroadMonetization = lazy(() => import('./pages/GumroadMonetization').then(m => ({ default: m.GumroadMonetization })));
 const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
 const SocialMedia = lazy(() => import('./pages/SocialMedia').then(m => ({ default: m.SocialMedia })));
 const Distributor = lazy(() => import('./pages/Distributor').then(m => ({ default: m.Distributor })));
@@ -185,6 +186,7 @@ function App() {
             <Route path="/nekropolis" element={<ErrorBoundary><Nekropolis /></ErrorBoundary>} />
             <Route path="/omega-console" element={<ErrorBoundary><OmegaConsole /></ErrorBoundary>} />
             <Route path="/agent" element={<ErrorBoundary><AgentChat /></ErrorBoundary>} />
+            <Route path="/gumroad" element={<ErrorBoundary><GumroadMonetization /></ErrorBoundary>} />
           </Routes>
         </Suspense>
       </ErrorBoundary>

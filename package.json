@@ -1,6 +1,7 @@
 {
   "name": "applet",
   "private": true,
+  "type": "module",
   "version": "4.5.0",
   "description": "WFP CRM Omega Hypergrowth Core with Integrated AI Swarm & Monetization Engine",
   "scripts": {
