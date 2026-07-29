@@ -29,7 +29,8 @@ import {
   StickyNote,
   Calendar,
   Sparkles,
-  MessageSquare
+  MessageSquare,
+  ShoppingCart
 } from 'lucide-react';
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { logout } from '../../lib/auth';
@@ -65,6 +66,7 @@ const navigation = [
   { name: 'Z-Pulse Trend Analyzer', to: '/z-pulse', icon: Radar },
   { name: 'OMEGA Pro Insights', to: '/pro-dashboard', icon: Award },
   { name: 'Oko Opatrzności', to: '/pricing', icon: Eye },
+  { name: 'Monetyzacja Gumroad', to: '/gumroad', icon: ShoppingCart },
   { name: 'Kokpit Automatyzacji', to: '/automation', icon: BrainCircuit },
   { name: 'Poczta (Gmail)', to: '/gmail', icon: Mail },
   { name: 'Google Chat', to: '/chat', icon: MessageSquare },
